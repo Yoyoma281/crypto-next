@@ -8,7 +8,7 @@ import { CoinPortfolioData } from "@/app/types/coin";
 
 export const columns: ColumnDef<CoinPortfolioData>[] = [
     {
-        accessorKey: "symbol",
+        accessorKey: "symbol",,
         header: "Symbol",
         cell: (props) =>
             <div className="flex items-center gap-2">
