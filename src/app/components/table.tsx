@@ -137,9 +137,13 @@ export function DataTable<T>({
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
                                     className="h-20 cursor-pointer"
-                                    onClick={() => {
-                                        window.location.href = `${Path}/${row.getValue(`${params}`)}`
-                                    }}
+                                    onClick={
+                                        params
+                                            ? () => {
+                                                window.location.href = `${Path}/${row.getValue(`${params}`)}`;
+                                            }
+                                            : undefined
+                                    }
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>

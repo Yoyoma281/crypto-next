@@ -21,6 +21,7 @@ import {
     ChartContainer,
 } from "@/components/ui/chart";
 import { BinanceKline } from "../types";
+import { formatPrice } from "@/lib/utils";
 
 type PriceLineChartProps = {
     data: BinanceKline[]; // Replace [] with the actual expected type
@@ -43,7 +44,6 @@ export function PriceLineChart({
     intervalOptions,
     selectedInterval,
     onIntervalChange,
-    coinName = "Crypto",
     loading = false,
     className
 }: PriceLineChartProps) {
@@ -112,7 +112,9 @@ export function PriceLineChart({
                             <button
                                 key={option}
                                 data-active={selectedInterval === option}
-                                className="flex flex-col justify-center border-t px-6 py-4 text-sm even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-4 sm:py-6"
+                                className="flex flex-col justify-center border-t px-6 py-4 text-sm even:border-l
+                                        sm:border-l sm:border-t sm:px-4 sm:py-6
+                                        data-[active=true]:bg-gray-100 data-[active=true]:text-gray-800"
                                 onClick={() => onIntervalChange(option)}
                             >
                                 {option}
@@ -154,7 +156,7 @@ export function PriceLineChart({
                                     axisLine={false}
                                     tickMargin={8}
                                     domain={["auto", "auto"]}
-                                    tickFormatter={(value) => `$${value}`}
+                                    tickFormatter={(value) => formatPrice(value)}
                                 />
                                 <Tooltip
                                     labelFormatter={(value) => new Date(Number(value)).toLocaleString()}

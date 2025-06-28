@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from "react";
 
-export default function AnimatedButton() {
+export default function ActionButton() {
   const [isAnimating, setIsAnimating] = useState(false);
 
   const handleClick = () => {

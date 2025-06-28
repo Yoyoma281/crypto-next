@@ -8,6 +8,7 @@ import { BinanceKline } from "@/app/types";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import Router from "next/navigation";
 
 type Props = {
   params: Promise<{ symbol: string }>;
@@ -24,8 +25,8 @@ export default function Page({ params }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [cache, setCache] = useState<Record<string, BinanceKline[]>>({});
-
   const intervalOptions = ["1m", "5m", "15m", "1h", "1d"];
+  const router = Router.useRouter();
 
   useEffect(() => {
     if (cache[selectedInterval]) {
@@ -53,6 +54,10 @@ export default function Page({ params }: Props) {
       });
   }, [symbol, selectedInterval, cache]);
 
+  const RedirectExchange = () => {
+    router.push(`/Exchange/${symbol}`);
+  }
+
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial" }}>
 
@@ -73,9 +78,8 @@ export default function Page({ params }: Props) {
             on a secure, transparent blockchain network and is often seen as a hedge against inflation and a store of value.
           </div>
           <div className="flex gap-3 mt-4">
-            <Button className="font-mono">Trade</Button>
-            <Button className="font-mono">Trade</Button>
-            <Button className="font-mono">Trade</Button>
+            <Button onClick={RedirectExchange} className="font-mono">Exchange</Button>
+            <Button className="font-mono">Add to portfolio</Button>
     
           </div>
 

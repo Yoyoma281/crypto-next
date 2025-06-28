@@ -3,10 +3,10 @@
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 import { formatPrice } from "@/lib/utils";
-import { CoinPortfolioData } from "@/app/types/coin";
+import { BinanceTrade } from "@/app/types/coin";
 
 
-export const columns: ColumnDef<CoinPortfolioData>[] = [
+export const columns: ColumnDef<BinanceTrade>[] = [
     {
         accessorKey: "symbol",
         header: "Symbol",

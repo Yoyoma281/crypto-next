@@ -3,6 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import Router from "next/navigation";
 
 export default function TopBarStats() {
   const stats = [
@@ -13,7 +14,11 @@ export default function TopBarStats() {
     { label: "BTC Dominance", value: "51.2%" },
     { label: "ETH Dominance", value: "18.9%" },
   ]
+  const router = Router.useRouter();
 
+  const RedirectPortfolio = () => {
+    router.push(`/Portfolio`);
+  }
   return (
     <div className="w-full px-4 py-2 border-b border-border text-sm text-muted-foreground">
       <div className="w-full flex items-center justify-between flex-wrap gap-3">
@@ -28,6 +33,7 @@ export default function TopBarStats() {
           ))}
         </div>
         <div className="flex items-center gap-5">
+          <Button onClick={RedirectPortfolio} className="font-mono">Portfolio</Button>
           <Button className="font-mono">Login</Button>
           <Avatar>
             <AvatarImage src="https://github.com/shadcn.png" />
