@@ -1,3 +1,4 @@
+
 export type Coin = {
   symbol: string;
   priceChange: string;
@@ -32,15 +33,26 @@ export type CoinTableRow = Pick<
   | "prevClosePrice"
 >;
 
-export type CoinPortfolioData = {
+export type User = {
+  _id: string;
+  username: string;
+  portfolio: string;
+  online: boolean;
+}
+
+ type portfolioCoin = {
   symbol: string;
-  amount: number;
-  totalValue: number;
-  change: number;
-  changePercent: number;
-  lastPrice: number;
-  priceChange: number;
+  amount: string;
+  _id: string;
 };
+
+export type Portfolio = {
+  _id: string;
+  User: User;
+  AvailableBalance: number;
+  Coins: portfolioCoin[];
+};
+
 
 export type BinanceTrade = {
   eventType: "trade"; // 'e' renamed to eventType

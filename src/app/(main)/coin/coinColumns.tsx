@@ -41,7 +41,7 @@ export const columns: ColumnDef<CoinTableRow>[] = [
     {
         accessorKey: "priceChangePercent",
         header: "Price Change Percent",
-        cell: (props) => <div>{formatPrice(props.getValue() as string)}</div>,
+        cell: (props) => <div>{props.getValue() as string}</div>,
     },
     {
         accessorKey: "weightedAvgPrice",

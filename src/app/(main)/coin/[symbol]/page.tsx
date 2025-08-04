@@ -38,7 +38,7 @@ export default function Page({ params }: Props) {
     setLoading(true);
     setError(null);
 
-    LocalApiAxios(`/coin/${symbol}?interval=${selectedInterval}`)
+    LocalApiAxios.get(`/coin/${symbol}?interval=${selectedInterval}`)
       .then((res) => {
         const response = res as ApiResponse;
         setChartData(response.data);

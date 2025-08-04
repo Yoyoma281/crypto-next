@@ -1,11 +1,11 @@
-
-import { LocalApiAxios } from "@/lib/axios";
 import { columns } from "./coinColumns";
-import { Coin } from "@/app/types/coin";
-import NewsCard from "@/app/components/newsCard";
+// import { Coin } from "@/app/types/coin";
+// import NewsCard from "@/app/components/newsCard";
 import { DataTable } from "@/app/components/table";
 
-export default async function Home() {
+import { fetchCoins} from "@/app/data/services";
+
+export default async function coin() {
   // LocalApiAxios('/')
   //   .then((res) => console.log(res))
 
@@ -115,26 +115,27 @@ export default async function Home() {
   //     prevClosePrice: "6.08",
   //   }
   // ];
-  const coins: Coin[] = await LocalApiAxios('/coin');
+
+  const res = await fetchCoins();
 
   return (
-  <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <div className="flex justify-center gap-28">
+        {/* <NewsCard
+          title="Bitcoin Surges Past $30,000"
+          description="Bitcoin jumped above $30,000 today amid increasing institutional interest..."
+          url=""
+          source="CoinDesk"
+          publishedAt="2025-05-21T12:34:00Z"
+          image="a"
+        />
         <NewsCard
           title="Bitcoin Surges Past $30,000"
           description="Bitcoin jumped above $30,000 today amid increasing institutional interest..."
           url=""
           source="CoinDesk"
           publishedAt="2025-05-21T12:34:00Z"
-          image=""
-        />  
-        <NewsCard
-          title="Bitcoin Surges Past $30,000"
-          description="Bitcoin jumped above $30,000 today amid increasing institutional interest..."
-          url=""
-          source="CoinDesk"
-          publishedAt="2025-05-21T12:34:00Z"
-          image=""
+          image="a"
 
         />
         <NewsCard
@@ -143,12 +144,12 @@ export default async function Home() {
           url=""
           source="CoinDesk"
           publishedAt="2025-05-21T12:34:00Z"
-          image=""
+          image="a"
 
         />
-      </div>
-      <div>
-        <DataTable data={coins} columns={columns} params="symbol" />
+      </div> */}
+      {/* <div> */}
+        <DataTable data={res} columns={columns} params="symbol" />
       </div>
     </div>
   );
