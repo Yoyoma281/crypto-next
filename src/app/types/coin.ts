@@ -40,9 +40,10 @@ export type User = {
   online: boolean;
 }
 
- type portfolioCoin = {
+ export type portfolioCoin = {
   symbol: string;
   amount: string;
+  CurrentWorth: string;
   _id: string;
 };
 

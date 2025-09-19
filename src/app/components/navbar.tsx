@@ -26,8 +26,15 @@ export function Navbar({ links }: { links: NavItem[] }) {
     <NavigationMenu>
       <NavigationMenuList className="">
         <NavigationMenuItem>
-          <NavigationMenuTrigger className="h-14">Components</NavigationMenuTrigger>
-          <NavigationMenuContent>
+          <NavigationMenuTrigger
+            className={cn(
+              "h-14 px-4 flex items-center justify-center font-medium text-contrast-text rounded-md",
+              "bg-white/5 hover:bg-white/10 focus:bg-white/10 data-[state=open]:bg-white/20 transition-colors"
+            )}
+          >
+            Components
+          </NavigationMenuTrigger>
+          <NavigationMenuContent className="bg-card border border-border rounded-md shadow-md">
             <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
               {links.map((component) => (
                 <ListItem key={component.title} title={component.title} href={component.href}>
@@ -37,6 +44,7 @@ export function Navbar({ links }: { links: NavItem[] }) {
             </ul>
           </NavigationMenuContent>
         </NavigationMenuItem>
+
 
         <NavigationMenuItem>
           <Link href="/docs" legacyBehavior passHref>

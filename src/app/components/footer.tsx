@@ -79,12 +79,12 @@ const Footer = ({
   ],
 }: FooterProps) => {
   return (
-    <section className="py-32">
+    <section className="py-32 bg-[#010409] text-contrast-text">
       <div className="container">
         <footer>
           <div className="grid grid-cols-2 gap-8 lg:grid-cols-6">
             <div className="col-span-2 mb-8 lg:mb-0">
-              <a href={logo.url} className="flex items-center gap-2 lg:justify-start">
+              <a href={logo.url} className="inline-flex items-center gap-2">
                 <Image
                   src={logo.src}
                   alt={logo.alt}
@@ -95,6 +95,7 @@ const Footer = ({
                 />
                 <p className="text-xl font-semibold">{logo.title}</p>
               </a>
+
               <p className="mt-4 font-bold">{tagline}</p>
             </div>
 
@@ -103,8 +104,8 @@ const Footer = ({
                 <h3 className="mb-4 font-bold">{section.title}</h3>
                 <ul className="space-y-4 text-muted-foreground">
                   {section.links.map((link, linkIdx) => (
-                    <li key={linkIdx} className="font-medium hover:text-primary">
-                      <a href={link.url}>{link.text}</a>
+                    <li key={linkIdx} className="font-medium">
+                      <a href={link.url} className="hover:text-primary">{link.text}</a>
                     </li>
                   ))}
                 </ul>

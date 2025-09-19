@@ -112,13 +112,16 @@ export function DataTable<T>({
                 </DropdownMenu>
             </div> */}
 
-            <div className="rounded-md border">
+            <div className="rounded-md border border-[#30363D] bg-[#0D1117] shadow-md">
                 <Table>
-                    <TableHeader>
+                    <TableHeader className="bg-[#161B22]">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id}>
+                                    <TableHead
+                                        key={header.id}
+                                        className="text-[#C9D1D9] font-medium border-b border-[#30363D]"
+                                    >
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
@@ -132,11 +135,17 @@ export function DataTable<T>({
                     </TableHeader>
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
+                            table.getRowModel().rows.map((row, i) => (
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
-                                    className="h-20 cursor-pointer"
+                                    className={`
+                                    h-20 cursor-pointer 
+                                    ${i % 2 === 0 ? "bg-[#0D1117]" : "bg-[#161B22]"} 
+                                    hover:bg-[rgba(56,139,253,0.1)]
+                                    border-b border-[#30363D]
+                                    text-[#E6EDF3]
+                                    `}
                                     onClick={
                                         params
                                             ? () => {
@@ -146,7 +155,7 @@ export function DataTable<T>({
                                     }
                                 >
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
+                                        <TableCell key={cell.id} className="px-4 py-3">
                                             {flexRender(
                                                 cell.column.columnDef.cell,
                                                 cell.getContext()
@@ -157,15 +166,18 @@ export function DataTable<T>({
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center text-[#8B949E]"
+                                >
                                     No results.
                                 </TableCell>
                             </TableRow>
                         )}
                     </TableBody>
-
                 </Table>
             </div>
+
 
             <div className="flex items-center justify-end space-x-2 py-4">
                 <div className="space-x-2">

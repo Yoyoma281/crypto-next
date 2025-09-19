@@ -1,8 +1,6 @@
 'use client';
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "./components/navbar";
-import { links } from "./data/links";
 import { Footer } from "./components/footer";
 import TopBarStats from "./components/top-section";
 import { Roboto } from 'next/font/google';
@@ -41,26 +39,22 @@ export default function RootLayout({
   const isLoginPage = pathname === "/login";
 
   return (
-    <html>
-      <body>
+    <html lang="en">
+      <body className={`bg-siteBg ${geistSans.variable} ${geistMono.variable} ${robotto.variable} font-geist antialiased`}>
+        {!isLoginPage && (
+          <>
+            <TopBarStats />
+            <NewsTicker headlines={headlines} speed={30} />
+          </>
+        )}
 
-
-        <div
-          className={`${geistSans.variable} ${geistMono.variable} ${robotto.variable} font-geist antialiased max-w-screen-xl mx-auto px-4`}
-        >
-          {!isLoginPage && (
-            <>
-              <TopBarStats />
-              <NewsTicker headlines={headlines} speed={30} />
-              <Navbar links={links} />
-            </>
-          )}
-
+        <main className="p-10 max-w-screen-xl mx-auto px-4">
           {children}
 
-          {!isLoginPage && <Footer />}
-        </div>
+        </main>
+        {!isLoginPage && <Footer />}
       </body>
     </html>
+
   );
 }

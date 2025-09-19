@@ -2,13 +2,12 @@
 
 import { use, useEffect, useState } from "react";
 import { PriceLineChart } from "@/app/components/priceChart";
-import { LocalApiAxios } from "@/lib/axios";
 import { BinanceKline } from "@/app/types";
-// import NewsCard from "@/app/components/newsCard";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Router from "next/navigation";
+import nextApi from "@/lib/next-api";
 
 type Props = {
   params: Promise<{ symbol: string }>;
@@ -38,7 +37,7 @@ export default function Page({ params }: Props) {
     setLoading(true);
     setError(null);
 
-    LocalApiAxios.get(`/coin/${symbol}?interval=${selectedInterval}`)
+    nextApi.get(`/coin/${symbol}?interval=${selectedInterval}`)
       .then((res) => {
         const response = res as ApiResponse;
         setChartData(response.data);
@@ -79,7 +78,7 @@ export default function Page({ params }: Props) {
           </div>
           <div className="flex gap-3 mt-4">
             <Button onClick={RedirectExchange} className="font-mono">Exchange</Button>
-            <Button className="font-mono">Add to portfolio</Button>
+            <Button className="font-mono">Add to watchlist</Button>
     
           </div>
 

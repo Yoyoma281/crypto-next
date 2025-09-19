@@ -3,7 +3,7 @@ import { columns } from "./coinColumns";
 // import NewsCard from "@/app/components/newsCard";
 import { DataTable } from "@/app/components/table";
 
-import { fetchCoins} from "@/app/data/services";
+import { fetchCoins } from "@/app/data/services";
 
 export default async function coin() {
   // LocalApiAxios('/')
@@ -120,7 +120,7 @@ export default async function coin() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-center gap-28">
+      <div className=" justify-center gap-28">
         {/* <NewsCard
           title="Bitcoin Surges Past $30,000"
           description="Bitcoin jumped above $30,000 today amid increasing institutional interest..."
@@ -148,7 +148,14 @@ export default async function coin() {
 
         />
       </div> */}
-      {/* <div> */}
+        {/* <div> */}
+        <h1 className="text-3xl font-primary font-semibold text-white mb-6 border-b border-border pb-2">
+          Coins overview
+        </h1>
+        <p className="text-sm text-muted-foreground mb-8">
+          Explore all your tables with live sorting, filtering, and detailed views.
+        </p>
+
         <DataTable data={res} columns={columns} params="symbol" />
       </div>
     </div>
