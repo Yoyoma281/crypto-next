@@ -1,4 +1,3 @@
-
 export type Coin = {
   symbol: string;
   priceChange: string;
@@ -38,9 +37,9 @@ export type User = {
   username: string;
   portfolio: string;
   online: boolean;
-}
+};
 
- export type portfolioCoin = {
+export type portfolioCoin = {
   symbol: string;
   amount: string;
   CurrentWorth: string;
@@ -48,12 +47,13 @@ export type User = {
 };
 
 export type Portfolio = {
-  _id: string;
-  User: User;
-  AvailableBalance: number;
-  Coins: portfolioCoin[];
+  portfolio: {
+    _id: string;
+    User: User;
+    AvailableBalance: number;
+    Coins: portfolioCoin[];
+  };
 };
-
 
 export type BinanceTrade = {
   eventType: "trade"; // 'e' renamed to eventType

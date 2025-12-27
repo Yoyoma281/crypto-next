@@ -1,4 +1,4 @@
-// lib/api.ts
+import { cookies } from "next/headers";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
@@ -16,15 +16,25 @@ async function request<Res = unknown, Req = unknown>(
   const url = `${baseUrl}${endpoint}`;
   console.log("URLLL:", url);
 
+  // ✅ Auto-forward cookie if running on server
+  let cookieHeader: HeadersInit = {};
+  try {
+    const token = (await cookies()).get("token")?.value;
+    if (token) cookieHeader = { Cookie: `token=${token}` };
+  } catch (err) {
+    throw new Error("error reading cookies : ");
+  }
+
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(config?.headers ?? {}),
+    ...cookieHeader, // add token cookie if available
   };
 
   const options: RequestInit = {
     method,
     headers,
-    credentials: "include", // ✅ ensures browser cookies are sent
+    credentials: "include", // works in browser
     ...config,
   };
 
@@ -49,10 +59,6 @@ async function request<Res = unknown, Req = unknown>(
       throw new Error(`API request failed: ${res.status} ${res.statusText}`);
     }
 
-    // Optionally log the cookie header returned from backend
-    const setCookie = res.headers.get("set-cookie");
-    if (setCookie) console.log("[Set-Cookie]", setCookie);
-
     const contentType = res.headers.get("content-type");
     if (contentType?.includes("application/json")) {
       const json = await res.json();
@@ -69,8 +75,8 @@ async function request<Res = unknown, Req = unknown>(
 
 // 🌐 Fetch clients
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? ""; // Your backend
-const INTERNAL_BASE_URL = "/api";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+const INTERNAL_BASE_URL = "http://localhost:3000/api";
 
 function createClient(baseUrl: string) {
   console.log("Creating API client with base URL:", baseUrl);

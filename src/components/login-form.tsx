@@ -1,5 +1,4 @@
 "use client";
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +6,8 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { fetchUser, Login } from "@/app/data/services";
+// import { useRouter } from "next/navigation";
+// import { login } from "@/app/data/services";
 
 const loginSchema = z.object({
   username: z.string("Invalid email address"),
@@ -17,6 +16,17 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+export async function login(username: string, password: string) {
+  const res = await fetch("http://localhost:3000/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ username, password }),
+  });
+
+  if (!res.ok) throw new Error("Login failed");
+  return await res.json();
+}
 export function LoginForm({
   className,
   ...props
@@ -28,17 +38,13 @@ export function LoginForm({
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
-  const router = useRouter();
+  // const router = useRouter();
   const onSubmit = async (data: LoginFormData) => {
-    console.log("asdasdasdasds:");
-
     try {
-      const response = await Login(data.username, data.password);
+      const response = await login(data.username, data.password);
 
       if (response && response.token) {
-        const user = await fetchUser();
-        console.log("userrrr:", user);
-        router.push("/coin");
+        // router.push("/coin");
       } else {
         alert(`Login failed. Please check your credentials.`);
       }
