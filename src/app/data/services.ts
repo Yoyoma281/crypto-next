@@ -1,15 +1,13 @@
-
 import { Coin, Portfolio, User } from "@/app/types/coin";
 import { loginResponse } from "../types/login";
-import { LocalApiAxios } from "@/lib/axios";
-import nextApi from "@/lib/next-api";
+import { ExternalServerApiFetch, InternalApiFetch } from "../api/ApiFetch";
 
 export async function Login(
   username: string,
   password: string
 ): Promise<{ token: string } | false> {
   try {
-    const response = await LocalApiAxios.post<loginResponse>(`/Login`, {
+    const response = await InternalApiFetch.post<loginResponse>(`/login`, {
       username: username,
       password: password,
     });
@@ -22,15 +20,17 @@ export async function Login(
 }
 
 export async function fetchUser(): Promise<User> {
-  const res: User = await LocalApiAxios.get<User>(`/GetUserInfo`);
-  
-if (!res) throw new Error("Failed to fetch portfolio");
+  const res: User = await ExternalServerApiFetch.get<User>(`/GetUserInfo`);
+
+  if (!res) throw new Error("Failed to fetch portfolio");
   console.log("User info fetched:", res);
   return res;
 }
 
 export async function fetchPortfolio(): Promise<Portfolio> {
-  const res: Portfolio = await LocalApiAxios.get<Portfolio>(`/Portfolio`);
+  const res: Portfolio = await ExternalServerApiFetch.get<Portfolio>(
+    `/Portfolio`
+  );
   // console.log("Portfolio response:", res);
 
   if (!res) throw new Error("Failed to fetch portfolio");
@@ -38,9 +38,8 @@ export async function fetchPortfolio(): Promise<Portfolio> {
   return res;
 }
 
-
 export async function fetchCoins(): Promise<Coin[]> {
-  const res = await nextApi.get<Coin[]>(`/coin`);
+  const res = await ExternalServerApiFetch.get<Coin[]>(`/coin`);
   if (!res) throw new Error("Failed to fetch coins");
-  return res.data;
+  return res;
 }

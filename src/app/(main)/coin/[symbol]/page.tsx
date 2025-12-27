@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Router from "next/navigation";
-import nextApi from "@/lib/next-api";
+import { InternalApiFetch } from "@/app/api/ApiFetch";
 
 type Props = {
   params: Promise<{ symbol: string }>;
@@ -37,7 +37,7 @@ export default function Page({ params }: Props) {
     setLoading(true);
     setError(null);
 
-    nextApi.get(`/coin/${symbol}?interval=${selectedInterval}`)
+    InternalApiFetch.get(`/coin/${symbol}?interval=${selectedInterval}`)
       .then((res) => {
         const response = res as ApiResponse;
         setChartData(response.data);
@@ -59,7 +59,7 @@ export default function Page({ params }: Props) {
 
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial" }}>
-
+ 
       {error && <p style={{ color: "red" }}>Error: {error}</p>}
       <div className="flex flex-row w-full gap-4 h-[32rem]"> {/* Parent has fixed height */}
         <Card className="h-full w-[80rem] p-4 flex flex-col justify-between">

@@ -41,6 +41,7 @@ interface DataTableProps<T> {
     params?: string
     customComponents?: React.ReactNode
     path?: string
+    
 }
 
 export function DataTable<T>({

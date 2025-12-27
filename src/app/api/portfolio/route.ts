@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { LocalApiAxios } from "@/lib/axios";
+import { ExternalServerApiFetch } from "../ApiFetch";
 
 export async function GET() {
   try {
-    const response = await LocalApiAxios.get(`/Portfolio`);
+    const response = await ExternalServerApiFetch.get(`/Portfolio`);
     console.log("Portfolio responseeee", response);
 
     return NextResponse.json(response);
