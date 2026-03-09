@@ -32,7 +32,7 @@ export function LoginForm({
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
   const router = useRouter();
-  const [redirecting, setRedirecting] = useState(false);
+  const [, setRedirecting] = useState(false);
 
   const {
     register,

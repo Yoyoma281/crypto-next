@@ -11,7 +11,7 @@ async function request<Res = unknown, Req = unknown>(
   baseUrl: string,
   endpoint: string,
   data?: Req,
-  config?: FetchConfig
+  config?: FetchConfig,
 ): Promise<Res> {
   const url = `${baseUrl}${endpoint}`;
   console.log("URLLL:", url);
@@ -21,8 +21,9 @@ async function request<Res = unknown, Req = unknown>(
   try {
     const token = (await cookies()).get("token")?.value;
     if (token) cookieHeader = { Cookie: `token=${token}` };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (err) {
-    throw new Error("error reading cookies : ",);
+    throw new Error("error reading cookies : ");
   }
 
   const headers: HeadersInit = {
@@ -50,7 +51,7 @@ async function request<Res = unknown, Req = unknown>(
     const res = await fetch(url, options);
 
     console.log(
-      `[API Response] ${res.status} ${res.statusText} for ${method} ${url}`
+      `[API Response] ${res.status} ${res.statusText} for ${method} ${url}`,
     );
 
     if (!res.ok) {
@@ -87,13 +88,13 @@ function createClient(baseUrl: string) {
     post: <Res = unknown, Req = unknown>(
       endpoint: string,
       data?: Req,
-      config?: FetchConfig
+      config?: FetchConfig,
     ) => request<Res, Req>("POST", baseUrl, endpoint, data, config),
 
     put: <Res = unknown, Req = unknown>(
       endpoint: string,
       data?: Req,
-      config?: FetchConfig
+      config?: FetchConfig,
     ) => request<Res, Req>("PUT", baseUrl, endpoint, data, config),
 
     delete: <Res = unknown>(endpoint: string, config?: FetchConfig) =>

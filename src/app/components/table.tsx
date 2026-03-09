@@ -85,7 +85,10 @@ export function DataTable<T>({
         <Table>
           <TableHeader className="">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-b border-border bg-muted/30 hover:bg-muted/30">
+              <TableRow
+                key={headerGroup.id}
+                className="border-b border-border bg-muted/30 hover:bg-muted/30"
+              >
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
@@ -95,7 +98,7 @@ export function DataTable<T>({
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </TableHead>
                 ))}
@@ -104,7 +107,7 @@ export function DataTable<T>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row, i) => (
+              table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
@@ -120,7 +123,7 @@ export function DataTable<T>({
                     params
                       ? () => {
                           window.location.href = `${Path}/${row.getValue(
-                            `${params}`
+                            `${params}`,
                           )}`;
                         }
                       : undefined
@@ -130,7 +133,7 @@ export function DataTable<T>({
                     <TableCell key={cell.id} className="px-4 py-3">
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
