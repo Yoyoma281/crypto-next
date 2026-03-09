@@ -1,132 +1,83 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Bitcoin, Github, Twitter } from "lucide-react";
 
-interface MenuItem {
-  title: string;
-  links: {
-    text: string;
-    url: string;
-  }[];
-}
-
-interface FooterProps {
-  logo?: {
-    url: string;
-    src: string;
-    alt: string;
-    title: string;
-  };
-  tagline?: string;
-  menuItems?: MenuItem[];
-  copyright?: string;
-  bottomLinks?: {
-    text: string;
-    url: string;
-  }[];
-}
-
-const Footer = ({
-  logo = {
-    src: "https://shadcnblocks.com/images/block/block-1.svg",
-    alt: "blocks for shadcn/ui",
-    title: "Crypto-demo.com",
-    url: "https://www.shadcnblocks.com",
-  },
-  tagline = "Components made easy.",
-  menuItems = [
-    {
-      title: "Product",
-      links: [
-        { text: "Overview", url: "#" },
-        { text: "Pricing", url: "#" },
-        { text: "Marketplace", url: "#" },
-        { text: "Features", url: "#" },
-        { text: "Integrations", url: "#" },
-        { text: "Pricing", url: "#" },
-      ],
-    },
-    {
-      title: "Company",
-      links: [
-        { text: "About", url: "#" },
-        { text: "Team", url: "#" },
-        { text: "Blog", url: "#" },
-        { text: "Careers", url: "#" },
-        { text: "Contact", url: "#" },
-        { text: "Privacy", url: "#" },
-      ],
-    },
-    {
-      title: "Resources",
-      links: [
-        { text: "Help", url: "#" },
-        { text: "Sales", url: "#" },
-        { text: "Advertise", url: "#" },
-      ],
-    },
-    {
-      title: "Social",
-      links: [
-        { text: "Twitter", url: "#" },
-        { text: "Instagram", url: "#" },
-        { text: "LinkedIn", url: "#" },
-      ],
-    },
+const LINKS = {
+  Platform: [
+    { text: "Markets", href: "/" },
+    { text: "Exchange", href: "/Exchange/BTCUSDT" },
+    { text: "Portfolio", href: "/Portfolio" },
   ],
-  copyright = "© 2024 Shadcnblocks.com. All rights reserved.",
-  bottomLinks = [
-    { text: "Terms and Conditions", url: "#" },
-    { text: "Privacy Policy", url: "#" },
+  Learn: [
+    { text: "What is Bitcoin?", href: "#" },
+    { text: "What is Ethereum?", href: "#" },
+    { text: "How to Trade", href: "#" },
   ],
-}: FooterProps) => {
-  return (
-    <section className="py-32 bg-[#010409] text-contrast-text">
-      <div className="container">
-        <footer>
-          <div className="grid grid-cols-2 gap-8 lg:grid-cols-6">
-            <div className="col-span-2 mb-8 lg:mb-0">
-              <a href={logo.url} className="inline-flex items-center gap-2">
-                <Image
-                  src={logo.src}
-                  alt={logo.alt}
-                  title={logo.title}
-                  width={40}
-                  height={40}
-                  className="h-10 w-auto"
-                />
-                <p className="text-xl font-semibold">{logo.title}</p>
-              </a>
-
-              <p className="mt-4 font-bold">{tagline}</p>
-            </div>
-
-            {menuItems.map((section, sectionIdx) => (
-              <div key={sectionIdx}>
-                <h3 className="mb-4 font-bold">{section.title}</h3>
-                <ul className="space-y-4 text-muted-foreground">
-                  {section.links.map((link, linkIdx) => (
-                    <li key={linkIdx} className="font-medium">
-                      <a href={link.url} className="hover:text-primary">{link.text}</a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-24 flex flex-col justify-between gap-4 border-t pt-8 text-sm font-medium text-muted-foreground md:flex-row md:items-center">
-            <p>{copyright}</p>
-            <ul className="flex gap-4">
-              {bottomLinks.map((link, linkIdx) => (
-                <li key={linkIdx} className="underline hover:text-primary">
-                  <a href={link.url}>{link.text}</a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </footer>
-      </div>
-    </section>
-  );
+  Legal: [
+    { text: "Privacy Policy", href: "#" },
+    { text: "Terms of Service", href: "#" },
+    { text: "Cookie Policy", href: "#" },
+  ],
 };
 
-export { Footer };
+export function Footer() {
+  return (
+    <footer className="border-t border-border bg-background mt-16">
+      <div className="max-w-screen-xl mx-auto px-4 py-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+
+          {/* Brand */}
+          <div className="col-span-2 md:col-span-1 flex flex-col gap-3">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                <Bitcoin className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <span className="font-bold text-base">CrySer</span>
+            </Link>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Real-time crypto market data, live trading, and portfolio tracking — all in one place.
+            </p>
+            <div className="flex items-center gap-3 mt-1">
+              <a href="#" aria-label="GitHub" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Github className="h-4 w-4" />
+              </a>
+              <a href="#" aria-label="Twitter" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Twitter className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+
+          {/* Link columns */}
+          {Object.entries(LINKS).map(([title, items]) => (
+            <div key={title}>
+              <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">
+                {title}
+              </h3>
+              <ul className="space-y-2">
+                {items.map((item) => (
+                  <li key={item.text}>
+                    <Link
+                      href={item.href}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {item.text}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        {/* Bottom bar */}
+        <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+          <p>© {new Date().getFullYear()} CrySer. All rights reserved.</p>
+          <p>
+            Market data provided by{" "}
+            <span className="text-foreground font-medium">Binance</span> &amp;{" "}
+            <span className="text-foreground font-medium">CoinGecko</span>
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}

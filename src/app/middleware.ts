@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME ?? 'auth_token';
 const LOGIN_PATH = process.env.LOGIN_PATH ?? '/login';
-const PUBLIC_PATHS = [LOGIN_PATH, '/signup', '/public', '/api/auth']; // Paths that don’t require auth
+const PUBLIC_PATHS = [LOGIN_PATH, '/signup', '/public', '/api/auth', '/api/register', '/Exchange', '/']; // Paths that don't require auth
 const API_VALIDATE_URL = process.env.API_VALIDATE_URL ?? ''; // optional backend endpoint to validate token
 
 export async function middleware(req: NextRequest) {

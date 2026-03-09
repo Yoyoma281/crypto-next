@@ -6,8 +6,8 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-// import { useRouter } from "next/navigation";
-// import { login } from "@/app/data/services";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const loginSchema = z.object({
   username: z.string("Invalid email address"),
@@ -31,6 +31,9 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
+  const router = useRouter();
+  const [redirecting, setRedirecting] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -38,13 +41,14 @@ export function LoginForm({
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
-  // const router = useRouter();
+
   const onSubmit = async (data: LoginFormData) => {
     try {
       const response = await login(data.username, data.password);
 
       if (response && response.token) {
-        // router.push("/coin");
+        setRedirecting(true);
+        setTimeout(() => router.push("/"), 1400);
       } else {
         alert(`Login failed. Please check your credentials.`);
       }
@@ -117,7 +121,7 @@ export function LoginForm({
 
       <div className="text-center text-sm">
         Don&apos;t have an account?{" "}
-        <a href="#" className="underline underline-offset-4">
+        <a href="/signup" className="underline underline-offset-4">
           Sign up
         </a>
       </div>

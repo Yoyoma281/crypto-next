@@ -30,7 +30,7 @@ export type CoinTableRow = Pick<
   | "priceChangePercent"
   | "weightedAvgPrice"
   | "prevClosePrice"
->;
+> & { sparkData?: number[] };
 
 export type User = {
   _id: string;

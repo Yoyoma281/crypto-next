@@ -7,6 +7,15 @@ const nextConfig: NextConfig = {
     };
     return config;
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "raw.githubusercontent.com",
+        pathname: "/ErikThiart/cryptocurrency-icons/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

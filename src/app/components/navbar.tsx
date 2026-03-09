@@ -28,8 +28,8 @@ export function Navbar({ links }: { links: NavItem[] }) {
         <NavigationMenuItem>
           <NavigationMenuTrigger
             className={cn(
-              "h-14 px-4 flex items-center justify-center font-medium text-contrast-text rounded-md",
-              "bg-white/5 hover:bg-white/10 focus:bg-white/10 data-[state=open]:bg-white/20 transition-colors"
+              "h-9 px-4 flex items-center justify-center font-medium text-foreground rounded-md",
+              "bg-transparent hover:bg-muted/50 focus:bg-muted/50 data-[state=open]:bg-muted/50 transition-colors"
             )}
           >
             Components
@@ -48,7 +48,12 @@ export function Navbar({ links }: { links: NavItem[] }) {
 
         <NavigationMenuItem>
           <Link href="/docs" legacyBehavior passHref>
-            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+            <NavigationMenuLink
+              className={cn(
+                navigationMenuTriggerStyle(),
+                "text-foreground bg-transparent hover:bg-muted/50"
+              )}
+            >
               Documentation
             </NavigationMenuLink>
           </Link>

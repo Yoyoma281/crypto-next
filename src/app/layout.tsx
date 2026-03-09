@@ -4,7 +4,6 @@ import "./globals.css";
 import { Footer } from "./components/footer";
 import TopBarStats from "./components/top-section";
 import { Roboto } from 'next/font/google';
-import NewsTicker from "./components/fading-text";
 import { usePathname } from "next/navigation";
 
 const geistSans = Geist({
@@ -28,14 +27,6 @@ export default function RootLayout({
 }) {
   const pathname = usePathname();
 
-  const headlines = [
-    "Bitcoin hits $30,000",
-    "Ethereum 2.0 upgrade completed",
-    "Ripple wins court case against SEC",
-    "Binance launches new trading platform",
-    "Coinbase adds support for new altcoin",
-  ];
-  console.log(pathname)
   const isLoginPage = pathname === "/login";
 
   return (
@@ -44,7 +35,6 @@ export default function RootLayout({
         {!isLoginPage && (
           <>
             <TopBarStats />
-            <NewsTicker headlines={headlines} speed={30} />
           </>
         )}
 

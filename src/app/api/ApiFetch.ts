@@ -22,7 +22,7 @@ async function request<Res = unknown, Req = unknown>(
     const token = (await cookies()).get("token")?.value;
     if (token) cookieHeader = { Cookie: `token=${token}` };
   } catch (err) {
-    throw new Error("error reading cookies : ");
+    throw new Error("error reading cookies : ",);
   }
 
   const headers: HeadersInit = {

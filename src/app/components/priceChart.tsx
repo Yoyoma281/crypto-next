@@ -114,7 +114,7 @@ export function PriceLineChart({
                                 data-active={selectedInterval === option}
                                 className="flex flex-col justify-center border-t px-6 py-4 text-sm even:border-l
                                         sm:border-l sm:border-t sm:px-4 sm:py-6
-                                        data-[active=true]:bg-gray-100 data-[active=true]:text-gray-800"
+                                        data-[active=true]:bg-[#8dc647] data-[active=true]:text-white"
                                 onClick={() => onIntervalChange(option)}
                             >
                                 {option}
