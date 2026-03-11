@@ -3,7 +3,7 @@ import { getAllTickers } from "@/lib/api/binance";
 import { Coin } from "@/app/types/coin";
 
 export async function GET() {
-  const tickers = await getAllTickers() as Coin[];
+  const tickers = (await getAllTickers()) as unknown as Coin[];
 
   const top = tickers
     .filter((c) => c.symbol.endsWith("USDT"))
