@@ -29,6 +29,6 @@ export async function PUT(req: Request) {
   const res = await backendFetch("PUT", "/favorites", body);
   const data = await res.json();
 
-  if (res.ok) revalidateTag(CACHE_TAG);
+  if (res.ok) revalidateTag(CACHE_TAG, {});
   return NextResponse.json(data, { status: res.status });
 }
