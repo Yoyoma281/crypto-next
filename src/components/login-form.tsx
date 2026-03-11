@@ -8,6 +8,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 
 const loginSchema = z.object({
   username: z.string("Invalid email address"),
@@ -27,12 +28,14 @@ export async function login(username: string, password: string) {
   if (!res.ok) throw new Error("Login failed");
   return await res.json();
 }
+
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
   const router = useRouter();
-  const [, setRedirecting] = useState(false);
+  const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const {
     register,
@@ -43,19 +46,49 @@ export function LoginForm({
   });
 
   const onSubmit = async (data: LoginFormData) => {
+    setState("loading");
+    setErrorMsg(null);
     try {
       const response = await login(data.username, data.password);
-
       if (response && response.token) {
-        setRedirecting(true);
-        setTimeout(() => router.push("/"), 1400);
+        setState("success");
+        setTimeout(() => router.push("/"), 1600);
       } else {
-        alert(`Login failed. Please check your credentials.`);
+        setErrorMsg("Invalid credentials. Please try again.");
+        setState("error");
       }
     } catch {
-      alert("Login failed. unknown error occurred.");
+      setErrorMsg("Login failed. Please check your credentials.");
+      setState("error");
     }
   };
+
+  if (state === "success") {
+    return (
+      <div className="flex flex-col items-center gap-4 py-10 anim-scale-in">
+        <div
+          className="h-16 w-16 rounded-full flex items-center justify-center"
+          style={{ background: "rgba(22,199,132,0.12)" }}
+        >
+          <CheckCircle2 className="h-8 w-8" style={{ color: "#16c784" }} />
+        </div>
+        <div className="text-center">
+          <p className="text-lg font-semibold text-foreground">Welcome back!</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Redirecting to markets…</p>
+        </div>
+        <div className="flex gap-1 mt-1">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce"
+              style={{ animationDelay: `${i * 0.15}s` }}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -63,66 +96,72 @@ export function LoginForm({
       {...props}
     >
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Login to your account</h1>
-        <p className="text-balance text-sm text-muted-foreground">
-          Enter your email below to login to your account
+        <h1 className="text-2xl font-bold">Welcome back</h1>
+        <p className="text-sm text-muted-foreground">
+          Sign in to your CrySer account
         </p>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-5">
         <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="text" {...register("username")} />
+          <Label htmlFor="email">Username</Label>
+          <Input
+            id="email"
+            type="text"
+            placeholder="satoshi"
+            autoComplete="username"
+            {...register("username")}
+          />
           {errors.username && (
-            <p className="text-sm text-red-500">{errors.username.message}</p>
+            <p className="text-xs text-destructive">{errors.username.message}</p>
           )}
         </div>
 
         <div className="grid gap-2">
-          <div className="flex items-center">
+          <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
-            <a
-              href="#"
-              className="ml-auto text-sm underline-offset-4 hover:underline"
-            >
-              Forgot your password?
+            <a href="#" className="text-xs text-muted-foreground underline-offset-4 hover:underline hover:text-foreground transition-colors">
+              Forgot password?
             </a>
           </div>
-          <Input id="password" type="password" {...register("password")} />
+          <Input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            {...register("password")}
+          />
           {errors.password && (
-            <p className="text-sm text-red-500">{errors.password.message}</p>
+            <p className="text-xs text-destructive">{errors.password.message}</p>
           )}
         </div>
 
-        <Button type="submit" className="w-full">
-          Login
-        </Button>
-
-        <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-          <span className="relative z-10 bg-background px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-
-        <Button variant="outline" className="w-full">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            className="w-4 h-4 mr-2"
+        {(state === "error" && errorMsg) && (
+          <div
+            className="text-xs text-center px-3 py-2.5 rounded-lg border"
+            style={{ color: "#ea3943", background: "rgba(234,57,67,0.07)", borderColor: "rgba(234,57,67,0.25)" }}
           >
-            <path
-              d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
-              fill="currentColor"
-            />
-          </svg>
-          Login with GitHub
+            {errorMsg}
+          </div>
+        )}
+
+        <Button
+          type="submit"
+          className="w-full font-semibold"
+          disabled={state === "loading"}
+        >
+          {state === "loading" ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Signing in…
+            </span>
+          ) : "Sign In"}
         </Button>
       </div>
 
-      <div className="text-center text-sm">
+      <div className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <a href="/signup" className="underline underline-offset-4">
-          Sign up
+        <a href="/signup" className="text-foreground font-medium underline underline-offset-4 hover:opacity-80 transition-opacity">
+          Sign up free
         </a>
       </div>
     </form>

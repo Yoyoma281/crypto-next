@@ -1,38 +1,26 @@
-    import { NextResponse } from 'next/server';
-    import axios from 'axios';
-    import { BinanceKline } from '@/app/types'; // You must define this type
+import { NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
+import { getKlines } from "@/lib/api/binance";
 
-    export async function GET(
-    req: Request,
-    context: { params: { symbol: string } }
-    ) {
-    const { symbol } = await Promise.resolve(context.params); // Await symbol as per new Next.js convention
+/**
+ * Cache kline results per symbol+interval for 15 seconds.
+ * The underlying binance fetch also has revalidate:15, but this caches
+ * the *route handler result* so repeated client requests don't even
+ * re-run the handler logic.
+ */
+const getCachedKlines = unstable_cache(
+  (symbol: string, interval: string) => getKlines(symbol, interval),
+  ["binance-klines"],
+  { tags: ["binance-klines"], revalidate: 15 }
+);
 
-    const url = new URL(req.url);
-    const interval = url.searchParams.get('interval') || '1m';
+export async function GET(
+  req: Request,
+  context: { params: Promise<{ symbol: string }> }
+) {
+  const { symbol } = await context.params;
+  const interval = new URL(req.url).searchParams.get("interval") ?? "1m";
 
-    try {
-        const response = await axios.get(`https://api.binance.com/api/v3/klines`, {
-        params: {
-            symbol: symbol.toUpperCase(),
-            interval,
-            limit: 100,
-        },
-        });
-
-        const rawData = response.data as BinanceKline[];
-
-        // const formattedData = rawData.map((kline: BinanceKline) => ({
-        // time: new Date(kline[0]).toISOString(),
-        // price: parseFloat(kline[4]), // Close price
-        // }));
-
-        return NextResponse.json({ data: rawData }, { status: 200 });
-    } catch (error) {
-        console.error('Failed to fetch klines:', error);
-        return NextResponse.json(
-        { error: 'Failed to fetch klines' },
-        { status: 500 }
-        );
-    }
-    }
+  const data = await getCachedKlines(symbol, interval);
+  return NextResponse.json({ data });
+}

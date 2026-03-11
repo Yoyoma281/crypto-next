@@ -26,6 +26,7 @@ const NAV_LINKS = [
   { label: "Markets", href: "/" },
   { label: "Exchange", href: "/Exchange/BTCUSDT" },
   { label: "Portfolio", href: "/Portfolio" },
+  { label: "Legal", href: "/legal" },
 ];
 
 export default function TopBarStats() {

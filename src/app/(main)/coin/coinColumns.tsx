@@ -5,9 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, fmtCoinPrice } from "@/lib/utils";
 import { CoinTableRow } from "@/app/types/coin";
 import Sparkline from "@/app/components/sparkline";
+import { Star } from "lucide-react";
 
 // Deterministic color from ticker name
 function tickerColor(ticker: string) {
@@ -79,8 +80,35 @@ function PctBadge({ value }: { value: string }) {
 }
 
 /** Pass the page offset so rank is globally correct (e.g. page 2 → #11, #12 …) */
-export function makeColumns(offset: number): ColumnDef<CoinTableRow>[] {
+export function makeColumns(
+  offset: number,
+  favorites: Set<string> = new Set(),
+  toggleFavorite: (symbol: string) => void = () => {},
+): ColumnDef<CoinTableRow>[] {
   return [
+    {
+        id: "favorite",
+        header: "",
+        cell: (props) => {
+            const sym = props.row.original.symbol;
+            const isFav = favorites.has(sym);
+            return (
+                <button
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(sym); }}
+                    className="flex items-center justify-center w-7 h-7 rounded-md hover:bg-muted/60 transition-colors"
+                    aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
+                >
+                    <Star
+                        className="h-4 w-4 transition-colors"
+                        style={isFav
+                            ? { fill: "#f59e0b", color: "#f59e0b" }
+                            : { fill: "transparent", color: "hsl(var(--muted-foreground))" }
+                        }
+                    />
+                </button>
+            );
+        },
+    },
     {
         id: "rank",
         header: "#",
@@ -121,10 +149,12 @@ export function makeColumns(offset: number): ColumnDef<CoinTableRow>[] {
         header: "24h Change",
         cell: (props) => {
             const val = parseFloat(props.getValue() as string);
+            if (isNaN(val)) return <span className="text-muted-foreground text-[13px]">—</span>;
             const isUp = val >= 0;
+            const formatted = fmtCoinPrice(Math.abs(val));
             return (
                 <span style={{ color: isUp ? "#16c784" : "#ea3943", fontWeight: 500, fontSize: "13px" }}>
-                    {isUp ? "+" : ""}{formatPrice((props.getValue() as string))}
+                    {isUp ? "+" : "-"}{formatted}
                 </span>
             );
         },
@@ -137,20 +167,26 @@ export function makeColumns(offset: number): ColumnDef<CoinTableRow>[] {
     {
         accessorKey: "weightedAvgPrice",
         header: "Avg Price",
-        cell: (props) => (
-            <span className="text-muted-foreground text-[13px]">
-                {formatPrice(props.getValue() as string)}
-            </span>
-        ),
+        cell: (props) => {
+            const val = parseFloat(props.getValue() as string);
+            return (
+                <span className="text-muted-foreground text-[13px]">
+                    {isNaN(val) ? "—" : fmtCoinPrice(val)}
+                </span>
+            );
+        },
     },
     {
         accessorKey: "prevClosePrice",
         header: "Prev Close",
-        cell: (props) => (
-            <span className="text-muted-foreground text-[13px]">
-                {formatPrice(props.getValue() as string)}
-            </span>
-        ),
+        cell: (props) => {
+            const val = parseFloat(props.getValue() as string);
+            return (
+                <span className="text-muted-foreground text-[13px]">
+                    {isNaN(val) ? "—" : fmtCoinPrice(val)}
+                </span>
+            );
+        },
     },
     {
         id: "sparkline",

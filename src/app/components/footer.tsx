@@ -10,12 +10,12 @@ const LINKS = {
   Learn: [
     { text: "What is Bitcoin?", href: "#" },
     { text: "What is Ethereum?", href: "#" },
-    { text: "How to Trade", href: "#" },
+    { text: "How to Trade", href: "/learn/how-to-trade" },
   ],
   Legal: [
-    { text: "Privacy Policy", href: "#" },
-    { text: "Terms of Service", href: "#" },
-    { text: "Cookie Policy", href: "#" },
+    { text: "Privacy Policy", href: "/legal/privacy" },
+    { text: "Terms of Service", href: "/legal/terms" },
+    { text: "Cookie Policy", href: "/legal/cookies" },
   ],
 };
 

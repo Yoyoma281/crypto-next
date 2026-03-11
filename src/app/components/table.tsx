@@ -42,6 +42,7 @@ interface DataTableProps<T> {
   customComponents?: React.ReactNode;
   path?: string;
   hidePagination?: boolean;
+  initialSorting?: SortingState;
 }
 
 export function DataTable<T>({
@@ -52,8 +53,9 @@ export function DataTable<T>({
   params,
   path,
   hidePagination = false,
+  initialSorting = [],
 }: DataTableProps<T>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
   // const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});

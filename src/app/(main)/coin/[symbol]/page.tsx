@@ -5,17 +5,19 @@ import CoinOverviewClient from "./components/chart/chart";
 import { BinanceKline } from "@/app/types";
 
 type PageProps = {
-  params: {
+  params: Promise<{
     symbol: string;
-  };
-  searchParams?: {
+  }>;
+  searchParams?: Promise<{
     interval?: string;
-  };
+  }>;
 };
 
 export default async function Page({ params, searchParams }: PageProps) {
-  const symbol = params.symbol;
-  const interval = searchParams?.interval ?? "1m";
+  const { symbol } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+
+  const interval = resolvedSearchParams?.interval ?? "1m";
 
   console.log("SYMBOOOL:", symbol);
 

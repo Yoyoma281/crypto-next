@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/app/components/table";
 import { makeColumns } from "./coinColumns";
 import { CoinTableRow } from "@/app/types/coin";
+import { useFavorites } from "@/hooks/useFavorites";
+import FavoritesTable from "./FavoritesTable";
+import { Star } from "lucide-react";
 
 const LIMIT = 10;
 
@@ -44,6 +47,8 @@ function TableSkeleton({ rows = LIMIT }: { rows?: number }) {
   );
 }
 
+type Tab = "all" | "favorites";
+
 export default function CoinListClient() {
   const [coins, setCoins] = useState<CoinTableRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +56,8 @@ export default function CoinListClient() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState<"connecting" | "live" | "error">("connecting");
+  const [tab, setTab] = useState<Tab>("all");
+  const { favorites, toggle } = useFavorites();
 
   // Reconnect SSE every time `page` changes
   useEffect(() => {
@@ -83,10 +90,51 @@ export default function CoinListClient() {
   }, [page]);
 
   // Columns with correct global offset so rank shows #11, #12 … on page 2
-  const columns = useMemo(() => makeColumns((page - 1) * LIMIT), [page]);
+  const columns = useMemo(
+    () => makeColumns((page - 1) * LIMIT, favorites, toggle),
+    [page, favorites, toggle]
+  );
 
   return (
     <>
+      {/* Tabs */}
+      <div className="flex items-center gap-1 mb-4 border-b border-border">
+        {(["all", "favorites"] as Tab[]).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              tab === t
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t === "favorites" && (
+              <Star
+                className="h-3.5 w-3.5"
+                style={tab === "favorites" ? { fill: "#f59e0b", color: "#f59e0b" } : {}}
+              />
+            )}
+            {t === "all" ? "All Coins" : "Favorites"}
+            {t === "favorites" && favorites.size > 0 && (
+              <span
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center"
+                style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}
+              >
+                {favorites.size}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Favorites view */}
+      {tab === "favorites" && (
+        <FavoritesTable favorites={favorites} toggleFavorite={toggle} />
+      )}
+
+      {/* All coins view */}
+      {tab === "all" && <>
       {/* Status + page info bar */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-2">
@@ -139,7 +187,9 @@ export default function CoinListClient() {
           data={coins}
           columns={columns}
           params="symbol"
+          path="/coin"
           hidePagination
+          initialSorting={[{ id: "lastPrice", desc: true }]}
         />
       )}
 
@@ -202,6 +252,7 @@ export default function CoinListClient() {
           </button>
         </div>
       </div>
+      </>}
     </>
   );
 }

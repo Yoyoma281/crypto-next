@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+import { Loader2, CheckCircle2, Wallet } from "lucide-react";
 
 const schema = z
   .object({
@@ -54,7 +55,7 @@ export function SignupForm({ className }: { className?: string }) {
       }
 
       setState("success");
-      setTimeout(() => router.push("/login"), 1500);
+      setTimeout(() => router.push("/login"), 2200);
     } catch {
       setServerError("Network error. Please try again.");
       setState("idle");
@@ -63,12 +64,41 @@ export function SignupForm({ className }: { className?: string }) {
 
   if (state === "success") {
     return (
-      <div className="flex flex-col items-center gap-4 py-8">
-        <div className="h-14 w-14 rounded-full bg-[rgba(22,199,132,0.15)] flex items-center justify-center text-2xl">
-          ✓
+      <div className="flex flex-col items-center gap-5 py-10 anim-scale-in">
+        <div className="relative">
+          <div
+            className="h-20 w-20 rounded-full flex items-center justify-center"
+            style={{ background: "rgba(22,199,132,0.12)" }}
+          >
+            <CheckCircle2 className="h-10 w-10" style={{ color: "#16c784" }} />
+          </div>
+          {/* Pulse ring */}
+          <div
+            className="absolute inset-0 rounded-full animate-ping opacity-20"
+            style={{ background: "#16c784" }}
+          />
         </div>
-        <p className="text-lg font-semibold text-foreground">Account created!</p>
-        <p className="text-sm text-muted-foreground">Redirecting to login…</p>
+        <div className="text-center">
+          <p className="text-xl font-bold text-foreground">Account created!</p>
+          <p className="text-sm text-muted-foreground mt-1">Redirecting to login…</p>
+        </div>
+        {/* Virtual balance badge */}
+        <div
+          className="flex items-center gap-2 px-4 py-2.5 rounded-full border text-sm font-semibold"
+          style={{ background: "rgba(22,199,132,0.08)", borderColor: "rgba(22,199,132,0.3)", color: "#16c784" }}
+        >
+          <Wallet className="h-4 w-4" />
+          $1,000 USDT added to your account
+        </div>
+        <div className="flex gap-1">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce"
+              style={{ animationDelay: `${i * 0.15}s` }}
+            />
+          ))}
+        </div>
       </div>
     );
   }
@@ -81,42 +111,72 @@ export function SignupForm({ className }: { className?: string }) {
       <div className="flex flex-col items-center gap-1 text-center">
         <h1 className="text-2xl font-bold">Create your account</h1>
         <p className="text-sm text-muted-foreground">
-          Start with <span className="text-foreground font-semibold">$1,000</span> in virtual funds
+          Start with <span className="text-foreground font-semibold">$1,000</span> in virtual funds — free forever
         </p>
       </div>
 
       <div className="grid gap-4">
         <div className="grid gap-1.5">
           <Label htmlFor="username">Username</Label>
-          <Input id="username" type="text" placeholder="satoshi" {...register("username")} />
+          <Input
+            id="username"
+            type="text"
+            placeholder="satoshi"
+            autoComplete="username"
+            {...register("username")}
+          />
           {errors.username && <p className="text-xs text-destructive">{errors.username.message}</p>}
         </div>
 
         <div className="grid gap-1.5">
           <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" {...register("password")} />
+          <Input
+            id="password"
+            type="password"
+            autoComplete="new-password"
+            {...register("password")}
+          />
           {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
         </div>
 
         <div className="grid gap-1.5">
           <Label htmlFor="confirm">Confirm Password</Label>
-          <Input id="confirm" type="password" {...register("confirm")} />
+          <Input
+            id="confirm"
+            type="password"
+            autoComplete="new-password"
+            {...register("confirm")}
+          />
           {errors.confirm && <p className="text-xs text-destructive">{errors.confirm.message}</p>}
         </div>
 
         {serverError && (
-          <p className="text-xs text-destructive text-center">{serverError}</p>
+          <div
+            className="text-xs text-center px-3 py-2.5 rounded-lg border"
+            style={{ color: "#ea3943", background: "rgba(234,57,67,0.07)", borderColor: "rgba(234,57,67,0.25)" }}
+          >
+            {serverError}
+          </div>
         )}
 
-        <Button type="submit" className="w-full" disabled={state === "loading"}>
-          {state === "loading" ? "Creating account…" : "Create Account"}
+        <Button
+          type="submit"
+          className="w-full font-semibold"
+          disabled={state === "loading"}
+        >
+          {state === "loading" ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Creating account…
+            </span>
+          ) : "Create Account"}
         </Button>
       </div>
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="text-foreground underline underline-offset-4">
-          Log in
+        <Link href="/login" className="text-foreground font-medium underline underline-offset-4 hover:opacity-80 transition-opacity">
+          Sign in
         </Link>
       </p>
     </form>

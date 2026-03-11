@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Footer } from "./components/footer";
 import TopBarStats from "./components/top-section";
+import TickerBar from "./components/TickerBar";
 import { Roboto } from 'next/font/google';
 import { usePathname } from "next/navigation";
 
@@ -35,6 +36,7 @@ export default function RootLayout({
         {!isLoginPage && (
           <>
             <TopBarStats />
+            <TickerBar />
           </>
         )}
 
