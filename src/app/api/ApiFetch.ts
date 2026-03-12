@@ -77,7 +77,7 @@ async function request<Res = unknown, Req = unknown>(
 // 🌐 Fetch clients
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "";
-const INTERNAL_BASE_URL = "http://localhost:3000/api";
+const INTERNAL_BASE_URL = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api`;
 
 function createClient(baseUrl: string) {
   console.log("Creating API client with base URL:", baseUrl);

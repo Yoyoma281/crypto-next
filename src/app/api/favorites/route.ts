@@ -5,10 +5,15 @@ import { backendFetch } from "@/lib/api/backend";
 
 const CACHE_TAG = "user-favorites";
 
+const BACKEND = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
+
 const getCachedFavorites = unstable_cache(
   async (token: string) => {
-    void token; // cache key only — cookies() picks up the session automatically
-    const res = await backendFetch("GET", "/favorites");
+    const res = await fetch(`${BACKEND}/favorites`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json", Cookie: `token=${token}` },
+      cache: "no-store",
+    });
     if (!res.ok) return { favorites: [] as string[] };
     return res.json() as Promise<{ favorites: string[] }>;
   },

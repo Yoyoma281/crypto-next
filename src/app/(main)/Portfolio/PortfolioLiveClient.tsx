@@ -34,7 +34,7 @@ export default function PortfolioLiveClient({ initialCoins, initialBalance }: Pr
   const [streamStatus, setStreamStatus] = useState<"connecting" | "live" | "error">("connecting");
 
   useEffect(() => {
-    const es = new EventSource("http://localhost:3001/portfolio/stream", {
+    const es = new EventSource(`${process.env.NEXT_PUBLIC_BASE_URL}/portfolio/stream`, {
       withCredentials: true,
     });
 

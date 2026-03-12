@@ -65,7 +65,7 @@ export default function CoinListClient() {
     setLoading(true);
 
     const es = new EventSource(
-      `http://localhost:3001/coins/stream?page=${page}&limit=${LIMIT}`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/coins/stream?page=${page}&limit=${LIMIT}`,
       { withCredentials: true }
     );
 

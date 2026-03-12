@@ -14,6 +14,11 @@ export async function POST(req: Request) {
       credentials: "include",
     });
 
+    if (!res.ok) {
+      const text = await res.text();
+      return NextResponse.json({ error: text }, { status: res.status });
+    }
+
     const body: loginResponse = await res.json();
     console.log("Login response from backend:", body);
 

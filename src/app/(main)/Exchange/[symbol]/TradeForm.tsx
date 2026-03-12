@@ -33,7 +33,7 @@ export default function TradeForm({ symbol }: { symbol: string }) {
   }, [symbol]);
 
   const refreshBalance = useCallback(() => {
-    fetch('http://localhost:3001/Portfolio', { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/Portfolio`, { credentials: 'include' })
       .then((r) => {
         if (r.status === 401 || r.status === 403) { setIsAuth(false); return null; }
         setIsAuth(true);
@@ -71,7 +71,7 @@ export default function TradeForm({ symbol }: { symbol: string }) {
     const usdtAmount = (coinAmount * price).toString();
 
     try {
-      const res = await fetch('http://localhost:3001/Trades', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/Trades`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
