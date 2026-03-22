@@ -1,32 +1,41 @@
-import { Button } from "@/components/ui/button";
-import { fetchPortfolio } from "@/app/data/services";
+import { fetchPortfolio, fetchPortfolioAnalytics, fetchUserSafe } from "@/app/data/services";
 import PortfolioLiveClient from "./PortfolioLiveClient";
+import AuthRequired from "@/components/auth-required";
 
 export default async function Page() {
-  const res = await fetchPortfolio();
+  const user = await fetchUserSafe();
+  if (!user) {
+    return (
+      <AuthRequired
+        title="Sign in to view your portfolio"
+        description="Your holdings, live valuations, and P&L are all waiting for you."
+      />
+    );
+  }
+
+  const [res, analyticsRes] = await Promise.all([
+    fetchPortfolio(),
+    fetchPortfolioAnalytics(),
+  ]);
 
   const initialCoins = res?.portfolio?.Coins ?? [];
   const initialBalance = res?.portfolio?.AvailableBalance ?? 0;
+  const costBasis = analyticsRes?.costBasis ?? {};
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold mb-0.5">My Portfolio</h1>
-          <p className="text-sm text-muted-foreground">
-            Track your crypto holdings and performance
-          </p>
-        </div>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-sm px-4">
-          + Add Coin
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold mb-0.5">My Portfolio</h1>
+        <p className="text-sm text-muted-foreground">
+          Track your crypto holdings and performance
+        </p>
       </div>
 
       {res ? (
         <PortfolioLiveClient
           initialCoins={initialCoins}
           initialBalance={initialBalance}
+          costBasis={costBasis}
         />
       ) : (
         <div

@@ -210,7 +210,7 @@ export function makeColumns(
             const sym = props.row.original.symbol;
             return (
                 <Link
-                    href={`/Exchange/${sym}`}
+                    href={`/coin/${sym}?tab=trade`}
                     className="px-3 py-1.5 rounded-md text-xs font-semibold border border-border hover:bg-muted transition-colors whitespace-nowrap"
                 >
                     Trade

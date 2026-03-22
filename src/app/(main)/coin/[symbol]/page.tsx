@@ -1,35 +1,17 @@
-// src/app/(main)/coin/[symbol]/page.tsx
-
-import { InternalApiFetch } from "@/app/api/ApiFetch";
-import CoinOverviewClient from "./components/chart/chart";
-import { BinanceKline } from "@/app/types";
+import { Suspense } from "react";
+import CoinPageClient from "./CoinPageClient";
 
 type PageProps = {
-  params: Promise<{
-    symbol: string;
-  }>;
-  searchParams?: Promise<{
-    interval?: string;
-  }>;
+  params: Promise<{ symbol: string }>;
 };
 
-export default async function Page({ params, searchParams }: PageProps) {
+export default async function CoinPage({ params }: PageProps) {
   const { symbol } = await params;
-  const resolvedSearchParams = searchParams ? await searchParams : undefined;
-
-  const interval = resolvedSearchParams?.interval ?? "1m";
-
-  console.log("SYMBOOOL:", symbol);
-
-  const res = (await InternalApiFetch.get(
-    `/coin/${symbol}?interval=${interval}`,
-  )) as { data: BinanceKline[] };
+  const upperSymbol = symbol.toUpperCase();
 
   return (
-    <CoinOverviewClient
-      symbol={symbol}
-      interval={interval}
-      chartData={res.data}
-    />
+    <Suspense>
+      <CoinPageClient symbol={upperSymbol} />
+    </Suspense>
   );
 }

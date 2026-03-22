@@ -1,11 +1,7 @@
-'use client';
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Roboto } from "next/font/google";
 import "./globals.css";
-import { Footer } from "./components/footer";
-import TopBarStats from "./components/top-section";
-import TickerBar from "./components/TickerBar";
-import { Roboto } from 'next/font/google';
-import { usePathname } from "next/navigation";
+import { ThemeProvider } from "next-themes";
+import ClientLayout from "./ClientLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,27 +22,13 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-
-  const isLoginPage = pathname === "/login";
-
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`bg-siteBg ${geistSans.variable} ${geistMono.variable} ${robotto.variable} font-geist antialiased`}>
-        {!isLoginPage && (
-          <>
-            <TopBarStats />
-            <TickerBar />
-          </>
-        )}
-
-        <main className="p-10 max-w-screen-xl mx-auto px-4">
-          {children}
-
-        </main>
-        {!isLoginPage && <Footer />}
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <ClientLayout>{children}</ClientLayout>
+        </ThemeProvider>
       </body>
     </html>
-
   );
 }

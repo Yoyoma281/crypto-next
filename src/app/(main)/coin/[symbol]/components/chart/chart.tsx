@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { PriceLineChart } from "@/app/components/priceChart";
 import { BinanceKline } from "@/app/types";
 import { fmtCoinPrice, fmtLarge } from "@/lib/utils";
-import CoinHero from "../CoinHero";
 import CoinStatCards, { StatCard } from "../CoinStatCards";
 
 const INTERVAL_OPTIONS = ["1m", "5m", "15m", "1h", "1d"] as const;
@@ -69,34 +68,18 @@ function buildStatCards(stats: CoinStats, interval: string): StatCard[] {
 
 export default function CoinOverviewClient({ symbol, interval, chartData }: Props) {
   const router = useRouter();
-  const coinTicker = symbol.replace("USDT", "");
-
   const stats = computeCoinStats(chartData);
-  const isUp = stats.priceChange >= 0;
 
   const handleIntervalChange = (next: string) => {
-    router.push(`?interval=${encodeURIComponent(next)}`);
-  };
-
-  const handleExchange = () => {
-    router.push(`/Exchange/${symbol}`);
+    router.push(`?tab=overview&interval=${encodeURIComponent(next)}`);
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto px-6 py-9" style={{ fontFamily: "'Inter', sans-serif" }}>
-      <CoinHero
-        coinTicker={coinTicker}
-        symbol={symbol}
-        currentPrice={fmtCoinPrice(stats.currentPrice)}
-        isUp={isUp}
-        priceChangePct={stats.priceChangePct}
-        onExchange={handleExchange}
-      />
-
+    <div className="max-w-[1400px] mx-auto px-6 py-6" style={{ fontFamily: "'Inter', sans-serif" }}>
       <CoinStatCards stats={buildStatCards(stats, interval)} />
 
       <div
-        className="rounded-[16px] overflow-hidden"
+        className="rounded-[16px] overflow-hidden mt-6"
         style={{
           background: "hsl(var(--card))",
           border: "1px solid hsl(var(--border))",

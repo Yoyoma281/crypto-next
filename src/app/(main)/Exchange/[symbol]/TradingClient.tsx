@@ -49,7 +49,7 @@ function CoinImage({ ticker }: { ticker: string }) {
   );
 }
 
-export default function TradingClient({ symbol }: { symbol: string }) {
+export default function TradingClient({ symbol, hiddenHeader }: { symbol: string; hiddenHeader?: boolean }) {
   const ticker = symbol.replace('USDT', '');
   const [tickerData, setTickerData] = useState<Ticker | null>(null);
 
@@ -88,37 +88,39 @@ export default function TradingClient({ symbol }: { symbol: string }) {
   return (
     <div className="flex flex-col gap-0 min-h-0">
       {/* ── Ticker Header ─────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 border-b border-border bg-card">
-        {/* Pair identity */}
-        <div className="flex items-center gap-2">
-          <CoinImage ticker={ticker} />
+      {!hiddenHeader && (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 border-b border-border bg-card">
+          {/* Pair identity */}
+          <div className="flex items-center gap-2">
+            <CoinImage ticker={ticker} />
+            <div className="flex flex-col leading-tight">
+              <span className="font-bold text-base">{ticker}/USDT</span>
+              <span className="text-muted-foreground text-[11px]">{symbol}</span>
+            </div>
+          </div>
+
+          {/* Price */}
           <div className="flex flex-col leading-tight">
-            <span className="font-bold text-base">{ticker}/USDT</span>
-            <span className="text-muted-foreground text-[11px]">{symbol}</span>
+            <span className="text-2xl font-bold tabular-nums" style={{ color: changeColor }}>
+              {tickerData ? fmtPrice(tickerData.price) : '—'}
+            </span>
+            <span className="text-xs tabular-nums" style={{ color: changeColor }}>
+              {tickerData
+                ? `${isUp ? '+' : ''}${parseFloat(tickerData.change).toFixed(2)} (${parseFloat(tickerData.changePct).toFixed(2)}%)`
+                : '—'}
+            </span>
           </div>
-        </div>
 
-        {/* Price */}
-        <div className="flex flex-col leading-tight">
-          <span className="text-2xl font-bold tabular-nums" style={{ color: changeColor }}>
-            {tickerData ? fmtPrice(tickerData.price) : '—'}
-          </span>
-          <span className="text-xs tabular-nums" style={{ color: changeColor }}>
-            {tickerData
-              ? `${isUp ? '+' : ''}${parseFloat(tickerData.change).toFixed(2)} (${parseFloat(tickerData.changePct).toFixed(2)}%)`
-              : '—'}
-          </span>
+          {/* Stats */}
+          {tickerData && (
+            <div className="flex gap-6 text-xs ml-auto flex-wrap">
+              <StatCell label="24h High" value={fmtPrice(tickerData.high)} />
+              <StatCell label="24h Low" value={fmtPrice(tickerData.low)} />
+              <StatCell label="24h Volume" value={fmtVol(tickerData.volume)} />
+            </div>
+          )}
         </div>
-
-        {/* Stats */}
-        {tickerData && (
-          <div className="flex gap-6 text-xs ml-auto flex-wrap">
-            <StatCell label="24h High" value={fmtPrice(tickerData.high)} />
-            <StatCell label="24h Low" value={fmtPrice(tickerData.low)} />
-            <StatCell label="24h Volume" value={fmtVol(tickerData.volume)} />
-          </div>
-        )}
-      </div>
+      )}
 
       {/* ── Main Layout ───────────────────────────────────────── */}
       <div className="flex flex-1 min-h-0 divide-x divide-border">
@@ -144,6 +146,11 @@ export default function TradingClient({ symbol }: { symbol: string }) {
         <div className="w-56 flex-shrink-0 border-l border-border overflow-y-auto">
           <RecentTrades symbol={symbol} />
         </div>
+
+        {/* News panel */}
+        <div className="w-56 flex-shrink-0 border-l border-border overflow-y-auto flex flex-col">
+          <NewsPanel base={ticker} />
+        </div>
       </div>
     </div>
   );
@@ -155,5 +162,55 @@ function StatCell({ label, value }: { label: string; value: string }) {
       <span className="text-muted-foreground">{label}</span>
       <span className="font-medium text-foreground tabular-nums">{value}</span>
     </div>
+  );
+}
+
+function NewsPanel({ base }: { base: string }) {
+  const [news, setNews] = useState<Array<{id:number;title:string;url:string;source:{title:string};published_at:string}>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/news?currency=${base}`)
+      .then(r => r.json())
+      .then(d => { setNews((d.results ?? []).slice(0, 15)); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [base]);
+
+  function timeAgo(iso: string) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  }
+
+  return (
+    <>
+      <div className="px-3 py-2.5 border-b border-border shrink-0">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">News</span>
+      </div>
+      <div className="flex flex-col overflow-y-auto">
+        {loading ? (
+          Array.from({length: 6}).map((_, i) => (
+            <div key={i} className="mx-2 my-1.5 h-14 rounded-lg animate-pulse bg-muted" />
+          ))
+        ) : news.length === 0 ? (
+          <p className="text-xs text-muted-foreground p-3">No news found.</p>
+        ) : (
+          news.map(item => (
+            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+              className="flex flex-col gap-0.5 px-3 py-2.5 hover:bg-muted/40 transition-colors border-b border-border/50">
+              <span className="text-[11px] font-medium leading-snug line-clamp-3 text-foreground">
+                {item.title}
+              </span>
+              <span className="text-[10px] text-muted-foreground mt-0.5">
+                {item.source.title} · {timeAgo(item.published_at)}
+              </span>
+            </a>
+          ))
+        )}
+      </div>
+    </>
   );
 }

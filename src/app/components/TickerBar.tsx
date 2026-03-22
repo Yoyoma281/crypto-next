@@ -13,6 +13,7 @@ interface TickerItem {
   symbol: string;
   price: number;
   change: number;
+  flash?: "up" | "down" | null;
 }
 
 function fmtPrice(p: number): string {
@@ -23,25 +24,40 @@ function fmtPrice(p: number): string {
 
 export default function TickerBar() {
   const [tickers, setTickers] = useState<Record<string, TickerItem>>({});
-  const wsRef = useRef<WebSocket | null>(null);
+  const prevPrices = useRef<Record<string, number>>({});
 
   useEffect(() => {
     const streams = SYMBOLS.map((s) => `${s.toLowerCase()}@miniTicker`).join("/");
     const ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
-    wsRef.current = ws;
 
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
       const d = msg.data;
       if (!d || !SYMBOLS.includes(d.s)) return;
+
+      const close = parseFloat(d.c);
+      const open = parseFloat(d.o);
+      const changePct = open > 0 ? ((close - open) / open) * 100 : 0;
+
+      const prev = prevPrices.current[d.s];
+      const flash: "up" | "down" | null =
+        prev == null ? null : close > prev ? "up" : close < prev ? "down" : null;
+      prevPrices.current[d.s] = close;
+
       setTickers((prev) => ({
         ...prev,
-        [d.s]: {
-          symbol: d.s.replace("USDT", ""),
-          price: parseFloat(d.c),
-          change: parseFloat(d.P),
-        },
+        [d.s]: { symbol: d.s.replace("USDT", ""), price: close, change: changePct, flash },
       }));
+
+      // Clear flash after 600ms
+      if (flash) {
+        setTimeout(() => {
+          setTickers((prev) => ({
+            ...prev,
+            [d.s]: { ...prev[d.s], flash: null },
+          }));
+        }, 600);
+      }
     };
 
     return () => ws.close();
@@ -51,7 +67,6 @@ export default function TickerBar() {
 
   if (items.length === 0) return null;
 
-  // Duplicate for seamless infinite loop
   const looped = [...items, ...items];
 
   return (
@@ -62,13 +77,22 @@ export default function TickerBar() {
       <div className="ticker-track flex items-center h-full">
         {looped.map((item, i) => {
           const isUp = item.change >= 0;
+          const flashColor =
+            item.flash === "up" ? "#16c784" :
+            item.flash === "down" ? "#ea3943" :
+            undefined;
           return (
             <div
               key={i}
               className="flex items-center gap-1.5 px-5 shrink-0 text-xs select-none"
             >
               <span className="font-semibold text-foreground">{item.symbol}</span>
-              <span className="text-muted-foreground">${fmtPrice(item.price)}</span>
+              <span
+                className="tabular-nums transition-colors duration-300"
+                style={{ color: flashColor ?? "hsl(var(--muted-foreground))" }}
+              >
+                ${fmtPrice(item.price)}
+              </span>
               <span
                 className="flex items-center gap-0.5 font-semibold"
                 style={{ color: isUp ? "#16c784" : "#ea3943" }}
@@ -79,7 +103,6 @@ export default function TickerBar() {
                 {isUp ? "+" : ""}{item.change.toFixed(2)}%
               </span>
 
-              {/* Separator dot */}
               <span className="text-border ml-2">·</span>
             </div>
           );

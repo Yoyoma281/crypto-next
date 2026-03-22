@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Loader2, CheckCircle2, Wallet } from "lucide-react";
 
@@ -25,16 +25,24 @@ const schema = z
 
 type FormData = z.infer<typeof schema>;
 
-export function SignupForm({ className }: { className?: string }) {
+export function SignupForm({ className, onSwitchToLogin, focusFirst }: { className?: string; onSwitchToLogin?: () => void; focusFirst?: boolean }) {
   const router = useRouter();
   const [state, setState] = useState<"idle" | "loading" | "success">("idle");
   const [serverError, setServerError] = useState<string | null>(null);
+  const firstFieldRef = useRef<HTMLInputElement | null>(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
+
+  useEffect(() => {
+    if (focusFirst) {
+      const t = setTimeout(() => firstFieldRef.current?.focus(), 50);
+      return () => clearTimeout(t);
+    }
+  }, [focusFirst]);
 
   const onSubmit = async (data: FormData) => {
     setState("loading");
@@ -124,6 +132,10 @@ export function SignupForm({ className }: { className?: string }) {
             placeholder="satoshi"
             autoComplete="username"
             {...register("username")}
+            ref={(el) => {
+              register("username").ref(el);
+              firstFieldRef.current = el;
+            }}
           />
           {errors.username && <p className="text-xs text-destructive">{errors.username.message}</p>}
         </div>
@@ -175,9 +187,19 @@ export function SignupForm({ className }: { className?: string }) {
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="text-foreground font-medium underline underline-offset-4 hover:opacity-80 transition-opacity">
-          Sign in
-        </Link>
+        {onSwitchToLogin ? (
+          <button
+            type="button"
+            onClick={onSwitchToLogin}
+            className="text-foreground font-medium underline underline-offset-4 hover:opacity-80 transition-opacity"
+          >
+            Sign in
+          </button>
+        ) : (
+          <Link href="/login" className="text-foreground font-medium underline underline-offset-4 hover:opacity-80 transition-opacity">
+            Sign in
+          </Link>
+        )}
       </p>
     </form>
   );

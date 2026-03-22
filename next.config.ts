@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
         hostname: "raw.githubusercontent.com",
         pathname: "/ErikThiart/cryptocurrency-icons/**",
       },
+      {
+        protocol: "https",
+        hostname: "coin-images.coingecko.com",
+      },
+      {
+        protocol: "https",
+        hostname: "assets.coingecko.com",
+      },
     ],
   },
 };

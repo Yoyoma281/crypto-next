@@ -131,7 +131,14 @@ body {
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: hsl(var(--background));
+    background-image: linear-gradient(160deg, hsl(220 40% 8%) 0%, hsl(220 33% 6%) 60%, hsl(215 30% 7%) 100%);
+    min-height: 100vh;
+  }
+
+  :root body {
+    background-image: linear-gradient(160deg, hsl(210 60% 98%) 0%, hsl(220 30% 96%) 100%);
   }
 }
 

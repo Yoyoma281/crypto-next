@@ -13,6 +13,17 @@ export async function fetchUser(): Promise<User> {
   return res.json();
 }
 
+/** Returns null instead of throwing — safe to use as an auth check */
+export async function fetchUserSafe(): Promise<User | null> {
+  try {
+    const res = await backendFetch("GET", "/GetUserInfo");
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchPortfolio(): Promise<Portfolio> {
   const res = await backendFetch("GET", "/Portfolio");
   if (!res.ok) throw new Error("Failed to fetch portfolio");
@@ -24,3 +35,42 @@ export async function fetchCoins(): Promise<Coin[]> {
   if (!res.ok) throw new Error("Failed to fetch coins");
   return res.json();
 }
+
+export type CostBasisEntry = {
+  avgBuyPrice: number;
+  totalCost: number;
+  totalQty: number;
+};
+
+export async function fetchPortfolioAnalytics(): Promise<{ costBasis: Record<string, CostBasisEntry> }> {
+  const res = await backendFetch("GET", "/portfolio/analytics");
+  if (!res.ok) return { costBasis: {} };
+  return res.json();
+}
+
+export async function fetchTradeHistory(): Promise<{ trades: TradeRecord[] }> {
+  const res = await backendFetch("GET", "/Trades");
+  if (!res.ok) return { trades: [] };
+  return res.json();
+}
+
+export async function fetchLeaderboard(): Promise<{ leaderboard: LeaderboardEntry[] }> {
+  const res = await backendFetch("GET", "/leaderboard");
+  if (!res.ok) return { leaderboard: [] };
+  return res.json();
+}
+
+export type TradeRecord = {
+  _id: string;
+  symbol: string;
+  type: "BUY" | "SELL";
+  usdAmount: string;
+  coinAmount: string;
+  price: string;
+  createdAt: string;
+};
+
+export type LeaderboardEntry = {
+  username: string;
+  totalValue: number;
+};
