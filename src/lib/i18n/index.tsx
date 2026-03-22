@@ -35,3 +35,4 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 }
 
 export const useI18n = () => useContext(Ctx);
+export type { T, Locale } from './translations';

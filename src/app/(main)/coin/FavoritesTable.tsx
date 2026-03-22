@@ -5,6 +5,7 @@ import { DataTable } from "@/app/components/table";
 import { makeColumns } from "./coinColumns";
 import { CoinTableRow } from "@/app/types/coin";
 import { Star } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   favorites: Set<string>;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function FavoritesTable({ favorites, toggleFavorite }: Props) {
+  const { t } = useI18n();
   const [tickers, setTickers] = useState<Record<string, CoinTableRow>>({});
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -62,7 +64,7 @@ export default function FavoritesTable({ favorites, toggleFavorite }: Props) {
   );
 
   const columns = useMemo(
-    () => makeColumns(0, favorites, toggleFavorite),
+    () => makeColumns(t, 0, favorites, toggleFavorite),
     [favorites, toggleFavorite]
   );
 
