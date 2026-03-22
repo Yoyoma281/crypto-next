@@ -17,7 +17,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           <TickerBar />
         </>
       )}
-      <main className="p-10 max-w-screen-xl mx-auto px-4">
+      <main className="max-w-screen-xl mx-auto px-4 py-4">
         {children}
       </main>
       {!isLoginPage && <Footer />}

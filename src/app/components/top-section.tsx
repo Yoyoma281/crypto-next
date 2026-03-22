@@ -140,7 +140,7 @@ export default function TopBarStats() {
               <span className="font-bold text-sm tracking-tight hidden sm:block">CrySer</span>
             </Link>
 
-            <div className="hidden xl:flex items-center gap-4 text-[11px] text-muted-foreground pl-4 border-l border-border/60">
+            <div className="hidden 2xl:flex items-center gap-4 text-[11px] text-muted-foreground pl-4 border-l border-border/60">
               {data ? stats.map((s) => (
                 <div key={s.label} className="flex items-center gap-1 whitespace-nowrap">
                   <s.icon className="h-3 w-3 shrink-0 opacity-50" />

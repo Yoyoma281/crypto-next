@@ -125,7 +125,7 @@ export default function TradingClient({ symbol, hiddenHeader }: { symbol: string
       {/* ── Main Layout ───────────────────────────────────────── */}
       <div className="flex flex-1 min-h-0 divide-x divide-border">
         {/* Left — Order Book */}
-        <div className="w-56 flex-shrink-0 overflow-y-auto border-r border-border">
+        <div className="w-40 lg:w-48 xl:w-56 flex-shrink-0 overflow-y-auto border-r border-border">
           <OrderBook symbol={symbol} />
         </div>
 
@@ -143,12 +143,12 @@ export default function TradingClient({ symbol, hiddenHeader }: { symbol: string
         </div>
 
         {/* Right — Recent Trades */}
-        <div className="w-56 flex-shrink-0 border-l border-border overflow-y-auto">
+        <div className="w-40 lg:w-48 xl:w-56 flex-shrink-0 border-l border-border overflow-y-auto">
           <RecentTrades symbol={symbol} />
         </div>
 
-        {/* News panel */}
-        <div className="w-56 flex-shrink-0 border-l border-border overflow-y-auto flex flex-col">
+        {/* News panel — only on xl+ */}
+        <div className="hidden xl:flex w-56 flex-shrink-0 border-l border-border overflow-y-auto flex-col">
           <NewsPanel base={ticker} />
         </div>
       </div>
