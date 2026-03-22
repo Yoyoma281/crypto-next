@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 
 interface Trade {
-  id: number;
+  id: string;
   price: string;
   qty: string;
   time: number;
@@ -19,30 +19,52 @@ export default function RecentTrades({ symbol }: { symbol: string }) {
   useEffect(() => {
     let alive = true;
 
-    fetch(`https://api.binance.com/api/v3/trades?symbol=${symbol}&limit=30`)
+    // REST snapshot — Bybit recent trades
+    fetch(`https://api.bybit.com/v5/market/recent-trade?category=spot&symbol=${symbol}&limit=30`)
       .then((r) => r.json())
-      .then((data: Trade[]) => {
+      .then((d) => {
         if (!alive) return;
-        setTrades([...data].reverse());
+        const list = (d.result?.list ?? []) as Array<{
+          execId: string; price: string; size: string; side: string; time: string;
+        }>;
+        setTrades(
+          list.map((item) => ({
+            id: item.execId,
+            price: item.price,
+            qty: item.size,
+            time: parseInt(item.time),
+            // In Bybit: side="Buy" means taker bought → maker was seller → isBuyerMaker=false
+            isBuyerMaker: item.side === 'Sell',
+          }))
+        );
       })
       .catch(() => {});
 
-    const ws = new WebSocket(
-      `wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@trade`
-    );
+    // WebSocket live stream
+    const ws = new WebSocket('wss://stream.bybit.com/v5/public/spot');
     wsRef.current = ws;
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ op: 'subscribe', args: [`publicTrade.${symbol}`] }));
+    };
+
     ws.onmessage = (e) => {
       if (!alive) return;
-      const d = JSON.parse(e.data);
+      const msg = JSON.parse(e.data);
+      if (!msg.topic || !msg.topic.startsWith('publicTrade')) return;
+
+      const items = msg.data as Array<{
+        i: string; p: string; v: string; S: string; T: number;
+      }>;
       setTrades((prev) =>
         [
-          {
-            id: d.t,
+          ...items.map((d) => ({
+            id: d.i,
             price: d.p,
-            qty: d.q,
+            qty: d.v,
             time: d.T,
-            isBuyerMaker: d.m,
-          },
+            isBuyerMaker: d.S === 'Sell',
+          })),
           ...prev,
         ].slice(0, 30)
       );

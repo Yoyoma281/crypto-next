@@ -16,6 +16,8 @@ export default function FavoritesTable({ favorites, toggleFavorite }: Props) {
   const { t } = useI18n();
   const [tickers, setTickers] = useState<Record<string, CoinTableRow>>({});
   const wsRef = useRef<WebSocket | null>(null);
+  // Keep last known values for delta merging
+  const rawRef = useRef<Record<string, Record<string, string>>>({});
 
   // Reconnect whenever the favorites set changes
   useEffect(() => {
@@ -26,30 +28,44 @@ export default function FavoritesTable({ favorites, toggleFavorite }: Props) {
       return;
     }
 
-    const streams = [...favorites]
-      .map((s) => `${s.toLowerCase()}@ticker`)
-      .join("/");
-
-    const ws = new WebSocket(
-      `wss://stream.binance.com:443/stream?streams=${streams}`
-    );
+    const ws = new WebSocket("wss://stream.bybit.com/v5/public/spot");
     wsRef.current = ws;
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        op: "subscribe",
+        args: [...favorites].map((s) => `tickers.${s}`),
+      }));
+    };
 
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
+        if (!msg.topic || !msg.topic.startsWith("tickers.")) return;
         const d = msg.data;
-        if (!d || !d.s) return;
+        if (!d || !d.symbol) return;
+
+        const sym = d.symbol as string;
+
+        // Merge delta into stored raw state
+        rawRef.current[sym] = { ...(rawRef.current[sym] ?? {}), ...d };
+        const r = rawRef.current[sym];
+
+        if (!r.lastPrice) return; // not enough data yet
+
+        const last = parseFloat(r.lastPrice);
+        const prev = parseFloat(r.prevPrice24h ?? r.lastPrice);
+
         setTickers((prev) => ({
           ...prev,
-          [d.s]: {
-            symbol: d.s,
-            lastPrice: d.c,
-            priceChange: d.p,
-            priceChangePercent: d.P,
-            weightedAvgPrice: d.w,
-            prevClosePrice: d.x,
-            sparkData: prev[d.s]?.sparkData ?? [],
+          [sym]: {
+            symbol: sym,
+            lastPrice: r.lastPrice,
+            priceChange: (last - prev).toFixed(8),
+            priceChangePercent: (parseFloat(r.price24hPcnt ?? "0") * 100).toFixed(2),
+            weightedAvgPrice: r.lastPrice,
+            prevClosePrice: r.prevPrice24h ?? r.lastPrice,
+            sparkData: prev[sym]?.sparkData ?? [],
           },
         }));
       } catch {}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
@@ -54,23 +54,51 @@ export default function TradingClient({ symbol, hiddenHeader }: { symbol: string
   const ticker = symbol.replace('USDT', '');
   const { t } = useI18n();
   const [tickerData, setTickerData] = useState<Ticker | null>(null);
+  // Store last known values for delta merging
+  const lastRef = useRef<Partial<Ticker>>({});
 
-  // Live 24h ticker via WebSocket
+  // Live 24h ticker via Bybit WebSocket
   useEffect(() => {
-    const ws = new WebSocket(
-      `wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`
-    );
-    ws.onmessage = (e) => {
-      const d = JSON.parse(e.data);
-      setTickerData({
-        price: d.c,
-        change: d.p,
-        changePct: d.P,
-        high: d.h,
-        low: d.l,
-        volume: d.q, // quote volume in USDT
-      });
+    const ws = new WebSocket('wss://stream.bybit.com/v5/public/spot');
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ op: 'subscribe', args: [`tickers.${symbol}`] }));
     };
+
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (!msg.topic || !msg.topic.startsWith('tickers')) return;
+      const d = msg.data;
+      if (!d) return;
+
+      // Merge delta fields into last known state
+      if (d.lastPrice)     lastRef.current.price     = d.lastPrice;
+      if (d.highPrice24h)  lastRef.current.high      = d.highPrice24h;
+      if (d.lowPrice24h)   lastRef.current.low       = d.lowPrice24h;
+      if (d.turnover24h)   lastRef.current.volume    = d.turnover24h;
+
+      // price24hPcnt is a decimal fraction (e.g. "0.0234" = 2.34%)
+      if (d.price24hPcnt !== undefined) {
+        const pct = parseFloat(d.price24hPcnt) * 100;
+        lastRef.current.changePct = pct.toFixed(2);
+      }
+      if (d.prevPrice24h !== undefined && d.lastPrice !== undefined) {
+        lastRef.current.change = (parseFloat(d.lastPrice) - parseFloat(d.prevPrice24h)).toFixed(8);
+      }
+
+      const cur = lastRef.current;
+      if (cur.price) {
+        setTickerData({
+          price:     cur.price     ?? '0',
+          change:    cur.change    ?? '0',
+          changePct: cur.changePct ?? '0',
+          high:      cur.high      ?? '0',
+          low:       cur.low       ?? '0',
+          volume:    cur.volume    ?? '0',
+        });
+      }
+    };
+
     return () => ws.close();
   }, [symbol]);
 
@@ -173,8 +201,8 @@ function NewsPanel({ base }: { base: string }) {
 
   useEffect(() => {
     fetch(`/api/news?currency=${base}`)
-      .then(r => r.json())
-      .then(d => { setNews((d.results ?? []).slice(0, 15)); setLoading(false); })
+      .then((r) => r.json())
+      .then((d) => { setNews((d.results ?? []).slice(0, 15)); setLoading(false); })
       .catch(() => setLoading(false));
   }, [base]);
 
@@ -200,7 +228,7 @@ function NewsPanel({ base }: { base: string }) {
         ) : news.length === 0 ? (
           <p className="text-xs text-muted-foreground p-3">No news found.</p>
         ) : (
-          news.map(item => (
+          news.map((item) => (
             <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
               className="flex flex-col gap-0.5 px-3 py-2.5 hover:bg-muted/40 transition-colors border-b border-border/50">
               <span className="text-[11px] font-medium leading-snug line-clamp-3 text-foreground">

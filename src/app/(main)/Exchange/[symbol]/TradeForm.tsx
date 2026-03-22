@@ -24,9 +24,9 @@ export default function TradeForm({ symbol }: { symbol: string }) {
   // Live price ticker
   useEffect(() => {
     const fetchPrice = () =>
-      fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`)
+      fetch(`https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`)
         .then((r) => r.json())
-        .then((d) => setPrice(parseFloat(d.price)))
+        .then((d) => setPrice(parseFloat(d.result?.list?.[0]?.lastPrice ?? '0')))
         .catch(() => {});
 
     fetchPrice();

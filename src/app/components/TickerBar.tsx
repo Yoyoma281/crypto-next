@@ -27,26 +27,36 @@ export default function TickerBar() {
   const prevPrices = useRef<Record<string, number>>({});
 
   useEffect(() => {
-    const streams = SYMBOLS.map((s) => `${s.toLowerCase()}@miniTicker`).join("/");
-    const ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
+    const ws = new WebSocket("wss://stream.bybit.com/v5/public/spot");
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        op: "subscribe",
+        args: SYMBOLS.map((s) => `tickers.${s}`),
+      }));
+    };
 
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
+      if (!msg.topic || !msg.topic.startsWith("tickers.")) return;
       const d = msg.data;
-      if (!d || !SYMBOLS.includes(d.s)) return;
+      if (!d || !d.symbol || !d.lastPrice) return;
 
-      const close = parseFloat(d.c);
-      const open = parseFloat(d.o);
-      const changePct = open > 0 ? ((close - open) / open) * 100 : 0;
+      const sym = d.symbol as string;
+      if (!SYMBOLS.includes(sym)) return;
 
-      const prev = prevPrices.current[d.s];
+      const close = parseFloat(d.lastPrice);
+      // price24hPcnt is a decimal fraction (e.g. "0.0234" = +2.34%)
+      const changePct = parseFloat(d.price24hPcnt ?? "0") * 100;
+
+      const prev = prevPrices.current[sym];
       const flash: "up" | "down" | null =
         prev == null ? null : close > prev ? "up" : close < prev ? "down" : null;
-      prevPrices.current[d.s] = close;
+      prevPrices.current[sym] = close;
 
       setTickers((prev) => ({
         ...prev,
-        [d.s]: { symbol: d.s.replace("USDT", ""), price: close, change: changePct, flash },
+        [sym]: { symbol: sym.replace("USDT", ""), price: close, change: changePct, flash },
       }));
 
       // Clear flash after 600ms
@@ -54,7 +64,7 @@ export default function TickerBar() {
         setTimeout(() => {
           setTickers((prev) => ({
             ...prev,
-            [d.s]: { ...prev[d.s], flash: null },
+            [sym]: { ...prev[sym], flash: null },
           }));
         }, 600);
       }

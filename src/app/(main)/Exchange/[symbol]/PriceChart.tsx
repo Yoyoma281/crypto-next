@@ -11,6 +11,11 @@ import { TrendingUp, TrendingDown, X, Newspaper } from 'lucide-react';
 const INTERVALS = ['1m', '5m', '15m', '1h', '4h', '1d'] as const;
 type Interval = (typeof INTERVALS)[number];
 
+// Bybit kline interval codes
+const BYBIT_INTERVAL: Record<Interval, string> = {
+  '1m': '1', '5m': '5', '15m': '15', '1h': '60', '4h': '240', '1d': 'D',
+};
+
 const INTERVAL_SECONDS: Record<Interval, number> = {
   '1m': 60, '5m': 300, '15m': 900, '1h': 3600, '4h': 14400, '1d': 86400,
 };
@@ -98,24 +103,28 @@ export default function PriceChart({ symbol }: { symbol: string }) {
 
     const ivSec = INTERVAL_SECONDS[interval];
     const limit = INTERVAL_LIMITS[interval];
+    const bybitIv = BYBIT_INTERVAL[interval];
 
     // Fetch candles + news in parallel
     let cancelled = false;
     Promise.all([
-      fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`)
-        .then(r => r.json()),
+      fetch(
+        `https://api.bybit.com/v5/market/kline?category=spot&symbol=${symbol}&interval=${bybitIv}&limit=${limit}`
+      ).then((r) => r.json()),
       fetch(`/api/news?currency=${base}`)
-        .then(r => r.json())
-        .then(d => (d.results ?? []) as NewsItem[])
+        .then((r) => r.json())
+        .then((d) => (d.results ?? []) as NewsItem[])
         .catch(() => [] as NewsItem[]),
-    ]).then(([klines, newsItems]: [unknown[][], NewsItem[]]) => {
+    ]).then(([klineRes, newsItems]: [{ result: { list: string[][] } }, NewsItem[]]) => {
       if (cancelled) return;
-      const candles: Candle[] = klines.map(k => ({
-        time: ((k[0] as number) / 1000) as Time,
-        open:  parseFloat(k[1] as string),
-        high:  parseFloat(k[2] as string),
-        low:   parseFloat(k[3] as string),
-        close: parseFloat(k[4] as string),
+
+      // Bybit returns newest-first; reverse to oldest-first for the chart
+      const candles: Candle[] = [...(klineRes.result?.list ?? [])].reverse().map((k) => ({
+        time: (parseInt(k[0]) / 1000) as Time,
+        open:  parseFloat(k[1]),
+        high:  parseFloat(k[2]),
+        low:   parseFloat(k[3]),
+        close: parseFloat(k[4]),
       }));
 
       series.setData(candles);
@@ -123,8 +132,8 @@ export default function PriceChart({ symbol }: { symbol: string }) {
 
       // Detect spikes
       const spikes: SpikeEvent[] = candles
-        .filter(c => Math.abs((c.close - c.open) / c.open) >= SPIKE_THRESHOLD)
-        .map(c => ({
+        .filter((c) => Math.abs((c.close - c.open) / c.open) >= SPIKE_THRESHOLD)
+        .map((c) => ({
           time: c.time as number,
           open: c.open, close: c.close, high: c.high, low: c.low,
           pct: (c.close - c.open) / c.open,
@@ -134,10 +143,9 @@ export default function PriceChart({ symbol }: { symbol: string }) {
 
       // Match news to nearest candle
       const newsMap = new Map<number, NewsItem[]>();
-      const candleTimes = candles.map(c => c.time as number);
-      newsItems.forEach(item => {
+      const candleTimes = candles.map((c) => c.time as number);
+      newsItems.forEach((item) => {
         const pubSec = new Date(item.published_at).getTime() / 1000;
-        // Find closest candle within ±2 intervals
         let bestTime = -1, bestDiff = Infinity;
         for (const ct of candleTimes) {
           const diff = Math.abs(ct - pubSec);
@@ -152,9 +160,9 @@ export default function PriceChart({ symbol }: { symbol: string }) {
       });
       newsMapRef.current = newsMap;
 
-      // Build markers: spikes first, then news
+      // Build markers
       const markers: SeriesMarker<Time>[] = [];
-      spikes.forEach(s => markers.push({
+      spikes.forEach((s) => markers.push({
         time: s.time as Time,
         position: s.direction === 'up' ? 'belowBar' : 'aboveBar',
         color: s.direction === 'up' ? '#16c784' : '#ea3943',
@@ -163,8 +171,7 @@ export default function PriceChart({ symbol }: { symbol: string }) {
         size: 1,
       }));
       newsMap.forEach((_, t) => {
-        // Only add news marker if no spike already at this time
-        if (!spikes.find(s => s.time === t)) {
+        if (!spikes.find((s) => s.time === t)) {
           markers.push({
             time: t as Time,
             position: 'aboveBar',
@@ -176,16 +183,15 @@ export default function PriceChart({ symbol }: { symbol: string }) {
         }
       });
 
-      // Sort markers by time (required by lightweight-charts)
       markers.sort((a, b) => (a.time as number) - (b.time as number));
       series.setMarkers(markers);
     }).catch(() => {});
 
     // Click handler
-    chart.subscribeClick(param => {
+    chart.subscribeClick((param) => {
       if (!param.time) { setClicked(null); return; }
       const t = param.time as number;
-      const spike = spikesRef.current.find(s => s.time === t) ?? null;
+      const spike = spikesRef.current.find((s) => s.time === t) ?? null;
       const news  = newsMapRef.current.get(t) ?? [];
       if (spike || news.length > 0) {
         setClicked({ time: t, spike, news });
@@ -194,15 +200,23 @@ export default function PriceChart({ symbol }: { symbol: string }) {
       }
     });
 
-    // Live WebSocket
-    const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_${interval}`);
+    // Live WebSocket klines
+    const ws = new WebSocket('wss://stream.bybit.com/v5/public/spot');
     wsRef.current = ws;
-    ws.onmessage = e => {
-      const k = JSON.parse(e.data).k;
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ op: 'subscribe', args: [`kline.${bybitIv}.${symbol}`] }));
+    };
+
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (!msg.topic || !msg.topic.startsWith('kline')) return;
+      const k = msg.data?.[0];
+      if (!k) return;
       series.update({
-        time: (k.t / 1000) as Time,
-        open: parseFloat(k.o), high: parseFloat(k.h),
-        low: parseFloat(k.l), close: parseFloat(k.c),
+        time: (parseInt(k.start) / 1000) as Time,
+        open: parseFloat(k.open), high: parseFloat(k.high),
+        low: parseFloat(k.low), close: parseFloat(k.close),
       });
     };
 
@@ -224,7 +238,7 @@ export default function PriceChart({ symbol }: { symbol: string }) {
     <div className="flex flex-col">
       {/* Interval buttons */}
       <div className="flex items-center gap-1 px-3 pt-3 pb-2">
-        {INTERVALS.map(iv => (
+        {INTERVALS.map((iv) => (
           <button key={iv} onClick={() => setInterval(iv)}
             className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
               interval === iv
@@ -267,7 +281,7 @@ export default function PriceChart({ symbol }: { symbol: string }) {
                 </span>
               </div>
               <div className="grid grid-cols-4 gap-2">
-                {(['open','high','low','close'] as const).map(k => (
+                {(['open','high','low','close'] as const).map((k) => (
                   <div key={k} className="flex flex-col gap-0.5 rounded-lg px-2.5 py-1.5"
                     style={{ background: 'hsl(var(--muted)/0.5)' }}>
                     <span className="text-[10px] text-muted-foreground capitalize">{k}</span>

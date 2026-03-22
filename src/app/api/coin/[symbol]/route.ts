@@ -4,14 +4,14 @@ import { getKlines } from "@/lib/api/binance";
 
 /**
  * Cache kline results per symbol+interval for 15 seconds.
- * The underlying binance fetch also has revalidate:15, but this caches
+ * The underlying Bybit fetch also has revalidate:15, but this caches
  * the *route handler result* so repeated client requests don't even
  * re-run the handler logic.
  */
 const getCachedKlines = unstable_cache(
   (symbol: string, interval: string) => getKlines(symbol, interval),
-  ["binance-klines"],
-  { tags: ["binance-klines"], revalidate: 15 }
+  ["bybit-klines"],
+  { tags: ["bybit-klines"], revalidate: 15 }
 );
 
 export async function GET(

@@ -26,29 +26,62 @@ export default function OrderBook({ symbol }: { symbol: string }) {
   const { t } = useI18n();
   const [book, setBook] = useState<BookState>({ bids: [], asks: [] });
   const wsRef = useRef<WebSocket | null>(null);
+  // Maintain a mutable copy for delta merging
+  const bookRef = useRef<{ bids: Map<string, string>; asks: Map<string, string> }>({
+    bids: new Map(),
+    asks: new Map(),
+  });
 
   useEffect(() => {
     let alive = true;
 
-    fetch(`https://api.binance.com/api/v3/depth?symbol=${symbol}&limit=14`)
+    // REST snapshot
+    fetch(`https://api.bybit.com/v5/market/orderbook?category=spot&symbol=${symbol}&limit=20`)
       .then((r) => r.json())
       .then((d) => {
         if (!alive) return;
-        setBook({
-          bids: d.bids.slice(0, 14),
-          asks: d.asks.slice(0, 14),
-        });
+        const bidsMap = new Map<string, string>((d.result?.b ?? []).map((l: string[]) => [l[0], l[1]]));
+        const asksMap = new Map<string, string>((d.result?.a ?? []).map((l: string[]) => [l[0], l[1]]));
+        bookRef.current = { bids: bidsMap, asks: asksMap };
+        applyBook();
       })
       .catch(() => {});
 
-    const ws = new WebSocket(
-      `wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@depth20@500ms`
-    );
+    function applyBook() {
+      const bids = [...bookRef.current.bids.entries()]
+        .filter(([, qty]) => parseFloat(qty) > 0)
+        .sort((a, b) => parseFloat(b[0]) - parseFloat(a[0]))
+        .slice(0, 14) as Level[];
+      const asks = [...bookRef.current.asks.entries()]
+        .filter(([, qty]) => parseFloat(qty) > 0)
+        .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
+        .slice(0, 14) as Level[];
+      setBook({ bids, asks });
+    }
+
+    // WebSocket live updates
+    const ws = new WebSocket('wss://stream.bybit.com/v5/public/spot');
     wsRef.current = ws;
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ op: 'subscribe', args: [`orderbook.20.${symbol}`] }));
+    };
+
     ws.onmessage = (e) => {
       if (!alive) return;
-      const d = JSON.parse(e.data);
-      setBook({ bids: d.bids.slice(0, 14), asks: d.asks.slice(0, 14) });
+      const msg = JSON.parse(e.data);
+      if (!msg.topic || !msg.topic.startsWith('orderbook')) return;
+
+      const data = msg.data;
+      if (msg.type === 'snapshot') {
+        bookRef.current.bids = new Map((data.b ?? []).map((l: string[]) => [l[0], l[1]]));
+        bookRef.current.asks = new Map((data.a ?? []).map((l: string[]) => [l[0], l[1]]));
+      } else {
+        // delta — merge updates (size=0 means remove)
+        for (const [p, q] of data.b ?? []) bookRef.current.bids.set(p, q);
+        for (const [p, q] of data.a ?? []) bookRef.current.asks.set(p, q);
+      }
+      applyBook();
     };
 
     return () => {
