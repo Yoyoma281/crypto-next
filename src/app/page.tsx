@@ -1,42 +1,27 @@
+'use client';
+
 import Link from "next/link";
 import { BarChart2, Wallet, ShieldCheck, Zap, ArrowRight, TrendingUp } from "lucide-react";
 import CoinListClient from "./(main)/coin/CoinListClient";
-
-const FEATURES = [
-  {
-    icon: Zap,
-    title: "Live Market Data",
-    desc: "Real-time prices, order books, and trade history streamed directly from Binance.",
-    color: "#f59e0b",
-  },
-  {
-    icon: BarChart2,
-    title: "Professional Charts",
-    desc: "TradingView-powered candlestick charts with multiple timeframes — 1m to 1d.",
-    color: "#10a1e7",
-  },
-  {
-    icon: Wallet,
-    title: "$1,000 Virtual Funds",
-    desc: "Every new account starts with $1,000 USDT in paper money. No real risk, real experience.",
-    color: "#16c784",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Portfolio Tracking",
-    desc: "Watch your holdings update in real-time as the market moves.",
-    color: "#a855f7",
-  },
-];
-
-const STEPS = [
-  { n: "01", title: "Create an account", desc: "Sign up free in under 30 seconds." },
-  { n: "02", title: "Get $1,000 USDT", desc: "Your virtual balance is ready immediately." },
-  { n: "03", title: "Browse markets", desc: "Explore hundreds of USDT trading pairs." },
-  { n: "04", title: "Place your first trade", desc: "Buy or sell at live market prices." },
-];
+import { useI18n } from "@/lib/i18n";
 
 export default function HomePage() {
+  const { t } = useI18n();
+
+  const FEATURES = [
+    { icon: Zap, title: t.home.f1Title, desc: t.home.f1Desc, color: "#f59e0b" },
+    { icon: BarChart2, title: t.home.f2Title, desc: t.home.f2Desc, color: "#10a1e7" },
+    { icon: Wallet, title: t.home.f3Title, desc: t.home.f3Desc, color: "#16c784" },
+    { icon: ShieldCheck, title: t.home.f4Title, desc: t.home.f4Desc, color: "#a855f7" },
+  ];
+
+  const STEPS = [
+    { n: "01", title: t.home.s1Title, desc: t.home.s1Desc },
+    { n: "02", title: t.home.s2Title, desc: t.home.s2Desc },
+    { n: "03", title: t.home.s3Title, desc: t.home.s3Desc },
+    { n: "04", title: t.home.s4Title, desc: t.home.s4Desc },
+  ];
+
   return (
     <div className="flex flex-col gap-20">
 
@@ -47,18 +32,21 @@ export default function HomePage() {
           style={{ color: "#16c784", borderColor: "rgba(22,199,132,0.3)", background: "rgba(22,199,132,0.08)" }}
         >
           <TrendingUp className="h-3 w-3" />
-          Paper trading — zero risk, 100% real data
+          {t.home.badge}
         </div>
 
         <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight max-w-2xl leading-tight">
-          Trade Crypto{" "}
-          <span style={{ color: "#10a1e7" }}>Like a Pro.</span>
-          <br />For Free.
+          {t.home.heroTitle1}{" "}
+          <span style={{ color: "#10a1e7" }}>{t.home.heroTitle2}</span>
+          <br />{t.home.heroTitle3}
         </h1>
 
         <p className="text-base text-muted-foreground max-w-lg leading-relaxed">
-          CrySer is a demo crypto trading platform powered by live Binance data.
-          Practice your strategy with <strong className="text-foreground">$1,000 in virtual USDT</strong> — no deposit, no risk.
+          {t.home.heroDesc.split(/(\$1,000[^.]*USDT[^.]*)/)[0]}
+          <strong className="text-foreground">
+            {t.home.heroDesc.match(/\$1,000[^.]*USDT[^.]*/)?.[0]}
+          </strong>
+          {t.home.heroDesc.split(/\$1,000[^.]*USDT[^.]*/)[1]}
         </p>
 
         <div className="flex items-center gap-3 flex-wrap justify-center">
@@ -67,22 +55,22 @@ export default function HomePage() {
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
             style={{ background: "#10a1e7" }}
           >
-            Start Trading <ArrowRight className="h-4 w-4" />
+            {t.home.startTrading} <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
             href="/Exchange/BTCUSDT"
             className="px-5 py-2.5 rounded-lg text-sm font-semibold border border-border hover:bg-muted transition-colors"
           >
-            View Live Chart
+            {t.home.viewLiveChart}
           </Link>
         </div>
 
         {/* Social proof numbers */}
         <div className="flex items-center gap-8 mt-2 flex-wrap justify-center">
           {[
-            { label: "Trading Pairs", value: "400+" },
-            { label: "Virtual Starting Balance", value: "$1,000" },
-            { label: "Data Delay", value: "0ms" },
+            { label: t.home.tradingPairs, value: "400+" },
+            { label: t.home.virtualBalance, value: "$1,000" },
+            { label: t.home.dataDelay, value: "0ms" },
           ].map((s) => (
             <div key={s.label} className="flex flex-col items-center">
               <span className="text-2xl font-bold text-foreground">{s.value}</span>
@@ -95,8 +83,8 @@ export default function HomePage() {
       {/* ── Features ─────────────────────────────────────────── */}
       <section className="flex flex-col gap-6">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-1">Everything you need to practice</h2>
-          <p className="text-sm text-muted-foreground">Built with real trading tools, zero real money.</p>
+          <h2 className="text-2xl font-bold mb-1">{t.home.featuresTitle}</h2>
+          <p className="text-sm text-muted-foreground">{t.home.featuresSubtitle}</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -124,8 +112,8 @@ export default function HomePage() {
       {/* ── How it works ─────────────────────────────────────── */}
       <section className="flex flex-col gap-6">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-1">How it works</h2>
-          <p className="text-sm text-muted-foreground">Up and trading in under a minute.</p>
+          <h2 className="text-2xl font-bold mb-1">{t.home.howItWorksTitle}</h2>
+          <p className="text-sm text-muted-foreground">{t.home.howItWorksSubtitle}</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -145,24 +133,24 @@ export default function HomePage() {
         style={{ background: "linear-gradient(135deg, rgba(16,161,231,0.08) 0%, rgba(22,199,132,0.08) 100%)", borderColor: "rgba(16,161,231,0.2)" }}
       >
         <div>
-          <h2 className="text-xl font-bold mb-1">Ready to start trading?</h2>
-          <p className="text-sm text-muted-foreground">Create a free account and get $1,000 in virtual funds instantly.</p>
+          <h2 className="text-xl font-bold mb-1">{t.home.ctaTitle}</h2>
+          <p className="text-sm text-muted-foreground">{t.home.ctaDesc}</p>
         </div>
         <Link
           href="/signup"
           className="shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold text-white"
           style={{ background: "#10a1e7" }}
         >
-          Get Started Free <ArrowRight className="h-4 w-4" />
+          {t.home.getStarted} <ArrowRight className="h-4 w-4" />
         </Link>
       </section>
 
       {/* ── Live Markets Table ───────────────────────────────── */}
       <section className="flex flex-col gap-4">
         <div>
-          <h2 className="text-2xl font-bold mb-1">Live Markets</h2>
+          <h2 className="text-2xl font-bold mb-1">{t.home.liveMarketsTitle}</h2>
           <p className="text-sm text-muted-foreground">
-            Real-time prices from Binance, updated every 3 seconds.
+            {t.home.liveMarketsDesc}
           </p>
         </div>
         <CoinListClient />

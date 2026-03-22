@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 function CoinImage({ ticker }: { ticker: string }) {
   const [stage, setStage] = useState(0);
@@ -43,6 +44,7 @@ interface Props {
 }
 
 export default function CoinTabHeader({ symbol, price, isUp, changePct }: Props) {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const activeTab = searchParams.get("tab") ?? "overview";
   const ticker = symbol.replace("USDT", "");
@@ -84,10 +86,10 @@ export default function CoinTabHeader({ symbol, price, isUp, changePct }: Props)
       {/* Right: tabs */}
       <div className="flex items-center">
         <Link href={`?tab=overview`} className={tabClass("overview")}>
-          Overview
+          {t.coin.overview}
         </Link>
         <Link href={`?tab=trade`} className={tabClass("trade")}>
-          Trade
+          {t.coin.trade}
         </Link>
       </div>
     </div>

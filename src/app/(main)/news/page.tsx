@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { ExternalLink, Newspaper, TrendingUp, Flame, ArrowUpRight } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 // ── CryptoPanic types ────────────────────────────────────────────────────────
 interface CPCurrency { code: string; title: string; }
@@ -26,12 +27,12 @@ interface TrendingCoin {
 }
 
 // ── Filters ──────────────────────────────────────────────────────────────────
-const FILTERS = [
-  { key: "",       label: "Latest", icon: Newspaper },
-  { key: "hot",    label: "Hot",    icon: Flame },
-  { key: "rising", label: "Rising", icon: ArrowUpRight },
+const FILTER_KEYS = [
+  { key: "",       tKey: "latest",  icon: Newspaper },
+  { key: "hot",    tKey: "hot",     icon: Flame },
+  { key: "rising", tKey: "rising",  icon: ArrowUpRight },
 ] as const;
-type Filter = typeof FILTERS[number]["key"];
+type Filter = typeof FILTER_KEYS[number]["key"];
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -87,6 +88,7 @@ function CurrencyPill({ code }: { code: string }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function NewsPage() {
+  const { t } = useI18n();
   const [posts, setPosts]       = useState<CPPost[]>([]);
   const [trending, setTrending] = useState<TrendingCoin[]>([]);
   const [loading, setLoading]   = useState(true);
@@ -117,8 +119,8 @@ export default function NewsPage() {
         <div className="flex items-center gap-3">
           <Newspaper className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="text-2xl font-bold">Crypto News</h1>
-            <p className="text-sm text-muted-foreground">Powered by CryptoPanic</p>
+            <h1 className="text-2xl font-bold">{t.news.title}</h1>
+            <p className="text-sm text-muted-foreground">{t.news.poweredBy}</p>
           </div>
         </div>
 
@@ -128,7 +130,7 @@ export default function NewsPage() {
             className="flex items-center rounded-lg p-0.5 gap-0.5"
             style={{ background: "hsl(var(--muted))" }}
           >
-            {FILTERS.map(({ key, label, icon: Icon }) => (
+            {FILTER_KEYS.map(({ key, tKey, icon: Icon }) => (
               <button
                 key={key}
                 onClick={() => setFilter(key)}
@@ -140,7 +142,7 @@ export default function NewsPage() {
                 }
               >
                 <Icon className="h-3 w-3" />
-                {label}
+                {t.news[tKey]}
               </button>
             ))}
           </div>
@@ -153,7 +155,7 @@ export default function NewsPage() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Filter by coin… BTC"
+              placeholder={t.news.filterPlaceholder}
               className="px-3 py-1.5 rounded-lg text-xs border bg-muted/40 focus:bg-background focus:border-primary/50 outline-none transition-all"
               style={{ borderColor: "hsl(var(--border))", width: "160px" }}
             />
@@ -181,7 +183,7 @@ export default function NewsPage() {
           ) : posts.length === 0 ? (
             <div className="rounded-xl px-6 py-12 text-center text-sm text-muted-foreground"
               style={{ border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}>
-              No news found{currency ? ` for ${currency}` : ""}. Try a different filter.
+              {t.news.noNews}{currency ? ` for ${currency}` : ""}. {t.news.tryDifferent}
             </div>
           ) : (
             posts.map((post) => (
@@ -242,7 +244,7 @@ export default function NewsPage() {
               style={{ borderBottom: "1px solid hsl(var(--border))" }}>
               <TrendingUp className="h-4 w-4 text-primary" />
               <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Trending
+                {t.news.trending}
               </span>
             </div>
 

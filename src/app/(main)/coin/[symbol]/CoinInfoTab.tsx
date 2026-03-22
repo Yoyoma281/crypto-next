@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ExternalLink, TrendingUp, BarChart2, DollarSign, Globe, Twitter, Github } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 interface CoinGeckoData {
   id: string;
@@ -92,6 +93,7 @@ const SYMBOL_TO_ID: Record<string, string> = {
 };
 
 export default function CoinInfoTab({ symbol }: { symbol: string }) {
+  const { t } = useI18n();
   const ticker = symbol.replace("USDT", "");
   const coinId = SYMBOL_TO_ID[ticker] ?? ticker.toLowerCase();
 
@@ -113,7 +115,7 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-sm text-muted-foreground animate-pulse">
-        Loading coin data…
+        {t.coin.loading}
       </div>
     );
   }
@@ -121,8 +123,8 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
   if (error || !data) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-2 text-center">
-        <p className="text-sm text-muted-foreground">Could not load data for <strong>{ticker}</strong>.</p>
-        <p className="text-xs text-muted-foreground">CoinGecko may not have this coin mapped, or rate limit hit.</p>
+        <p className="text-sm text-muted-foreground">{t.coin.couldNotLoad} <strong>{ticker}</strong>.</p>
+        <p className="text-xs text-muted-foreground">{t.coin.geckoNote}</p>
       </div>
     );
   }
@@ -160,7 +162,7 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
                   className="text-xs font-semibold px-2 py-0.5 rounded-md"
                   style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}
                 >
-                  Rank #{data.market_cap_rank}
+                  {t.coin.rank}{data.market_cap_rank}
                 </span>
               )}
             </div>
@@ -192,17 +194,17 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
         >
           <div className="px-4 py-3 border-b border-border">
             <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <TrendingUp className="h-3.5 w-3.5" /> Price Performance
+              <TrendingUp className="h-3.5 w-3.5" /> {t.coin.pricePerformance}
             </h3>
           </div>
           <div className="px-4">
-            <StatRow label="24h Change" value={<PctBadge value={md.price_change_percentage_24h} />} />
-            <StatRow label="7d Change" value={<PctBadge value={md.price_change_percentage_7d} />} />
-            <StatRow label="30d Change" value={<PctBadge value={md.price_change_percentage_30d} />} />
-            <StatRow label="24h High" value={fmtUSD(md.high_24h.usd)} />
-            <StatRow label="24h Low" value={fmtUSD(md.low_24h.usd)} />
+            <StatRow label={t.coin.change24h} value={<PctBadge value={md.price_change_percentage_24h} />} />
+            <StatRow label={t.coin.change7d} value={<PctBadge value={md.price_change_percentage_7d} />} />
+            <StatRow label={t.coin.change30d} value={<PctBadge value={md.price_change_percentage_30d} />} />
+            <StatRow label={t.coin.high24h} value={fmtUSD(md.high_24h.usd)} />
+            <StatRow label={t.coin.low24h} value={fmtUSD(md.low_24h.usd)} />
             <StatRow
-              label="All-Time High"
+              label={t.coin.ath}
               value={
                 <span>
                   {fmtUSD(md.ath.usd)}{" "}
@@ -213,7 +215,7 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
               }
             />
             <StatRow
-              label="All-Time Low"
+              label={t.coin.atl}
               value={
                 <span>
                   {fmtUSD(md.atl.usd)}{" "}
@@ -237,17 +239,17 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
         >
           <div className="px-4 py-3 border-b border-border">
             <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <BarChart2 className="h-3.5 w-3.5" /> Market Stats
+              <BarChart2 className="h-3.5 w-3.5" /> {t.coin.marketStats}
             </h3>
           </div>
           <div className="px-4">
-            <StatRow label="Market Cap" value={fmtUSD(md.market_cap.usd)} />
-            <StatRow label="24h Volume" value={fmtUSD(md.total_volume.usd)} />
-            <StatRow label="Circulating Supply" value={fmtNum(md.circulating_supply)} />
-            {md.total_supply && <StatRow label="Total Supply" value={fmtNum(md.total_supply)} />}
-            {md.max_supply && <StatRow label="Max Supply" value={fmtNum(md.max_supply)} />}
-            {data.genesis_date && <StatRow label="Launch Date" value={data.genesis_date} />}
-            {data.hashing_algorithm && <StatRow label="Algorithm" value={data.hashing_algorithm} />}
+            <StatRow label={t.coin.marketCap} value={fmtUSD(md.market_cap.usd)} />
+            <StatRow label={t.coin.volume24h} value={fmtUSD(md.total_volume.usd)} />
+            <StatRow label={t.coin.circulatingSupply} value={fmtNum(md.circulating_supply)} />
+            {md.total_supply && <StatRow label={t.coin.totalSupply} value={fmtNum(md.total_supply)} />}
+            {md.max_supply && <StatRow label={t.coin.maxSupply} value={fmtNum(md.max_supply)} />}
+            {data.genesis_date && <StatRow label={t.coin.launchDate} value={data.genesis_date} />}
+            {data.hashing_algorithm && <StatRow label={t.coin.algorithm} value={data.hashing_algorithm} />}
           </div>
         </div>
 
@@ -258,7 +260,7 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
         >
           <div className="px-4 py-3 border-b border-border">
             <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <Globe className="h-3.5 w-3.5" /> Links
+              <Globe className="h-3.5 w-3.5" /> {t.coin.links}
             </h3>
           </div>
           <div className="px-4 py-2 flex flex-col gap-1">
@@ -294,7 +296,7 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
                 className="flex items-center gap-2 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Github className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">GitHub</span>
+                <span className="truncate">{t.coin.github}</span>
                 <ExternalLink className="h-3 w-3 shrink-0 ml-auto" />
               </a>
             )}
@@ -306,7 +308,7 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
                 className="flex items-center gap-2 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 <DollarSign className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">Reddit</span>
+                <span className="truncate">{t.coin.reddit}</span>
                 <ExternalLink className="h-3 w-3 shrink-0 ml-auto" />
               </a>
             )}

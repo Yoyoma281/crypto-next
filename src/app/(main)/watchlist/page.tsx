@@ -6,10 +6,12 @@ import Link from "next/link";
 import FavoritesTable from "@/app/(main)/coin/FavoritesTable";
 import { useFavorites } from "@/hooks/useFavorites";
 import AuthRequired from "@/components/auth-required";
+import { useI18n } from "@/lib/i18n";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
 
 export default function WatchlistPage() {
+  const { t } = useI18n();
   const [authed, setAuthed] = useState<boolean | null>(null);
   const { favorites, toggle, synced } = useFavorites();
 
@@ -23,8 +25,8 @@ export default function WatchlistPage() {
   if (authed === false) {
     return (
       <AuthRequired
-        title="Sign in to view your watchlist"
-        description="Star coins to track them here with live prices."
+        title={t.watchlist.signIn}
+        description={t.watchlist.signInSubtitle}
       />
     );
   }
@@ -36,10 +38,10 @@ export default function WatchlistPage() {
         <div>
           <div className="flex items-center gap-2 mb-0.5">
             <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-            <h1 className="text-2xl font-bold">Watchlist</h1>
+            <h1 className="text-2xl font-bold">{t.watchlist.title}</h1>
           </div>
           <p className="text-sm text-muted-foreground">
-            Your starred coins — live prices updated in real time
+            {t.watchlist.subtitle}
           </p>
         </div>
 
@@ -59,14 +61,14 @@ export default function WatchlistPage() {
                   style={{ background: "#16c784" }}
                 />
               </span>
-              Synced
+              {t.watchlist.synced}
             </span>
           )}
           <Link
             href="/coin"
             className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors"
           >
-            Browse Markets <ArrowRight className="h-3 w-3" />
+            {t.watchlist.browseMarkets} <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
       </div>
@@ -76,7 +78,7 @@ export default function WatchlistPage() {
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
           <span>
-            {favorites.size} coin{favorites.size !== 1 ? "s" : ""} watched
+            {favorites.size} {favorites.size !== 1 ? t.watchlist.coinPlural : t.watchlist.coinSingular} {t.watchlist.watched}
           </span>
         </div>
       )}
@@ -91,15 +93,15 @@ export default function WatchlistPage() {
 
       {favorites.size === 0 && (
         <p className="text-xs text-center text-muted-foreground">
-          Star coins on the{" "}
+          {t.watchlist.starCoins}{" "}
           <Link href="/coin" className="underline hover:text-foreground">
-            Markets
+            {t.watchlist.markets}
           </Link>{" "}
-          or{" "}
+          {t.watchlist.or}{" "}
           <Link href="/coin/BTCUSDT?tab=trade" className="underline hover:text-foreground">
-            Exchange
+            {t.watchlist.exchange}
           </Link>{" "}
-          page to add them here.
+          {t.watchlist.addThem}
         </p>
       )}
     </div>

@@ -11,6 +11,8 @@ import {
 import UserSidebar from "@/components/user-sidebar";
 import CoinSearch from "@/components/coin-search";
 import ThemeToggle from "@/components/theme-toggle";
+import LanguageSelector from "@/components/language-selector";
+import { useI18n } from "@/lib/i18n";
 
 interface GlobalData {
   coins: number;
@@ -32,25 +34,25 @@ function fmtBig(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
-// Primary nav always visible; secondary collapses into "More"
-const PRIMARY_NAV = [
-  { label: "Markets",    href: "/" },
-  { label: "Exchange",   href: "/coin/BTCUSDT?tab=trade" },
-  { label: "Portfolio",  href: "/Portfolio" },
-  { label: "Watchlist",  href: "/watchlist" },
+const PRIMARY_NAV_KEYS = [
+  { key: "markets" as const,   href: "/" },
+  { key: "exchange" as const,  href: "/coin/BTCUSDT?tab=trade" },
+  { key: "portfolio" as const, href: "/Portfolio" },
+  { key: "watchlist" as const, href: "/watchlist" },
 ];
 
-const MORE_NAV = [
-  { label: "History",     href: "/history" },
-  { label: "Leaderboard", href: "/leaderboard" },
-  { label: "News",        href: "/news" },
-  { label: "Settings",    href: "/settings" },
+const MORE_NAV_KEYS = [
+  { key: "history" as const,     href: "/history" },
+  { key: "leaderboard" as const, href: "/leaderboard" },
+  { key: "news" as const,        href: "/news" },
+  { key: "settings" as const,    href: "/settings" },
 ];
 
 const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
 
 export default function TopBarStats() {
   const pathname = usePathname();
+  const { t } = useI18n();
   const [data, setData]           = useState<GlobalData | null>(null);
   const [moreOpen, setMoreOpen]   = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -102,13 +104,13 @@ export default function TopBarStats() {
 
   const stats = data
     ? [
-        { icon: Globe,    label: "Coins",      value: data.coins.toLocaleString() },
+        { icon: Globe,    label: t.stats.coins,      value: data.coins.toLocaleString() },
         {
-          icon: BarChart2, label: "Mkt Cap",   value: fmtBig(data.marketCap),
+          icon: BarChart2, label: t.stats.marketCap, value: fmtBig(data.marketCap),
           sub: `${isUp ? "+" : ""}${data.change24h.toFixed(1)}%`, up: isUp,
         },
-        { icon: TrendingUp, label: "24h Vol",  value: fmtBig(data.volume24h) },
-        { icon: Bitcoin,    label: "BTC Dom",  value: `${data.btcDominance.toFixed(1)}%` },
+        { icon: TrendingUp, label: t.stats.volume24h, value: fmtBig(data.volume24h) },
+        { icon: Bitcoin,    label: t.stats.btcDominance, value: `${data.btcDominance.toFixed(1)}%` },
       ]
     : [];
 
@@ -120,7 +122,7 @@ export default function TopBarStats() {
     }`;
   }
 
-  const moreActive = MORE_NAV.some(
+  const moreActive = MORE_NAV_KEYS.some(
     (l) => pathname === l.href || pathname.startsWith(l.href)
   );
 
@@ -167,9 +169,9 @@ export default function TopBarStats() {
             <CoinSearch />
 
             <nav className="flex items-center gap-1">
-              {PRIMARY_NAV.map((link) => (
+              {PRIMARY_NAV_KEYS.map((link) => (
                 <Link key={link.href} href={link.href} className={navClass(link.href)}>
-                  {link.label}
+                  {t.nav[link.key]}
                 </Link>
               ))}
 
@@ -182,7 +184,7 @@ export default function TopBarStats() {
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                   }`}
                 >
-                  More <ChevronDown className={`h-3 w-3 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
+                  {t.nav.more} <ChevronDown className={`h-3 w-3 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 {moreOpen && (
@@ -190,7 +192,7 @@ export default function TopBarStats() {
                     className="absolute right-0 top-full mt-1.5 w-40 rounded-lg shadow-lg py-1 z-50"
                     style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
                   >
-                    {MORE_NAV.map((link) => (
+                    {MORE_NAV_KEYS.map((link) => (
                       <Link
                         key={link.href}
                         href={link.href}
@@ -201,7 +203,7 @@ export default function TopBarStats() {
                             : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                         }`}
                       >
-                        {link.label}
+                        {t.nav[link.key]}
                       </Link>
                     ))}
                   </div>
@@ -212,6 +214,7 @@ export default function TopBarStats() {
 
           {/* ── Right: auth + avatar ── */}
           <div className="flex items-center gap-2 flex-1 justify-end">
+            <LanguageSelector />
             <ThemeToggle />
 
             {!currentUser && (
@@ -220,13 +223,13 @@ export default function TopBarStats() {
                   href="/signup"
                   className="text-xs px-3 py-1.5 rounded-md font-medium border border-border hover:bg-muted transition-colors hidden sm:block"
                 >
-                  Sign Up
+                  {t.nav.signup}
                 </Link>
                 <Link
                   href="/login"
                   className="text-xs px-3 py-1.5 rounded-md font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
-                  Login
+                  {t.nav.login}
                 </Link>
               </>
             )}

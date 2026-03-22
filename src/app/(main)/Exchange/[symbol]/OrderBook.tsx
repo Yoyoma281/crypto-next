@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useI18n } from '@/lib/i18n';
 
 type Level = [string, string]; // [price, qty]
 
@@ -22,6 +23,7 @@ function Bar({ pct, isAsk }: { pct: number; isAsk: boolean }) {
 }
 
 export default function OrderBook({ symbol }: { symbol: string }) {
+  const { t } = useI18n();
   const [book, setBook] = useState<BookState>({ bids: [], asks: [] });
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -76,12 +78,12 @@ export default function OrderBook({ symbol }: { symbol: string }) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden text-[12px]">
-      <p className="text-xs font-semibold px-3 py-2 border-b border-border">Order Book</p>
+      <p className="text-xs font-semibold px-3 py-2 border-b border-border">{t.trading.orderBook}</p>
 
       {/* Column headers */}
       <div className="flex justify-between text-muted-foreground px-3 py-1 text-[11px]">
-        <span>Price (USDT)</span>
-        <span>Qty</span>
+        <span>{t.trading.priceUsdt}</span>
+        <span>{t.trading.qty}</span>
       </div>
 
       {/* Asks — red, highest first */}
@@ -99,7 +101,7 @@ export default function OrderBook({ symbol }: { symbol: string }) {
 
       {/* Spread row */}
       <div className="flex items-center justify-center gap-2 py-1.5 border-y border-border bg-muted/20 text-[11px]">
-        <span className="text-muted-foreground">Spread</span>
+        <span className="text-muted-foreground">{t.trading.spread}</span>
         <span className="font-medium text-foreground">{spread}</span>
       </div>
 

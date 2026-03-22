@@ -1,25 +1,30 @@
+'use client';
+
 import Link from "next/link";
 import { Bitcoin, Github, Twitter } from "lucide-react";
-
-const LINKS = {
-  Platform: [
-    { text: "Markets", href: "/" },
-    { text: "Exchange", href: "/Exchange/BTCUSDT" },
-    { text: "Portfolio", href: "/Portfolio" },
-  ],
-  Learn: [
-    { text: "What is Bitcoin?", href: "#" },
-    { text: "What is Ethereum?", href: "#" },
-    { text: "How to Trade", href: "/learn/how-to-trade" },
-  ],
-  Legal: [
-    { text: "Privacy Policy", href: "/legal/privacy" },
-    { text: "Terms of Service", href: "/legal/terms" },
-    { text: "Cookie Policy", href: "/legal/cookies" },
-  ],
-};
+import { useI18n } from "@/lib/i18n";
 
 export function Footer() {
+  const { t } = useI18n();
+
+  const LINKS = {
+    [t.footer.platform]: [
+      { text: t.nav.markets,   href: "/" },
+      { text: t.nav.exchange,  href: "/Exchange/BTCUSDT" },
+      { text: t.nav.portfolio, href: "/Portfolio" },
+    ],
+    [t.footer.learn]: [
+      { text: t.footer.whatIsBitcoin,  href: "#" },
+      { text: t.footer.whatIsEthereum, href: "#" },
+      { text: t.footer.howToTrade,     href: "/learn/how-to-trade" },
+    ],
+    [t.footer.legal]: [
+      { text: t.footer.privacyPolicy, href: "/legal/privacy" },
+      { text: t.footer.terms,         href: "/legal/terms" },
+      { text: t.footer.cookies,       href: "/legal/cookies" },
+    ],
+  };
+
   return (
     <footer className="border-t border-border bg-background mt-16">
       <div className="max-w-screen-xl mx-auto px-4 py-10">
@@ -34,7 +39,7 @@ export function Footer() {
               <span className="font-bold text-base">CrySer</span>
             </Link>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Real-time crypto market data, live trading, and portfolio tracking — all in one place.
+              {t.footer.tagline}
             </p>
             <div className="flex items-center gap-3 mt-1">
               <a href="#" aria-label="GitHub" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -70,12 +75,8 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} CrySer. All rights reserved.</p>
-          <p>
-            Market data provided by{" "}
-            <span className="text-foreground font-medium">Binance</span> &amp;{" "}
-            <span className="text-foreground font-medium">CoinGecko</span>
-          </p>
+          <p>© {new Date().getFullYear()} CrySer. {t.footer.allRightsReserved}</p>
+          <p>{t.footer.dataProvided}</p>
         </div>
       </div>
     </footer>

@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import { formatPrice, fmtCoinPrice } from "@/lib/utils";
 import { CoinTableRow } from "@/app/types/coin";
+import type { T } from '@/lib/i18n';
 import Sparkline from "@/app/components/sparkline";
 import { Star } from "lucide-react";
 
@@ -81,6 +82,7 @@ function PctBadge({ value }: { value: string }) {
 
 /** Pass the page offset so rank is globally correct (e.g. page 2 → #11, #12 …) */
 export function makeColumns(
+  t: T,
   offset: number,
   favorites: Set<string> = new Set(),
   toggleFavorite: (symbol: string) => void = () => {},
@@ -120,7 +122,7 @@ export function makeColumns(
     },
     {
         accessorKey: "symbol",
-        header: "Name",
+        header: t.markets.colName,
         cell: (props) => {
             const sym = props.getValue() as string;
             const ticker = sym.replace("USDT", "");
@@ -137,7 +139,7 @@ export function makeColumns(
     },
     {
         accessorKey: "lastPrice",
-        header: "Price",
+        header: t.markets.colPrice,
         cell: (props) => (
             <span className="font-semibold text-[14px]">
                 {formatPrice(props.getValue() as string)}
@@ -146,7 +148,7 @@ export function makeColumns(
     },
     {
         accessorKey: "priceChange",
-        header: "24h Change",
+        header: t.markets.col24hChange,
         cell: (props) => {
             const val = parseFloat(props.getValue() as string);
             if (isNaN(val)) return <span className="text-muted-foreground text-[13px]">—</span>;
@@ -161,12 +163,12 @@ export function makeColumns(
     },
     {
         accessorKey: "priceChangePercent",
-        header: "24h %",
+        header: t.markets.col24hPct,
         cell: (props) => <PctBadge value={props.getValue() as string} />,
     },
     {
         accessorKey: "weightedAvgPrice",
-        header: "Avg Price",
+        header: t.markets.colAvgPrice,
         cell: (props) => {
             const val = parseFloat(props.getValue() as string);
             return (
@@ -178,7 +180,7 @@ export function makeColumns(
     },
     {
         accessorKey: "prevClosePrice",
-        header: "Prev Close",
+        header: t.markets.colPrevClose,
         cell: (props) => {
             const val = parseFloat(props.getValue() as string);
             return (
@@ -190,7 +192,7 @@ export function makeColumns(
     },
     {
         id: "sparkline",
-        header: "7d Chart",
+        header: t.markets.col7dChart,
         cell: (props) => {
             const data = props.row.original.sparkData;
             if (!data || data.length === 0) {

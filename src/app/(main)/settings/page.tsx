@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Shield, RotateCcw, Lock } from "lucide-react";
 import AuthRequired from "@/components/auth-required";
+import { useI18n } from "@/lib/i18n";
 
 function Section({ icon: Icon, title, description, children }: {
   icon: React.ElementType;
@@ -28,6 +29,7 @@ function Section({ icon: Icon, title, description, children }: {
 }
 
 export default function SettingsPage() {
+  const { t } = useI18n();
   const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
 
   // Auth check — must be first so hooks are unconditional
@@ -53,8 +55,8 @@ export default function SettingsPage() {
   if (authed === false) {
     return (
       <AuthRequired
-        title="Sign in to access settings"
-        description="Manage your password and account preferences."
+        title={t.settings.signIn}
+        description={t.settings.signInSubtitle}
       />
     );
   }
@@ -62,7 +64,7 @@ export default function SettingsPage() {
   async function handlePasswordChange(e: React.FormEvent) {
     e.preventDefault();
     if (pwForm.newPassword !== pwForm.confirm) {
-      setPwStatus({ ok: false, msg: "Passwords do not match" });
+      setPwStatus({ ok: false, msg: t.settings.noMatch });
       return;
     }
     setPwLoading(true);
@@ -76,13 +78,13 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setPwStatus({ ok: true, msg: data.message ?? "Password updated!" });
+        setPwStatus({ ok: true, msg: data.message ?? t.settings.updated });
         setPwForm({ currentPassword: "", newPassword: "", confirm: "" });
       } else {
-        setPwStatus({ ok: false, msg: data.error ?? "Something went wrong" });
+        setPwStatus({ ok: false, msg: data.error ?? t.settings.somethingWrong });
       }
     } catch {
-      setPwStatus({ ok: false, msg: "Network error — is the server running?" });
+      setPwStatus({ ok: false, msg: t.settings.networkError });
     } finally {
       setPwLoading(false);
     }
@@ -102,12 +104,12 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setResetStatus({ ok: true, msg: data.message ?? "Portfolio reset!" });
+        setResetStatus({ ok: true, msg: data.message ?? t.settings.reset });
       } else {
-        setResetStatus({ ok: false, msg: data.error ?? "Something went wrong" });
+        setResetStatus({ ok: false, msg: data.error ?? t.settings.somethingWrong });
       }
     } catch {
-      setResetStatus({ ok: false, msg: "Network error — is the server running?" });
+      setResetStatus({ ok: false, msg: t.settings.networkError });
     } finally {
       setResetLoading(false);
       setConfirmReset(false);
@@ -117,17 +119,17 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-6 max-w-lg">
       <div>
-        <h1 className="text-2xl font-bold mb-0.5">Settings</h1>
-        <p className="text-sm text-muted-foreground">Manage your account</p>
+        <h1 className="text-2xl font-bold mb-0.5">{t.settings.title}</h1>
+        <p className="text-sm text-muted-foreground">{t.settings.subtitle}</p>
       </div>
 
       {/* Change Password */}
-      <Section icon={Lock} title="Change Password" description="Update your login password">
+      <Section icon={Lock} title={t.settings.changePassword} description={t.settings.changePasswordDesc}>
         <form onSubmit={handlePasswordChange} className="flex flex-col gap-3">
           {(["currentPassword", "newPassword", "confirm"] as const).map((field) => (
             <div key={field} className="flex flex-col gap-1">
               <label className="text-xs font-medium text-muted-foreground capitalize">
-                {field === "confirm" ? "Confirm New Password" : field === "currentPassword" ? "Current Password" : "New Password"}
+                {field === "confirm" ? t.settings.confirmNewPassword : field === "currentPassword" ? t.settings.currentPassword : t.settings.newPassword}
               </label>
               <input
                 type="password"
@@ -136,7 +138,7 @@ export default function SettingsPage() {
                 required
                 minLength={field !== "currentPassword" ? 6 : undefined}
                 className="rounded-md px-3 py-2 text-sm bg-background border border-border outline-none focus:ring-2 focus:ring-primary/50 transition"
-                placeholder={field === "confirm" ? "Re-enter new password" : "••••••••"}
+                placeholder={field === "confirm" ? t.settings.reEnter : "••••••••"}
               />
             </div>
           ))}
@@ -158,7 +160,7 @@ export default function SettingsPage() {
             disabled={pwLoading}
             className="mt-1 px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50"
           >
-            {pwLoading ? "Updating…" : "Update Password"}
+            {pwLoading ? t.settings.updating : t.settings.updatePassword}
           </button>
         </form>
       </Section>
@@ -166,15 +168,15 @@ export default function SettingsPage() {
       {/* Reset Portfolio */}
       <Section
         icon={RotateCcw}
-        title="Reset Portfolio"
-        description="Wipe all holdings and start fresh with $1,000 USDT"
+        title={t.settings.resetPortfolio}
+        description={t.settings.resetDesc}
       >
         <div className="flex flex-col gap-3">
           <div
             className="text-xs px-3 py-2.5 rounded-md text-muted-foreground"
             style={{ background: "rgba(234,57,67,0.07)", border: "1px solid rgba(234,57,67,0.2)" }}
           >
-            ⚠️ This will permanently delete all your holdings and trade data. You will start over with $1,000 virtual USDT. This cannot be undone.
+            ⚠️ {t.settings.resetWarning}
           </div>
 
           {resetStatus && (
@@ -198,7 +200,7 @@ export default function SettingsPage() {
               color: confirmReset ? "#fff" : "#ea3943",
             }}
           >
-            {resetLoading ? "Resetting…" : confirmReset ? "Click again to confirm reset" : "Reset Portfolio"}
+            {resetLoading ? t.settings.resetting : confirmReset ? t.settings.confirmReset : t.settings.reset}
           </button>
 
           {confirmReset && (
@@ -206,18 +208,18 @@ export default function SettingsPage() {
               onClick={() => setConfirmReset(false)}
               className="text-xs text-muted-foreground hover:underline"
             >
-              Cancel
+              {t.settings.cancel}
             </button>
           )}
         </div>
       </Section>
 
       {/* Account Info */}
-      <Section icon={Shield} title="Account" description="Your account details">
+      <Section icon={Shield} title={t.settings.account} description={t.settings.accountDetails}>
         <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-          <p>Starting balance: <span className="text-foreground font-semibold">$1,000 USDT</span></p>
-          <p>Trading: <span className="text-foreground font-semibold">Paper trading only — no real money</span></p>
-          <p>Data source: <span className="text-foreground font-semibold">Live Binance prices</span></p>
+          <p>{t.settings.startingBalance}<span className="text-foreground font-semibold">$1,000 USDT</span></p>
+          <p>{t.settings.trading}<span className="text-foreground font-semibold">{t.settings.tradingDesc}</span></p>
+          <p>{t.settings.dataSource}<span className="text-foreground font-semibold">{t.settings.dataSourceDesc}</span></p>
         </div>
       </Section>
     </div>

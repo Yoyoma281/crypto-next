@@ -7,6 +7,7 @@ import { CoinTableRow } from "@/app/types/coin";
 import { useFavorites } from "@/hooks/useFavorites";
 import FavoritesTable from "./FavoritesTable";
 import { Star } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 const LIMIT = 10;
 
@@ -58,6 +59,7 @@ export default function CoinListClient() {
   const [status, setStatus] = useState<"connecting" | "live" | "error">("connecting");
   const [tab, setTab] = useState<Tab>("all");
   const { favorites, toggle } = useFavorites();
+  const { t } = useI18n();
 
   // Reconnect SSE every time `page` changes
   useEffect(() => {
@@ -91,32 +93,32 @@ export default function CoinListClient() {
 
   // Columns with correct global offset so rank shows #11, #12 … on page 2
   const columns = useMemo(
-    () => makeColumns((page - 1) * LIMIT, favorites, toggle),
-    [page, favorites, toggle]
+    () => makeColumns(t, (page - 1) * LIMIT, favorites, toggle),
+    [t, page, favorites, toggle]
   );
 
   return (
     <>
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-4 border-b border-border">
-        {(["all", "favorites"] as Tab[]).map((t) => (
+        {(["all", "favorites"] as Tab[]).map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
             className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
-              tab === t
+              tab === tabKey
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            {t === "favorites" && (
+            {tabKey === "favorites" && (
               <Star
                 className="h-3.5 w-3.5"
                 style={tab === "favorites" ? { fill: "#f59e0b", color: "#f59e0b" } : {}}
               />
             )}
-            {t === "all" ? "All Coins" : "Favorites"}
-            {t === "favorites" && favorites.size > 0 && (
+            {tabKey === "all" ? t.markets.allCoins : t.markets.favorites}
+            {tabKey === "favorites" && favorites.size > 0 && (
               <span
                 className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center"
                 style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}
@@ -153,29 +155,29 @@ export default function CoinListClient() {
                   style={{ background: "#16c784" }}
                 />
               </span>
-              Live
+              {t.markets.live}
             </span>
           )}
           {status === "connecting" && (
-            <span className="text-xs text-muted-foreground animate-pulse">Connecting…</span>
+            <span className="text-xs text-muted-foreground animate-pulse">{t.markets.connecting}</span>
           )}
           {status === "error" && (
             <span
               className="text-xs font-semibold px-2.5 py-1 rounded-full"
               style={{ color: "#ea3943", background: "rgba(234,57,67,0.1)" }}
             >
-              Disconnected
+              {t.markets.disconnected}
             </span>
           )}
         </div>
 
         {total > 0 && (
           <span className="text-xs text-muted-foreground">
-            Showing{" "}
+            {t.markets.showing}{" "}
             <span className="text-foreground font-medium">
               {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)}
             </span>{" "}
-            of <span className="text-foreground font-medium">{total}</span> coins
+            {t.markets.of} <span className="text-foreground font-medium">{total}</span> {t.markets.coins}
           </span>
         )}
       </div>
@@ -196,7 +198,7 @@ export default function CoinListClient() {
       {/* Pagination controls */}
       <div className="flex items-center justify-between mt-4 flex-wrap gap-3">
         <span className="text-xs text-muted-foreground">
-          Page <span className="text-foreground font-semibold">{page}</span> of{" "}
+          {t.markets.page} <span className="text-foreground font-semibold">{page}</span> of{" "}
           <span className="text-foreground font-semibold">{totalPages}</span>
         </span>
 
@@ -213,7 +215,7 @@ export default function CoinListClient() {
             disabled={page === 1}
             className="px-3 py-1.5 rounded-md text-xs font-medium border border-border transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted"
           >
-            ‹ Prev
+            {t.markets.prev}
           </button>
 
           {/* Page number pills */}
@@ -241,7 +243,7 @@ export default function CoinListClient() {
             disabled={page === totalPages}
             className="px-3 py-1.5 rounded-md text-xs font-medium border border-border transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted"
           >
-            Next ›
+            {t.markets.next}
           </button>
           <button
             onClick={() => setPage(totalPages)}

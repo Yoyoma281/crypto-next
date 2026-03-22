@@ -1,16 +1,12 @@
 import { fetchPortfolio, fetchPortfolioAnalytics, fetchUserSafe } from "@/app/data/services";
 import PortfolioLiveClient from "./PortfolioLiveClient";
-import AuthRequired from "@/components/auth-required";
+import PortfolioAuthRequired from "./PortfolioAuthRequired";
+import PortfolioPageHeader from "./PortfolioPageHeader";
 
 export default async function Page() {
   const user = await fetchUserSafe();
   if (!user) {
-    return (
-      <AuthRequired
-        title="Sign in to view your portfolio"
-        description="Your holdings, live valuations, and P&L are all waiting for you."
-      />
-    );
+    return <PortfolioAuthRequired />;
   }
 
   const [res, analyticsRes] = await Promise.all([
@@ -24,12 +20,7 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-bold mb-0.5">My Portfolio</h1>
-        <p className="text-sm text-muted-foreground">
-          Track your crypto holdings and performance
-        </p>
-      </div>
+      <PortfolioPageHeader />
 
       {res ? (
         <PortfolioLiveClient
@@ -38,12 +29,7 @@ export default async function Page() {
           costBasis={costBasis}
         />
       ) : (
-        <div
-          className="rounded-xl px-6 py-10 text-center text-muted-foreground text-sm"
-          style={{ border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
-        >
-          Could not load portfolio. Please log in.
-        </div>
+        <PortfolioPageHeader errorOnly />
       )}
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useI18n } from '@/lib/i18n';
 
 interface Coin {
   symbol: string;
@@ -9,6 +10,7 @@ interface Coin {
 }
 
 export default function TradeForm({ symbol }: { symbol: string }) {
+  const { t } = useI18n();
   const ticker = symbol.replace('USDT', '');
   const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
   const [amount, setAmount] = useState('');
@@ -84,14 +86,14 @@ export default function TradeForm({ symbol }: { symbol: string }) {
       });
       const data = await res.json();
       if (res.ok) {
-        setMsg({ text: `${side} order filled!`, ok: true });
+        setMsg({ text: `${side} ${t.trading.orderFilled}`, ok: true });
         setAmount('');
         refreshBalance();
       } else {
         setMsg({ text: data.error ?? 'Trade failed', ok: false });
       }
     } catch {
-      setMsg({ text: 'Network error', ok: false });
+      setMsg({ text: t.trading.networkError, ok: false });
     }
 
     setLoading(false);
@@ -106,10 +108,10 @@ export default function TradeForm({ symbol }: { symbol: string }) {
         {/* Tab preview (disabled) */}
         <div className="flex rounded-lg overflow-hidden border border-border opacity-40 pointer-events-none select-none">
           <div className="flex-1 py-2 text-sm font-semibold text-center" style={{ background: '#16c784', color: '#fff' }}>
-            Buy {ticker}
+            {t.trading.buy} {ticker}
           </div>
           <div className="flex-1 py-2 text-sm font-semibold text-center text-muted-foreground">
-            Sell {ticker}
+            {t.trading.sell} {ticker}
           </div>
         </div>
 
@@ -120,9 +122,9 @@ export default function TradeForm({ symbol }: { symbol: string }) {
         >
           <div className="text-3xl">🔒</div>
           <div>
-            <p className="font-semibold text-sm text-foreground">Sign up to start trading</p>
+            <p className="font-semibold text-sm text-foreground">{t.trading.signUpToTrade}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Get <span className="text-foreground font-semibold">$1,000 USDT</span> in virtual funds instantly.
+              {t.trading.getVirtualFunds}
             </p>
           </div>
           <div className="flex gap-2 w-full mt-1">
@@ -131,13 +133,13 @@ export default function TradeForm({ symbol }: { symbol: string }) {
               className="flex-1 py-2 rounded-lg text-sm font-semibold text-white text-center transition-opacity hover:opacity-90"
               style={{ background: '#10a1e7' }}
             >
-              Sign Up Free
+              {t.trading.signUpFree}
             </Link>
             <Link
               href="/login"
               className="flex-1 py-2 rounded-lg text-sm font-semibold border border-border hover:bg-muted transition-colors text-center"
             >
-              Log In
+              {t.trading.logIn}
             </Link>
           </div>
         </div>
@@ -160,7 +162,7 @@ export default function TradeForm({ symbol }: { symbol: string }) {
                 : { color: 'hsl(var(--muted-foreground))' }
             }
           >
-            {s === 'BUY' ? `Buy ${ticker}` : `Sell ${ticker}`}
+            {s === 'BUY' ? `${t.trading.buy} ${ticker}` : `${t.trading.sell} ${ticker}`}
           </button>
         ))}
       </div>
@@ -168,7 +170,7 @@ export default function TradeForm({ symbol }: { symbol: string }) {
       {/* Balance & price info row */}
       <div className="flex justify-between text-xs text-muted-foreground">
         <span>
-          Available:{' '}
+          {t.trading.available + ':'}{' '}
           <span className="text-foreground font-medium">
             {side === 'BUY'
               ? `$${usdtBal.toLocaleString('en-US', { maximumFractionDigits: 2 })} USDT`
@@ -176,7 +178,7 @@ export default function TradeForm({ symbol }: { symbol: string }) {
           </span>
         </span>
         <span>
-          Price:{' '}
+          {t.trading.price + ':'}{' '}
           <span className="text-foreground font-medium">
             {price
               ? `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -220,7 +222,7 @@ export default function TradeForm({ symbol }: { symbol: string }) {
 
       {/* Total */}
       <div className="flex justify-between text-xs text-muted-foreground border-t border-border pt-2">
-        <span>Est. Total</span>
+        <span>{t.trading.estTotal}</span>
         <span className="text-foreground font-medium">${total} USDT</span>
       </div>
 
@@ -232,10 +234,10 @@ export default function TradeForm({ symbol }: { symbol: string }) {
         style={{ background: activeColor }}
       >
         {loading
-          ? 'Processing…'
+          ? t.trading.processing
           : side === 'BUY'
-          ? `Buy ${ticker}`
-          : `Sell ${ticker}`}
+          ? `${t.trading.buy} ${ticker}`
+          : `${t.trading.sell} ${ticker}`}
       </button>
 
       {/* Feedback */}

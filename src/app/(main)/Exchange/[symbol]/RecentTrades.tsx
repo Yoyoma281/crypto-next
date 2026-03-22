@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useI18n } from '@/lib/i18n';
 
 interface Trade {
   id: number;
@@ -11,6 +12,7 @@ interface Trade {
 }
 
 export default function RecentTrades({ symbol }: { symbol: string }) {
+  const { t } = useI18n();
   const [trades, setTrades] = useState<Trade[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -55,14 +57,14 @@ export default function RecentTrades({ symbol }: { symbol: string }) {
   return (
     <div className="flex flex-col overflow-hidden text-[12px]">
       <p className="text-xs font-semibold px-3 py-2 border-b border-border">
-        Recent Trades
+        {t.trading.recentTrades}
       </p>
 
       {/* Headers */}
       <div className="flex justify-between text-muted-foreground px-3 py-1 text-[11px]">
-        <span>Price (USDT)</span>
-        <span>Amount</span>
-        <span>Time</span>
+        <span>{t.trading.priceUsdt}</span>
+        <span>{t.trading.amount}</span>
+        <span>{t.trading.time}</span>
       </div>
 
       <div className="flex flex-col overflow-y-auto" style={{ maxHeight: 260 }}>

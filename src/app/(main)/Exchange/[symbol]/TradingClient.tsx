@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useI18n } from '@/lib/i18n';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import OrderBook from './OrderBook';
@@ -51,6 +52,7 @@ function CoinImage({ ticker }: { ticker: string }) {
 
 export default function TradingClient({ symbol, hiddenHeader }: { symbol: string; hiddenHeader?: boolean }) {
   const ticker = symbol.replace('USDT', '');
+  const { t } = useI18n();
   const [tickerData, setTickerData] = useState<Ticker | null>(null);
 
   // Live 24h ticker via WebSocket
@@ -114,9 +116,9 @@ export default function TradingClient({ symbol, hiddenHeader }: { symbol: string
           {/* Stats */}
           {tickerData && (
             <div className="flex gap-6 text-xs ml-auto flex-wrap">
-              <StatCell label="24h High" value={fmtPrice(tickerData.high)} />
-              <StatCell label="24h Low" value={fmtPrice(tickerData.low)} />
-              <StatCell label="24h Volume" value={fmtVol(tickerData.volume)} />
+              <StatCell label={t.trading.high24h} value={fmtPrice(tickerData.high)} />
+              <StatCell label={t.trading.low24h} value={fmtPrice(tickerData.low)} />
+              <StatCell label={t.trading.volume24h} value={fmtVol(tickerData.volume)} />
             </div>
           )}
         </div>

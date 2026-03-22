@@ -3,6 +3,7 @@
 import { portfolioCoin } from "@/app/types/coin";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
+import { T } from "@/lib/i18n/translations";
 
 type EnrichedCoin = portfolioCoin & {
   avgBuyPrice?: number;
@@ -26,11 +27,11 @@ function fmtWorth(val: string) {
   return fmtUSD(n);
 }
 
-export function makeColumns(): ColumnDef<EnrichedCoin>[] {
+export function makeColumns(t: T): ColumnDef<EnrichedCoin>[] {
   return [
     {
       id: "rank",
-      header: "#",
+      header: t.portfolio.colRank,
       cell: (props) => (
         <span className="text-muted-foreground text-sm font-medium">
           {props.row.index + 1}
@@ -39,7 +40,7 @@ export function makeColumns(): ColumnDef<EnrichedCoin>[] {
     },
     {
       accessorKey: "symbol",
-      header: "Asset",
+      header: t.portfolio.colAsset,
       cell: (props) => {
         const sym = props.getValue() as string;
         const ticker = sym.replace(/USDT$/i, "").replace("/", "");
@@ -63,7 +64,7 @@ export function makeColumns(): ColumnDef<EnrichedCoin>[] {
     },
     {
       accessorKey: "amount",
-      header: "Holdings",
+      header: t.portfolio.colHoldings,
       cell: (props) => (
         <span className="font-medium text-[14px]">
           {fmtAmount(props.getValue() as string)}
@@ -72,7 +73,7 @@ export function makeColumns(): ColumnDef<EnrichedCoin>[] {
     },
     {
       accessorKey: "CurrentWorth",
-      header: "Current Value",
+      header: t.portfolio.colCurrentValue,
       cell: (props) => (
         <span className="font-semibold text-[14px]">
           {fmtWorth(props.getValue() as string)}
@@ -81,7 +82,7 @@ export function makeColumns(): ColumnDef<EnrichedCoin>[] {
     },
     {
       id: "avgBuyPrice",
-      header: "Avg Buy Price",
+      header: t.portfolio.colAvgBuy,
       cell: (props) => {
         const avg = props.row.original.avgBuyPrice;
         if (avg == null || avg === 0) return <span className="text-muted-foreground text-sm">—</span>;
@@ -90,7 +91,7 @@ export function makeColumns(): ColumnDef<EnrichedCoin>[] {
     },
     {
       id: "unrealizedPnl",
-      header: "Unrealized P&L",
+      header: t.portfolio.colPnl,
       cell: (props) => {
         const pnl = props.row.original.unrealizedPnl;
         const pct = props.row.original.unrealizedPnlPct;

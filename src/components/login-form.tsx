@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 const loginSchema = z.object({
   username: z.string("Invalid email address"),
@@ -36,6 +37,7 @@ export function LoginForm({
   ...props
 }: React.ComponentPropsWithoutRef<"form"> & { onSwitchToSignup?: () => void; focusFirst?: boolean }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const firstFieldRef = useRef<HTMLInputElement | null>(null);
@@ -64,11 +66,11 @@ export function LoginForm({
         setState("success");
         setTimeout(() => router.push("/"), 1600);
       } else {
-        setErrorMsg("Invalid credentials. Please try again.");
+        setErrorMsg(t.auth.invalidCredentials);
         setState("error");
       }
     } catch {
-      setErrorMsg("Login failed. Please check your credentials.");
+      setErrorMsg(t.auth.loginFailed);
       setState("error");
     }
   };
@@ -83,8 +85,8 @@ export function LoginForm({
           <CheckCircle2 className="h-8 w-8" style={{ color: "#16c784" }} />
         </div>
         <div className="text-center">
-          <p className="text-lg font-semibold text-foreground">Welcome back!</p>
-          <p className="text-sm text-muted-foreground mt-0.5">Redirecting to markets…</p>
+          <p className="text-lg font-semibold text-foreground">{t.auth.welcomeBack}!</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{t.auth.redirectingMarkets}</p>
         </div>
         <div className="flex gap-1 mt-1">
           {[0, 1, 2].map((i) => (
@@ -106,15 +108,13 @@ export function LoginForm({
       {...props}
     >
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Welcome back</h1>
-        <p className="text-sm text-muted-foreground">
-          Sign in to your CrySer account
-        </p>
+        <h1 className="text-2xl font-bold">{t.auth.welcomeBack}</h1>
+        <p className="text-sm text-muted-foreground">{t.auth.loginSubtitle}</p>
       </div>
 
       <div className="grid gap-5">
         <div className="grid gap-2">
-          <Label htmlFor="email">Username</Label>
+          <Label htmlFor="email">{t.auth.username}</Label>
           <Input
             id="email"
             type="text"
@@ -133,9 +133,9 @@ export function LoginForm({
 
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t.auth.password}</Label>
             <a href="#" className="text-xs text-muted-foreground underline-offset-4 hover:underline hover:text-foreground transition-colors">
-              Forgot password?
+              {t.auth.forgotPassword}
             </a>
           </div>
           <Input
@@ -166,25 +166,25 @@ export function LoginForm({
           {state === "loading" ? (
             <span className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Signing in…
+              {t.auth.signingIn}
             </span>
-          ) : "Sign In"}
+          ) : t.auth.signIn}
         </Button>
       </div>
 
       <div className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
+        {t.auth.noAccount}{" "}
         {onSwitchToSignup ? (
           <button
             type="button"
             onClick={onSwitchToSignup}
             className="text-foreground font-medium underline underline-offset-4 hover:opacity-80 transition-opacity"
           >
-            Sign up free
+            {t.auth.signUpFree}
           </button>
         ) : (
           <a href="/signup" className="text-foreground font-medium underline underline-offset-4 hover:opacity-80 transition-opacity">
-            Sign up free
+            {t.auth.signUpFree}
           </a>
         )}
       </div>

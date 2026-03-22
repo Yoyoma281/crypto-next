@@ -5,6 +5,7 @@ import { DataTable } from "@/app/components/table";
 import { makeColumns } from "./columns";
 import { portfolioCoin } from "@/app/types/coin";
 import { CostBasisEntry } from "@/app/data/services";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   initialCoins: portfolioCoin[];
@@ -43,6 +44,7 @@ function StatCard({
 }
 
 export default function PortfolioLiveClient({ initialCoins, initialBalance, costBasis }: Props) {
+  const { t } = useI18n();
   const [coins, setCoins] = useState<portfolioCoin[]>(initialCoins);
   const [streamStatus, setStreamStatus] = useState<"connecting" | "live" | "error">("connecting");
 
@@ -90,29 +92,29 @@ export default function PortfolioLiveClient({ initialCoins, initialBalance, cost
     return { ...c, avgBuyPrice: basis.avgBuyPrice, unrealizedPnl, unrealizedPnlPct };
   });
 
-  const columns = makeColumns();
+  const columns = makeColumns(t);
 
   return (
     <>
       {/* Summary cards */}
       <div className="flex gap-4 flex-wrap">
-        <StatCard label="Total Value" value={fmtUSD(totalValue)} sub="Holdings + Cash" />
+        <StatCard label={t.portfolio.totalValue} value={fmtUSD(totalValue)} sub={t.portfolio.holdingsPlusCash} />
         <StatCard
-          label="Total P&L"
+          label={t.portfolio.totalPnl}
           value={fmtPnl(pnl)}
-          sub={`${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}% vs $1,000 start`}
+          sub={`${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}% ${t.portfolio.vsStart}`}
           valueColor={pnlColor}
         />
-        <StatCard label="Holdings Value" value={fmtUSD(holdingsTotal)} />
-        <StatCard label="Available Balance" value={fmtUSD(cashBalance)} sub="USDT" />
-        <StatCard label="Assets" value={String(numAssets)} sub="active positions" />
+        <StatCard label={t.portfolio.holdingsValue} value={fmtUSD(holdingsTotal)} />
+        <StatCard label={t.portfolio.availableBalance} value={fmtUSD(cashBalance)} sub="USDT" />
+        <StatCard label={t.portfolio.assets} value={String(numAssets)} sub={t.portfolio.activePositions} />
       </div>
 
       {/* Holdings table */}
       <div>
         <div className="flex items-center gap-3 mb-3">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Holdings
+            {t.portfolio.colHoldings}
           </h2>
           {streamStatus === "live" && (
             <span
@@ -123,15 +125,15 @@ export default function PortfolioLiveClient({ initialCoins, initialBalance, cost
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#16c784" }} />
                 <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#16c784" }} />
               </span>
-              Live
+              {t.portfolio.live}
             </span>
           )}
           {streamStatus === "connecting" && (
-            <span className="text-xs text-muted-foreground animate-pulse">Connecting…</span>
+            <span className="text-xs text-muted-foreground animate-pulse">{t.portfolio.connecting}</span>
           )}
           {streamStatus === "error" && (
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ color: "#ea3943", background: "rgba(234,57,67,0.1)" }}>
-              Disconnected
+              {t.portfolio.disconnected}
             </span>
           )}
         </div>

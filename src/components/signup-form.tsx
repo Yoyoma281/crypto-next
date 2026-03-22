@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Loader2, CheckCircle2, Wallet } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 const schema = z
   .object({
@@ -27,6 +28,7 @@ type FormData = z.infer<typeof schema>;
 
 export function SignupForm({ className, onSwitchToLogin, focusFirst }: { className?: string; onSwitchToLogin?: () => void; focusFirst?: boolean }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [state, setState] = useState<"idle" | "loading" | "success">("idle");
   const [serverError, setServerError] = useState<string | null>(null);
   const firstFieldRef = useRef<HTMLInputElement | null>(null);
@@ -57,7 +59,7 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
 
       if (!res.ok) {
         const body = await res.json();
-        setServerError(body.error ?? "Registration failed");
+        setServerError(body.error ?? t.auth.networkError);
         setState("idle");
         return;
       }
@@ -65,7 +67,7 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
       setState("success");
       setTimeout(() => router.push("/login"), 2200);
     } catch {
-      setServerError("Network error. Please try again.");
+      setServerError(t.auth.networkError);
       setState("idle");
     }
   };
@@ -87,8 +89,8 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
           />
         </div>
         <div className="text-center">
-          <p className="text-xl font-bold text-foreground">Account created!</p>
-          <p className="text-sm text-muted-foreground mt-1">Redirecting to login…</p>
+          <p className="text-xl font-bold text-foreground">{t.auth.accountCreated}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t.auth.redirectingLogin}</p>
         </div>
         {/* Virtual balance badge */}
         <div
@@ -96,7 +98,7 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
           style={{ background: "rgba(22,199,132,0.08)", borderColor: "rgba(22,199,132,0.3)", color: "#16c784" }}
         >
           <Wallet className="h-4 w-4" />
-          $1,000 USDT added to your account
+          {t.auth.virtualBalance}
         </div>
         <div className="flex gap-1">
           {[0, 1, 2].map((i) => (
@@ -117,15 +119,13 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
       className={cn("flex flex-col gap-5", className)}
     >
       <div className="flex flex-col items-center gap-1 text-center">
-        <h1 className="text-2xl font-bold">Create your account</h1>
-        <p className="text-sm text-muted-foreground">
-          Start with <span className="text-foreground font-semibold">$1,000</span> in virtual funds — free forever
-        </p>
+        <h1 className="text-2xl font-bold">{t.auth.createAccount}</h1>
+        <p className="text-sm text-muted-foreground">{t.auth.signupSubtitle}</p>
       </div>
 
       <div className="grid gap-4">
         <div className="grid gap-1.5">
-          <Label htmlFor="username">Username</Label>
+          <Label htmlFor="username">{t.auth.username}</Label>
           <Input
             id="username"
             type="text"
@@ -141,7 +141,7 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
         </div>
 
         <div className="grid gap-1.5">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t.auth.password}</Label>
           <Input
             id="password"
             type="password"
@@ -152,7 +152,7 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
         </div>
 
         <div className="grid gap-1.5">
-          <Label htmlFor="confirm">Confirm Password</Label>
+          <Label htmlFor="confirm">{t.auth.confirmPassword}</Label>
           <Input
             id="confirm"
             type="password"
@@ -179,25 +179,25 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
           {state === "loading" ? (
             <span className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Creating account…
+              {t.auth.creatingAccount}
             </span>
-          ) : "Create Account"}
+          ) : t.auth.signUp}
         </Button>
       </div>
 
       <p className="text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
+        {t.auth.hasAccount}{" "}
         {onSwitchToLogin ? (
           <button
             type="button"
             onClick={onSwitchToLogin}
             className="text-foreground font-medium underline underline-offset-4 hover:opacity-80 transition-opacity"
           >
-            Sign in
+            {t.auth.signInLink}
           </button>
         ) : (
           <Link href="/login" className="text-foreground font-medium underline underline-offset-4 hover:opacity-80 transition-opacity">
-            Sign in
+            {t.auth.signInLink}
           </Link>
         )}
       </p>
