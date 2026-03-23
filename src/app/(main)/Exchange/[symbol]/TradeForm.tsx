@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useI18n } from '@/lib/i18n';
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { useI18n } from "@/lib/i18n";
 
 interface Coin {
   symbol: string;
@@ -11,9 +11,9 @@ interface Coin {
 
 export default function TradeForm({ symbol }: { symbol: string }) {
   const { t } = useI18n();
-  const ticker = symbol.replace('USDT', '');
-  const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
-  const [amount, setAmount] = useState('');
+  const ticker = symbol.replace("USDT", "");
+  const [side, setSide] = useState<"BUY" | "SELL">("BUY");
+  const [amount, setAmount] = useState("");
   const [price, setPrice] = useState<number | null>(null);
   const [usdtBal, setUsdtBal] = useState(0);
   const [coinBal, setCoinBal] = useState(0);
@@ -24,9 +24,13 @@ export default function TradeForm({ symbol }: { symbol: string }) {
   // Live price ticker
   useEffect(() => {
     const fetchPrice = () =>
-      fetch(`https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`)
+      fetch(
+        `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`,
+      )
         .then((r) => r.json())
-        .then((d) => setPrice(parseFloat(d.result?.list?.[0]?.lastPrice ?? '0')))
+        .then((d) =>
+          setPrice(parseFloat(d.result?.list?.[0]?.lastPrice ?? "0")),
+        )
         .catch(() => {});
 
     fetchPrice();
@@ -35,19 +39,24 @@ export default function TradeForm({ symbol }: { symbol: string }) {
   }, [symbol]);
 
   const refreshBalance = useCallback(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/Portfolio`, { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/Portfolio`, {
+      credentials: "include",
+    })
       .then((r) => {
-        if (r.status === 401 || r.status === 403) { setIsAuth(false); return null; }
+        if (r.status === 401 || r.status === 403) {
+          setIsAuth(false);
+          return null;
+        }
         setIsAuth(true);
         return r.json();
       })
       .then((data) => {
         if (!data) return;
         const coins: Coin[] = data?.portfolio?.Coins ?? [];
-        const usdt = coins.find((c) => c.symbol === 'USD/USDT');
+        const usdt = coins.find((c) => c.symbol === "USD/USDT");
         const coin = coins.find((c) => c.symbol === symbol);
-        setUsdtBal(parseFloat(usdt?.amount ?? '0'));
-        setCoinBal(parseFloat(coin?.amount ?? '0'));
+        setUsdtBal(parseFloat(usdt?.amount ?? "0"));
+        setCoinBal(parseFloat(coin?.amount ?? "0"));
       })
       .catch(() => setIsAuth(false));
   }, [symbol]);
@@ -57,11 +66,11 @@ export default function TradeForm({ symbol }: { symbol: string }) {
   }, [refreshBalance]);
 
   const coinAmount = parseFloat(amount) || 0;
-  const total = price ? (coinAmount * price).toFixed(2) : '—';
+  const total = price ? (coinAmount * price).toFixed(2) : "—";
 
   const setPercent = (pct: number) => {
     if (!price) return;
-    const base = side === 'BUY' ? usdtBal / price : coinBal;
+    const base = side === "BUY" ? usdtBal / price : coinBal;
     setAmount(((base * pct) / 100).toFixed(6));
   };
 
@@ -74,12 +83,12 @@ export default function TradeForm({ symbol }: { symbol: string }) {
 
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/Trades`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           targetSymbol: symbol,
-          paymentSymbol: 'USD/USDT',
+          paymentSymbol: "USD/USDT",
           paymentAmount: parseFloat(usdtAmount),
           type: side,
         }),
@@ -87,10 +96,10 @@ export default function TradeForm({ symbol }: { symbol: string }) {
       const data = await res.json();
       if (res.ok) {
         setMsg({ text: `${side} ${t.trading.orderFilled}`, ok: true });
-        setAmount('');
+        setAmount("");
         refreshBalance();
       } else {
-        setMsg({ text: data.error ?? 'Trade failed', ok: false });
+        setMsg({ text: data.error ?? "Trade failed", ok: false });
       }
     } catch {
       setMsg({ text: t.trading.networkError, ok: false });
@@ -99,7 +108,7 @@ export default function TradeForm({ symbol }: { symbol: string }) {
     setLoading(false);
   };
 
-  const activeColor = side === 'BUY' ? '#4edea3' : '#ffb3ad';
+  const activeColor = side === "BUY" ? "#4edea3" : "#ffb3ad";
 
   // Guest view — locked
   if (isAuth === false) {
@@ -107,7 +116,10 @@ export default function TradeForm({ symbol }: { symbol: string }) {
       <div className="p-4 flex flex-col gap-3">
         {/* Tab preview (disabled) */}
         <div className="flex rounded-lg overflow-hidden border border-border opacity-40 pointer-events-none select-none">
-          <div className="flex-1 py-2 text-sm font-semibold text-center" style={{ background: '#4edea3', color: '#fff' }}>
+          <div
+            className="flex-1 py-2 text-sm font-semibold text-center"
+            style={{ background: "#4edea3", color: "#fff" }}
+          >
             {t.trading.buy} {ticker}
           </div>
           <div className="flex-1 py-2 text-sm font-semibold text-center text-muted-foreground">
@@ -118,11 +130,16 @@ export default function TradeForm({ symbol }: { symbol: string }) {
         {/* Lock card */}
         <div
           className="flex flex-col items-center gap-3 py-6 px-4 rounded-xl border text-center"
-          style={{ background: 'rgba(78,222,163,0.05)', borderColor: 'rgba(78,222,163,0.2)' }}
+          style={{
+            background: "rgba(78,222,163,0.05)",
+            borderColor: "rgba(78,222,163,0.2)",
+          }}
         >
           <div className="text-3xl">🔒</div>
           <div>
-            <p className="font-semibold text-sm text-foreground">{t.trading.signUpToTrade}</p>
+            <p className="font-semibold text-sm text-foreground">
+              {t.trading.signUpToTrade}
+            </p>
             <p className="text-xs text-muted-foreground mt-1">
               {t.trading.getVirtualFunds}
             </p>
@@ -131,7 +148,7 @@ export default function TradeForm({ symbol }: { symbol: string }) {
             <Link
               href="/signup"
               className="flex-1 py-2 rounded-lg text-sm font-semibold text-white text-center transition-opacity hover:opacity-90"
-              style={{ background: '#4edea3' }}
+              style={{ background: "#4edea3" }}
             >
               {t.trading.signUpFree}
             </Link>
@@ -151,18 +168,27 @@ export default function TradeForm({ symbol }: { symbol: string }) {
     <div className="p-4 flex flex-col gap-3">
       {/* Tabs */}
       <div className="flex rounded-lg overflow-hidden border border-border">
-        {(['BUY', 'SELL'] as const).map((s) => (
+        {(["BUY", "SELL"] as const).map((s) => (
           <button
             key={s}
-            onClick={() => { setSide(s); setAmount(''); setMsg(null); }}
+            onClick={() => {
+              setSide(s);
+              setAmount("");
+              setMsg(null);
+            }}
             className="flex-1 py-2 text-sm font-semibold transition-colors"
             style={
               side === s
-                ? { background: s === 'BUY' ? '#4edea3' : '#ffb3ad', color: '#fff' }
-                : { color: 'hsl(var(--muted-foreground))' }
+                ? {
+                    background: s === "BUY" ? "#4edea3" : "#ffb3ad",
+                    color: "#fff",
+                  }
+                : { color: "hsl(var(--muted-foreground))" }
             }
           >
-            {s === 'BUY' ? `${t.trading.buy} ${ticker}` : `${t.trading.sell} ${ticker}`}
+            {s === "BUY"
+              ? `${t.trading.buy} ${ticker}`
+              : `${t.trading.sell} ${ticker}`}
           </button>
         ))}
       </div>
@@ -170,19 +196,19 @@ export default function TradeForm({ symbol }: { symbol: string }) {
       {/* Balance & price info row */}
       <div className="flex justify-between text-xs text-muted-foreground">
         <span>
-          {t.trading.available + ':'}{' '}
+          {t.trading.available + ":"}{" "}
           <span className="text-foreground font-medium">
-            {side === 'BUY'
-              ? `$${usdtBal.toLocaleString('en-US', { maximumFractionDigits: 2 })} USDT`
+            {side === "BUY"
+              ? `$${usdtBal.toLocaleString("en-US", { maximumFractionDigits: 2 })} USDT`
               : `${coinBal.toFixed(6)} ${ticker}`}
           </span>
         </span>
         <span>
-          {t.trading.price + ':'}{' '}
+          {t.trading.price + ":"}{" "}
           <span className="text-foreground font-medium">
             {price
-              ? `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : '…'}
+              ? `$${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : "…"}
           </span>
         </span>
       </div>
@@ -235,9 +261,9 @@ export default function TradeForm({ symbol }: { symbol: string }) {
       >
         {loading
           ? t.trading.processing
-          : side === 'BUY'
-          ? `${t.trading.buy} ${ticker}`
-          : `${t.trading.sell} ${ticker}`}
+          : side === "BUY"
+            ? `${t.trading.buy} ${ticker}`
+            : `${t.trading.sell} ${ticker}`}
       </button>
 
       {/* Feedback */}
@@ -245,8 +271,10 @@ export default function TradeForm({ symbol }: { symbol: string }) {
         <div
           className="text-xs text-center py-2 rounded-lg font-medium"
           style={{
-            color: msg.ok ? '#4edea3' : '#ffb3ad',
-            background: msg.ok ? 'rgba(78,222,163,0.1)' : 'rgba(255,179,173,0.1)',
+            color: msg.ok ? "#4edea3" : "#ffb3ad",
+            background: msg.ok
+              ? "rgba(78,222,163,0.1)"
+              : "rgba(255,179,173,0.1)",
           }}
         >
           {msg.text}

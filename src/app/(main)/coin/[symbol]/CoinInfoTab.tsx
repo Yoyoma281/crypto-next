@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { ExternalLink, TrendingUp, BarChart2, DollarSign, Globe, Twitter, Github } from "lucide-react";
+import {
+  ExternalLink,
+  TrendingUp,
+  BarChart2,
+  DollarSign,
+  Globe,
+  Twitter,
+  Github,
+} from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 interface CoinGeckoData {
@@ -42,8 +50,8 @@ interface CoinGeckoData {
 function fmtUSD(n: number): string {
   if (!n) return "—";
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
-  if (n >= 1e9)  return `$${(n / 1e9).toFixed(2)}B`;
-  if (n >= 1e6)  return `$${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
   return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
@@ -65,14 +73,18 @@ function PctBadge({ value }: { value: number }) {
         background: isUp ? "rgba(22,199,132,0.1)" : "rgba(234,57,67,0.1)",
       }}
     >
-      {isUp ? "+" : ""}{value?.toFixed(2) ?? "—"}%
+      {isUp ? "+" : ""}
+      {value?.toFixed(2) ?? "—"}%
     </span>
   );
 }
 
 function StatRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between py-2.5" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
+    <div
+      className="flex items-center justify-between py-2.5"
+      style={{ borderBottom: "1px solid hsl(var(--border))" }}
+    >
       <span className="text-xs text-muted-foreground">{label}</span>
       <span className="text-xs font-semibold text-foreground">{value}</span>
     </div>
@@ -81,15 +93,38 @@ function StatRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 // Map Binance symbols to CoinGecko IDs for common coins
 const SYMBOL_TO_ID: Record<string, string> = {
-  BTC: "bitcoin", ETH: "ethereum", BNB: "binancecoin", SOL: "solana",
-  XRP: "ripple", ADA: "cardano", DOGE: "dogecoin", MATIC: "matic-network",
-  DOT: "polkadot", SHIB: "shiba-inu", AVAX: "avalanche-2", LINK: "chainlink",
-  LTC: "litecoin", UNI: "uniswap", ATOM: "cosmos", FIL: "filecoin",
-  XLM: "stellar", NEAR: "near", ALGO: "algorand", VET: "vechain",
-  ICP: "internet-computer", HBAR: "hedera-hashgraph", TRX: "tron",
-  BCH: "bitcoin-cash", ETC: "ethereum-classic", APE: "apecoin",
-  SAND: "the-sandbox", MANA: "decentraland", FTM: "fantom",
-  AAVE: "aave", CRV: "curve-dao-token", MKR: "maker",
+  BTC: "bitcoin",
+  ETH: "ethereum",
+  BNB: "binancecoin",
+  SOL: "solana",
+  XRP: "ripple",
+  ADA: "cardano",
+  DOGE: "dogecoin",
+  MATIC: "matic-network",
+  DOT: "polkadot",
+  SHIB: "shiba-inu",
+  AVAX: "avalanche-2",
+  LINK: "chainlink",
+  LTC: "litecoin",
+  UNI: "uniswap",
+  ATOM: "cosmos",
+  FIL: "filecoin",
+  XLM: "stellar",
+  NEAR: "near",
+  ALGO: "algorand",
+  VET: "vechain",
+  ICP: "internet-computer",
+  HBAR: "hedera-hashgraph",
+  TRX: "tron",
+  BCH: "bitcoin-cash",
+  ETC: "ethereum-classic",
+  APE: "apecoin",
+  SAND: "the-sandbox",
+  MANA: "decentraland",
+  FTM: "fantom",
+  AAVE: "aave",
+  CRV: "curve-dao-token",
+  MKR: "maker",
 };
 
 export default function CoinInfoTab({ symbol }: { symbol: string }) {
@@ -105,11 +140,17 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
     setLoading(true);
     setError(false);
     fetch(
-      `https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&community_data=false&developer_data=false`
+      `https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&community_data=false&developer_data=false`,
     )
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d) => { setData(d); setLoading(false); })
-      .catch(() => { setError(true); setLoading(false); });
+      .then((d) => {
+        setData(d);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError(true);
+        setLoading(false);
+      });
   }, [coinId]);
 
   if (loading) {
@@ -123,7 +164,9 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
   if (error || !data) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-2 text-center">
-        <p className="text-sm text-muted-foreground">{t.coin.couldNotLoad} <strong>{ticker}</strong>.</p>
+        <p className="text-sm text-muted-foreground">
+          {t.coin.couldNotLoad} <strong>{ticker}</strong>.
+        </p>
         <p className="text-xs text-muted-foreground">{t.coin.geckoNote}</p>
       </div>
     );
@@ -134,10 +177,8 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-
       {/* ── Left column: identity + description ── */}
       <div className="lg:col-span-2 flex flex-col gap-5">
-
         {/* Hero */}
         <div className="flex items-center gap-4">
           <Image
@@ -153,16 +194,23 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
               <h2 className="text-xl font-bold">{data.name}</h2>
               <span
                 className="text-xs font-semibold px-2 py-0.5 rounded-md uppercase"
-                style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}
+                style={{
+                  background: "hsl(var(--muted))",
+                  color: "hsl(var(--muted-foreground))",
+                }}
               >
                 {data.symbol}
               </span>
               {data.market_cap_rank && (
                 <span
                   className="text-xs font-semibold px-2 py-0.5 rounded-md"
-                  style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}
+                  style={{
+                    background: "hsl(var(--muted))",
+                    color: "hsl(var(--muted-foreground))",
+                  }}
                 >
-                  {t.coin.rank}{data.market_cap_rank}
+                  {t.coin.rank}
+                  {data.market_cap_rank}
                 </span>
               )}
             </div>
@@ -179,7 +227,10 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
         {description && description.length > 5 && (
           <div
             className="rounded-xl p-4"
-            style={{ background: "hsl(var(--muted)/0.4)", border: "1px solid hsl(var(--border))" }}
+            style={{
+              background: "hsl(var(--muted)/0.4)",
+              border: "1px solid hsl(var(--border))",
+            }}
           >
             <p className="text-xs text-muted-foreground leading-relaxed">
               {description}
@@ -190,7 +241,10 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
         {/* Price performance */}
         <div
           className="rounded-xl overflow-hidden"
-          style={{ border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
+          style={{
+            border: "1px solid hsl(var(--border))",
+            background: "hsl(var(--card))",
+          }}
         >
           <div className="px-4 py-3 border-b border-border">
             <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
@@ -198,9 +252,18 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
             </h3>
           </div>
           <div className="px-4">
-            <StatRow label={t.coin.change24h} value={<PctBadge value={md.price_change_percentage_24h} />} />
-            <StatRow label={t.coin.change7d} value={<PctBadge value={md.price_change_percentage_7d} />} />
-            <StatRow label={t.coin.change30d} value={<PctBadge value={md.price_change_percentage_30d} />} />
+            <StatRow
+              label={t.coin.change24h}
+              value={<PctBadge value={md.price_change_percentage_24h} />}
+            />
+            <StatRow
+              label={t.coin.change7d}
+              value={<PctBadge value={md.price_change_percentage_7d} />}
+            />
+            <StatRow
+              label={t.coin.change30d}
+              value={<PctBadge value={md.price_change_percentage_30d} />}
+            />
             <StatRow label={t.coin.high24h} value={fmtUSD(md.high_24h.usd)} />
             <StatRow label={t.coin.low24h} value={fmtUSD(md.low_24h.usd)} />
             <StatRow
@@ -231,11 +294,13 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
 
       {/* ── Right column: market data + links ── */}
       <div className="flex flex-col gap-5">
-
         {/* Market Stats */}
         <div
           className="rounded-xl overflow-hidden"
-          style={{ border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
+          style={{
+            border: "1px solid hsl(var(--border))",
+            background: "hsl(var(--card))",
+          }}
         >
           <div className="px-4 py-3 border-b border-border">
             <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
@@ -243,20 +308,46 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
             </h3>
           </div>
           <div className="px-4">
-            <StatRow label={t.coin.marketCap} value={fmtUSD(md.market_cap.usd)} />
-            <StatRow label={t.coin.volume24h} value={fmtUSD(md.total_volume.usd)} />
-            <StatRow label={t.coin.circulatingSupply} value={fmtNum(md.circulating_supply)} />
-            {md.total_supply && <StatRow label={t.coin.totalSupply} value={fmtNum(md.total_supply)} />}
-            {md.max_supply && <StatRow label={t.coin.maxSupply} value={fmtNum(md.max_supply)} />}
-            {data.genesis_date && <StatRow label={t.coin.launchDate} value={data.genesis_date} />}
-            {data.hashing_algorithm && <StatRow label={t.coin.algorithm} value={data.hashing_algorithm} />}
+            <StatRow
+              label={t.coin.marketCap}
+              value={fmtUSD(md.market_cap.usd)}
+            />
+            <StatRow
+              label={t.coin.volume24h}
+              value={fmtUSD(md.total_volume.usd)}
+            />
+            <StatRow
+              label={t.coin.circulatingSupply}
+              value={fmtNum(md.circulating_supply)}
+            />
+            {md.total_supply && (
+              <StatRow
+                label={t.coin.totalSupply}
+                value={fmtNum(md.total_supply)}
+              />
+            )}
+            {md.max_supply && (
+              <StatRow label={t.coin.maxSupply} value={fmtNum(md.max_supply)} />
+            )}
+            {data.genesis_date && (
+              <StatRow label={t.coin.launchDate} value={data.genesis_date} />
+            )}
+            {data.hashing_algorithm && (
+              <StatRow
+                label={t.coin.algorithm}
+                value={data.hashing_algorithm}
+              />
+            )}
           </div>
         </div>
 
         {/* Links */}
         <div
           className="rounded-xl overflow-hidden"
-          style={{ border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
+          style={{
+            border: "1px solid hsl(var(--border))",
+            background: "hsl(var(--card))",
+          }}
         >
           <div className="px-4 py-3 border-b border-border">
             <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
@@ -272,7 +363,9 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
                 className="flex items-center gap-2 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Globe className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{data.links.homepage[0].replace(/https?:\/\//, "")}</span>
+                <span className="truncate">
+                  {data.links.homepage[0].replace(/https?:\/\//, "")}
+                </span>
                 <ExternalLink className="h-3 w-3 shrink-0 ml-auto" />
               </a>
             )}

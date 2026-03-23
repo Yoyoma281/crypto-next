@@ -22,7 +22,10 @@ export default function CoinStatCards({ stats }: CoinStatCardsProps) {
       {/* Header bar */}
       <div
         className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-        style={{ borderBottom: "1px solid hsl(var(--border))", background: "hsl(var(--muted)/0.3)" }}
+        style={{
+          borderBottom: "1px solid hsl(var(--border))",
+          background: "hsl(var(--muted)/0.3)",
+        }}
       >
         Key Statistics
       </div>
@@ -34,24 +37,23 @@ export default function CoinStatCards({ stats }: CoinStatCardsProps) {
             s.up === true
               ? "#4edea3"
               : s.up === false
-              ? "#ffb3ad"
-              : "hsl(var(--muted-foreground))";
+                ? "#ffb3ad"
+                : "hsl(var(--muted-foreground))";
           const subBg =
             s.up === true
               ? "rgba(22,199,132,0.1)"
               : s.up === false
-              ? "rgba(234,57,67,0.1)"
-              : "transparent";
+                ? "rgba(234,57,67,0.1)"
+                : "transparent";
 
           return (
-            <div
-              key={s.label}
-              className="flex flex-col gap-1 px-5 py-4"
-            >
+            <div key={s.label} className="flex flex-col gap-1 px-5 py-4">
               <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
                 {s.label}
               </span>
-              <span className="text-[18px] font-bold tracking-tight">{s.value}</span>
+              <span className="text-[18px] font-bold tracking-tight">
+                {s.value}
+              </span>
               {s.sub && (
                 <span
                   className="text-xs font-semibold px-2 py-0.5 rounded-md self-start flex items-center gap-1"

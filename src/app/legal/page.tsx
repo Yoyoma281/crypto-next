@@ -36,7 +36,8 @@ export default function LegalPage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">Legal</h1>
         <p className="text-sm text-muted-foreground">
-          CrySer is a demo paper-trading platform. The documents below explain your rights and our responsibilities.
+          CrySer is a demo paper-trading platform. The documents below explain
+          your rights and our responsibilities.
         </p>
       </div>
 
@@ -56,8 +57,12 @@ export default function LegalPage() {
                 <Icon className="h-5 w-5" style={{ color: doc.color }} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-foreground">{doc.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{doc.desc}</p>
+                <p className="font-semibold text-sm text-foreground">
+                  {doc.title}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {doc.desc}
+                </p>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
             </Link>
@@ -66,8 +71,9 @@ export default function LegalPage() {
       </div>
 
       <p className="text-xs text-muted-foreground border-t border-border pt-6">
-        CrySer involves no real money, assets, or financial instruments. All funds and trades are virtual, for
-        educational purposes only. Market data is provided by Binance and CoinGecko.
+        CrySer involves no real money, assets, or financial instruments. All
+        funds and trades are virtual, for educational purposes only. Market data
+        is provided by Binance and CoinGecko.
       </p>
     </div>
   );

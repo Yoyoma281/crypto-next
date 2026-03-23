@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { useI18n } from '@/lib/i18n';
+import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 type Level = [string, string]; // [price, qty]
 
@@ -16,7 +16,7 @@ function Bar({ pct, isAsk }: { pct: number; isAsk: boolean }) {
       className="absolute inset-y-0 right-0"
       style={{
         width: `${pct}%`,
-        background: isAsk ? 'rgba(234,57,67,0.12)' : 'rgba(22,199,132,0.12)',
+        background: isAsk ? "rgba(234,57,67,0.12)" : "rgba(22,199,132,0.12)",
       }}
     />
   );
@@ -27,7 +27,10 @@ export default function OrderBook({ symbol }: { symbol: string }) {
   const [book, setBook] = useState<BookState>({ bids: [], asks: [] });
   const wsRef = useRef<WebSocket | null>(null);
   // Maintain a mutable copy for delta merging
-  const bookRef = useRef<{ bids: Map<string, string>; asks: Map<string, string> }>({
+  const bookRef = useRef<{
+    bids: Map<string, string>;
+    asks: Map<string, string>;
+  }>({
     bids: new Map(),
     asks: new Map(),
   });
@@ -36,12 +39,18 @@ export default function OrderBook({ symbol }: { symbol: string }) {
     let alive = true;
 
     // REST snapshot
-    fetch(`https://api.bybit.com/v5/market/orderbook?category=spot&symbol=${symbol}&limit=20`)
+    fetch(
+      `https://api.bybit.com/v5/market/orderbook?category=spot&symbol=${symbol}&limit=20`,
+    )
       .then((r) => r.json())
       .then((d) => {
         if (!alive) return;
-        const bidsMap = new Map<string, string>((d.result?.b ?? []).map((l: string[]) => [l[0], l[1]]));
-        const asksMap = new Map<string, string>((d.result?.a ?? []).map((l: string[]) => [l[0], l[1]]));
+        const bidsMap = new Map<string, string>(
+          (d.result?.b ?? []).map((l: string[]) => [l[0], l[1]]),
+        );
+        const asksMap = new Map<string, string>(
+          (d.result?.a ?? []).map((l: string[]) => [l[0], l[1]]),
+        );
         bookRef.current = { bids: bidsMap, asks: asksMap };
         applyBook();
       })
@@ -60,22 +69,28 @@ export default function OrderBook({ symbol }: { symbol: string }) {
     }
 
     // WebSocket live updates
-    const ws = new WebSocket('wss://stream.bybit.com/v5/public/spot');
+    const ws = new WebSocket("wss://stream.bybit.com/v5/public/spot");
     wsRef.current = ws;
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ op: 'subscribe', args: [`orderbook.20.${symbol}`] }));
+      ws.send(
+        JSON.stringify({ op: "subscribe", args: [`orderbook.20.${symbol}`] }),
+      );
     };
 
     ws.onmessage = (e) => {
       if (!alive) return;
       const msg = JSON.parse(e.data);
-      if (!msg.topic || !msg.topic.startsWith('orderbook')) return;
+      if (!msg.topic || !msg.topic.startsWith("orderbook")) return;
 
       const data = msg.data;
-      if (msg.type === 'snapshot') {
-        bookRef.current.bids = new Map((data.b ?? []).map((l: string[]) => [l[0], l[1]]));
-        bookRef.current.asks = new Map((data.a ?? []).map((l: string[]) => [l[0], l[1]]));
+      if (msg.type === "snapshot") {
+        bookRef.current.bids = new Map(
+          (data.b ?? []).map((l: string[]) => [l[0], l[1]]),
+        );
+        bookRef.current.asks = new Map(
+          (data.a ?? []).map((l: string[]) => [l[0], l[1]]),
+        );
       } else {
         // delta — merge updates (size=0 means remove)
         for (const [p, q] of data.b ?? []) bookRef.current.bids.set(p, q);
@@ -102,16 +117,19 @@ export default function OrderBook({ symbol }: { symbol: string }) {
   const bestAsk = book.asks[0] ? parseFloat(book.asks[0][0]) : null;
   const bestBid = book.bids[0] ? parseFloat(book.bids[0][0]) : null;
   const spread =
-    bestAsk != null && bestBid != null
-      ? (bestAsk - bestBid).toFixed(2)
-      : '—';
+    bestAsk != null && bestBid != null ? (bestAsk - bestBid).toFixed(2) : "—";
 
   const fmt = (n: string, decimals = 2) =>
-    parseFloat(n).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    parseFloat(n).toLocaleString("en-US", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
 
   return (
     <div className="flex flex-col h-full overflow-hidden text-[12px]">
-      <p className="text-xs font-semibold px-3 py-2 border-b border-border">{t.trading.orderBook}</p>
+      <p className="text-xs font-semibold px-3 py-2 border-b border-border">
+        {t.trading.orderBook}
+      </p>
 
       {/* Column headers */}
       <div className="flex justify-between text-muted-foreground px-3 py-1 text-[11px]">
@@ -124,7 +142,7 @@ export default function OrderBook({ symbol }: { symbol: string }) {
         {displayAsks.map(([price, qty], i) => (
           <div key={i} className="relative flex justify-between px-3 py-[2px]">
             <Bar pct={(parseFloat(qty) / maxQty) * 100} isAsk />
-            <span className="relative font-mono" style={{ color: '#ffb3ad' }}>
+            <span className="relative font-mono" style={{ color: "#ffb3ad" }}>
               {fmt(price)}
             </span>
             <span className="relative text-foreground">{fmt(qty, 4)}</span>
@@ -143,7 +161,7 @@ export default function OrderBook({ symbol }: { symbol: string }) {
         {book.bids.map(([price, qty], i) => (
           <div key={i} className="relative flex justify-between px-3 py-[2px]">
             <Bar pct={(parseFloat(qty) / maxQty) * 100} isAsk={false} />
-            <span className="relative font-mono" style={{ color: '#4edea3' }}>
+            <span className="relative font-mono" style={{ color: "#4edea3" }}>
               {fmt(price)}
             </span>
             <span className="relative text-foreground">{fmt(qty, 4)}</span>

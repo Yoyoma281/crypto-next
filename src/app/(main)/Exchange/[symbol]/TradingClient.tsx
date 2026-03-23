@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { useI18n } from '@/lib/i18n';
-import Image from 'next/image';
-import dynamic from 'next/dynamic';
-import OrderBook from './OrderBook';
-import RecentTrades from './RecentTrades';
-import TradeForm from './TradeForm';
+import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/lib/i18n";
+import Image from "next/image";
+import dynamic from "next/dynamic";
+import OrderBook from "./OrderBook";
+import RecentTrades from "./RecentTrades";
+import TradeForm from "./TradeForm";
 
 // Lazy-load the chart (needs DOM, can't SSR)
-const PriceChart = dynamic(() => import('./PriceChart'), { ssr: false });
+const PriceChart = dynamic(() => import("./PriceChart"), { ssr: false });
 
 interface Ticker {
   price: string;
@@ -26,7 +26,9 @@ function CoinImage({ ticker }: { ticker: string }) {
     return (
       <div
         className="h-8 w-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-        style={{ background: `hsl(${(ticker.charCodeAt(0) * 47) % 360}, 55%, 45%)` }}
+        style={{
+          background: `hsl(${(ticker.charCodeAt(0) * 47) % 360}, 55%, 45%)`,
+        }}
       >
         {ticker[0]}
       </div>
@@ -50,8 +52,14 @@ function CoinImage({ ticker }: { ticker: string }) {
   );
 }
 
-export default function TradingClient({ symbol, hiddenHeader }: { symbol: string; hiddenHeader?: boolean }) {
-  const ticker = symbol.replace('USDT', '');
+export default function TradingClient({
+  symbol,
+  hiddenHeader,
+}: {
+  symbol: string;
+  hiddenHeader?: boolean;
+}) {
+  const ticker = symbol.replace("USDT", "");
   const { t } = useI18n();
   const [tickerData, setTickerData] = useState<Ticker | null>(null);
   // Store last known values for delta merging
@@ -59,23 +67,23 @@ export default function TradingClient({ symbol, hiddenHeader }: { symbol: string
 
   // Live 24h ticker via Bybit WebSocket
   useEffect(() => {
-    const ws = new WebSocket('wss://stream.bybit.com/v5/public/spot');
+    const ws = new WebSocket("wss://stream.bybit.com/v5/public/spot");
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ op: 'subscribe', args: [`tickers.${symbol}`] }));
+      ws.send(JSON.stringify({ op: "subscribe", args: [`tickers.${symbol}`] }));
     };
 
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
-      if (!msg.topic || !msg.topic.startsWith('tickers')) return;
+      if (!msg.topic || !msg.topic.startsWith("tickers")) return;
       const d = msg.data;
       if (!d) return;
 
       // Merge delta fields into last known state
-      if (d.lastPrice)     lastRef.current.price     = d.lastPrice;
-      if (d.highPrice24h)  lastRef.current.high      = d.highPrice24h;
-      if (d.lowPrice24h)   lastRef.current.low       = d.lowPrice24h;
-      if (d.turnover24h)   lastRef.current.volume    = d.turnover24h;
+      if (d.lastPrice) lastRef.current.price = d.lastPrice;
+      if (d.highPrice24h) lastRef.current.high = d.highPrice24h;
+      if (d.lowPrice24h) lastRef.current.low = d.lowPrice24h;
+      if (d.turnover24h) lastRef.current.volume = d.turnover24h;
 
       // price24hPcnt is a decimal fraction (e.g. "0.0234" = 2.34%)
       if (d.price24hPcnt !== undefined) {
@@ -83,18 +91,20 @@ export default function TradingClient({ symbol, hiddenHeader }: { symbol: string
         lastRef.current.changePct = pct.toFixed(2);
       }
       if (d.prevPrice24h !== undefined && d.lastPrice !== undefined) {
-        lastRef.current.change = (parseFloat(d.lastPrice) - parseFloat(d.prevPrice24h)).toFixed(8);
+        lastRef.current.change = (
+          parseFloat(d.lastPrice) - parseFloat(d.prevPrice24h)
+        ).toFixed(8);
       }
 
       const cur = lastRef.current;
       if (cur.price) {
         setTickerData({
-          price:     cur.price     ?? '0',
-          change:    cur.change    ?? '0',
-          changePct: cur.changePct ?? '0',
-          high:      cur.high      ?? '0',
-          low:       cur.low       ?? '0',
-          volume:    cur.volume    ?? '0',
+          price: cur.price ?? "0",
+          change: cur.change ?? "0",
+          changePct: cur.changePct ?? "0",
+          high: cur.high ?? "0",
+          low: cur.low ?? "0",
+          volume: cur.volume ?? "0",
         });
       }
     };
@@ -103,10 +113,13 @@ export default function TradingClient({ symbol, hiddenHeader }: { symbol: string
   }, [symbol]);
 
   const isUp = tickerData ? parseFloat(tickerData.changePct) >= 0 : true;
-  const changeColor = isUp ? '#4edea3' : '#ffb3ad';
+  const changeColor = isUp ? "#4edea3" : "#ffb3ad";
 
   const fmtPrice = (v: string) =>
-    parseFloat(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 });
+    parseFloat(v).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 8,
+    });
 
   const fmtVol = (v: string) => {
     const n = parseFloat(v);
@@ -127,19 +140,27 @@ export default function TradingClient({ symbol, hiddenHeader }: { symbol: string
               <CoinImage ticker={ticker} />
               <div className="flex flex-col leading-tight">
                 <span className="font-bold text-lg">{ticker}/USDT</span>
-                <span className="text-muted-foreground text-[11px]">{symbol}</span>
+                <span className="text-muted-foreground text-[11px]">
+                  {symbol}
+                </span>
               </div>
             </div>
 
             {/* Price */}
             <div className="flex flex-col leading-tight">
-              <span className="text-4xl font-bold tabular-nums" style={{ color: changeColor }}>
-                {tickerData ? fmtPrice(tickerData.price) : '—'}
+              <span
+                className="text-4xl font-bold tabular-nums"
+                style={{ color: changeColor }}
+              >
+                {tickerData ? fmtPrice(tickerData.price) : "—"}
               </span>
-              <span className="text-sm tabular-nums" style={{ color: changeColor }}>
+              <span
+                className="text-sm tabular-nums"
+                style={{ color: changeColor }}
+              >
                 {tickerData
-                  ? `${isUp ? '+' : ''}${parseFloat(tickerData.change).toFixed(2)} (${parseFloat(tickerData.changePct).toFixed(2)}%)`
-                  : '—'}
+                  ? `${isUp ? "+" : ""}${parseFloat(tickerData.change).toFixed(2)} (${parseFloat(tickerData.changePct).toFixed(2)}%)`
+                  : "—"}
               </span>
             </div>
 
@@ -147,16 +168,28 @@ export default function TradingClient({ symbol, hiddenHeader }: { symbol: string
             {tickerData && (
               <div className="flex gap-8 text-sm ml-auto flex-wrap">
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground text-xs uppercase tracking-widest font-semibold">{t.trading.high24h}</span>
-                  <span className="font-bold text-foreground tabular-nums mt-1">{fmtPrice(tickerData.high)}</span>
+                  <span className="text-muted-foreground text-xs uppercase tracking-widest font-semibold">
+                    {t.trading.high24h}
+                  </span>
+                  <span className="font-bold text-foreground tabular-nums mt-1">
+                    {fmtPrice(tickerData.high)}
+                  </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground text-xs uppercase tracking-widest font-semibold">{t.trading.low24h}</span>
-                  <span className="font-bold text-foreground tabular-nums mt-1">{fmtPrice(tickerData.low)}</span>
+                  <span className="text-muted-foreground text-xs uppercase tracking-widest font-semibold">
+                    {t.trading.low24h}
+                  </span>
+                  <span className="font-bold text-foreground tabular-nums mt-1">
+                    {fmtPrice(tickerData.low)}
+                  </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground text-xs uppercase tracking-widest font-semibold">{t.trading.volume24h}</span>
-                  <span className="font-bold text-foreground tabular-nums mt-1">{fmtVol(tickerData.volume)}</span>
+                  <span className="text-muted-foreground text-xs uppercase tracking-widest font-semibold">
+                    {t.trading.volume24h}
+                  </span>
+                  <span className="font-bold text-foreground tabular-nums mt-1">
+                    {fmtVol(tickerData.volume)}
+                  </span>
                 </div>
               </div>
             )}
@@ -208,13 +241,24 @@ function StatCell({ label, value }: { label: string; value: string }) {
 }
 
 function NewsPanel({ base }: { base: string }) {
-  const [news, setNews] = useState<Array<{id:number;title:string;url:string;source:{title:string};published_at:string}>>([]);
+  const [news, setNews] = useState<
+    Array<{
+      id: number;
+      title: string;
+      url: string;
+      source: { title: string };
+      published_at: string;
+    }>
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`/api/news?currency=${base}`)
       .then((r) => r.json())
-      .then((d) => { setNews((d.results ?? []).slice(0, 15)); setLoading(false); })
+      .then((d) => {
+        setNews((d.results ?? []).slice(0, 15));
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, [base]);
 
@@ -230,19 +274,29 @@ function NewsPanel({ base }: { base: string }) {
   return (
     <>
       <div className="px-3 py-2.5 border-b border-border shrink-0">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">News</span>
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+          News
+        </span>
       </div>
       <div className="flex flex-col overflow-y-auto">
         {loading ? (
-          Array.from({length: 6}).map((_, i) => (
-            <div key={i} className="mx-2 my-1.5 h-14 rounded-lg animate-pulse bg-muted" />
+          Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="mx-2 my-1.5 h-14 rounded-lg animate-pulse bg-muted"
+            />
           ))
         ) : news.length === 0 ? (
           <p className="text-xs text-muted-foreground p-3">No news found.</p>
         ) : (
           news.map((item) => (
-            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-              className="flex flex-col gap-0.5 px-3 py-2.5 hover:bg-muted/40 transition-colors border-b border-border/50">
+            <a
+              key={item.id}
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col gap-0.5 px-3 py-2.5 hover:bg-muted/40 transition-colors border-b border-border/50"
+            >
               <span className="text-[11px] font-medium leading-snug line-clamp-3 text-foreground">
                 {item.title}
               </span>

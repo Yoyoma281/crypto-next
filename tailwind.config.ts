@@ -66,14 +66,14 @@ export default {
         "on-error-container": "#ffdad6",
         "outline-variant": "#45464d",
         "primary-fixed": "#6ffbbe",
-        "tertiary": "#ffb3ad",
+        tertiary: "#ffb3ad",
         "on-tertiary-fixed": "#410004",
         "on-tertiary": "#68000a",
         "surface-container-high": "#23293c",
         "on-background": "#dce1fb",
         "surface-container-low": "#151b2d",
         "on-primary-fixed": "#002113",
-        "error": "#ffb4ab",
+        error: "#ffb4ab",
         "primary-container": "#001c10",
         "on-secondary-container": "#abb9d2",
         "on-surface-variant": "#c6c6cd",
@@ -91,7 +91,7 @@ export default {
         "secondary-fixed": "#d5e3fd",
         "error-container": "#93000a",
         "surface-tint": "#4edea3",
-        "surface": "#0c1324",
+        surface: "#0c1324",
         "on-secondary-fixed": "#0d1c2f",
         "surface-container": "#191f31",
         "primary-fixed-dim": "#4edea3",
@@ -101,7 +101,7 @@ export default {
         "on-secondary-fixed-variant": "#3a485c",
         "surface-container-lowest": "#070d1f",
         "inverse-surface": "#dce1fb",
-        "outline": "#909097",
+        outline: "#909097",
 
         /* Crypto palette */
         "crypto-dark-blue": "hsl(var(--color-dark-blue))",
@@ -200,7 +200,8 @@ export default {
 
       boxShadow: {
         sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-        DEFAULT: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+        DEFAULT:
+          "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
         md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
         lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
         xl: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",

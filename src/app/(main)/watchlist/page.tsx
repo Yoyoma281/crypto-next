@@ -78,7 +78,11 @@ export default function WatchlistPage() {
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
           <span>
-            {favorites.size} {favorites.size !== 1 ? t.watchlist.coinPlural : t.watchlist.coinSingular} {t.watchlist.watched}
+            {favorites.size}{" "}
+            {favorites.size !== 1
+              ? t.watchlist.coinPlural
+              : t.watchlist.coinSingular}{" "}
+            {t.watchlist.watched}
           </span>
         </div>
       )}
@@ -86,7 +90,10 @@ export default function WatchlistPage() {
       {/* Table */}
       <div
         className="rounded-xl overflow-hidden"
-        style={{ border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
+        style={{
+          border: "1px solid hsl(var(--border))",
+          background: "hsl(var(--card))",
+        }}
       >
         <FavoritesTable favorites={favorites} toggleFavorite={toggle} />
       </div>
@@ -98,7 +105,10 @@ export default function WatchlistPage() {
             {t.watchlist.markets}
           </Link>{" "}
           {t.watchlist.or}{" "}
-          <Link href="/coin/BTCUSDT?tab=trade" className="underline hover:text-foreground">
+          <Link
+            href="/coin/BTCUSDT?tab=trade"
+            className="underline hover:text-foreground"
+          >
             {t.watchlist.exchange}
           </Link>{" "}
           {t.watchlist.addThem}

@@ -4,8 +4,17 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  X, LogOut, TrendingUp, BarChart2, Wallet, History,
-  Trophy, Newspaper, Settings, Star, Bitcoin,
+  X,
+  LogOut,
+  TrendingUp,
+  BarChart2,
+  Wallet,
+  History,
+  Trophy,
+  Newspaper,
+  Settings,
+  Star,
+  Bitcoin,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
@@ -24,26 +33,30 @@ interface Props {
 export default function UserSidebar({ isOpen, onClose, user }: Props) {
   const { t } = useI18n();
   const pathname = usePathname();
-  const router   = useRouter();
-  const ref      = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const ref = useRef<HTMLDivElement>(null);
 
   const NAV_SECTIONS = [
     {
       label: t.sidebar.market,
       items: [
-        { icon: BarChart2,  label: t.nav.markets,     href: "/" },
-        { icon: TrendingUp, label: t.nav.exchange,     href: "/coin/BTCUSDT?tab=trade" },
-        { icon: Star,       label: t.nav.watchlist,    href: "/watchlist" },
-        { icon: Newspaper,  label: t.nav.news,         href: "/news" },
-        { icon: Trophy,     label: t.nav.leaderboard,  href: "/leaderboard" },
+        { icon: BarChart2, label: t.nav.markets, href: "/" },
+        {
+          icon: TrendingUp,
+          label: t.nav.exchange,
+          href: "/coin/BTCUSDT?tab=trade",
+        },
+        { icon: Star, label: t.nav.watchlist, href: "/watchlist" },
+        { icon: Newspaper, label: t.nav.news, href: "/news" },
+        { icon: Trophy, label: t.nav.leaderboard, href: "/leaderboard" },
       ],
     },
     {
       label: t.sidebar.account,
       items: [
-        { icon: Wallet,   label: t.nav.portfolio, href: "/Portfolio" },
-        { icon: History,  label: t.nav.history,   href: "/history" },
-        { icon: Settings, label: t.nav.settings,  href: "/settings" },
+        { icon: Wallet, label: t.nav.portfolio, href: "/Portfolio" },
+        { icon: History, label: t.nav.history, href: "/history" },
+        { icon: Settings, label: t.nav.settings, href: "/settings" },
       ],
     },
   ];
@@ -61,7 +74,9 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
   // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [isOpen, onClose]);
@@ -80,7 +95,10 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
-        style={{ opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? "auto" : "none" }}
+        style={{
+          opacity: isOpen ? 1 : 0,
+          pointerEvents: isOpen ? "auto" : "none",
+        }}
         aria-hidden
       />
 
@@ -112,7 +130,10 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
         </div>
 
         {/* User card */}
-        <div className="px-5 py-4" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
+        <div
+          className="px-5 py-4"
+          style={{ borderBottom: "1px solid hsl(var(--border))" }}
+        >
           {user ? (
             <div className="flex items-center gap-3">
               {user.avatar ? (
@@ -130,13 +151,19 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
                 </div>
               )}
               <div className="flex flex-col min-w-0">
-                <span className="font-semibold text-sm truncate">{user.username}</span>
-                <span className="text-xs text-muted-foreground">{t.sidebar.paperTrader}</span>
+                <span className="font-semibold text-sm truncate">
+                  {user.username}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {t.sidebar.paperTrader}
+                </span>
               </div>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              <p className="text-sm text-muted-foreground">{t.sidebar.notSignedIn}</p>
+              <p className="text-sm text-muted-foreground">
+                {t.sidebar.notSignedIn}
+              </p>
               <div className="flex gap-2">
                 <Link
                   href="/login"
@@ -167,7 +194,8 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
               {section.items.map(({ icon: Icon, label, href }) => {
                 const hrefPath = href.split("?")[0];
                 const active =
-                  pathname === hrefPath || (hrefPath !== "/" && pathname.startsWith(hrefPath));
+                  pathname === hrefPath ||
+                  (hrefPath !== "/" && pathname.startsWith(hrefPath));
                 return (
                   <Link
                     key={href}
@@ -176,16 +204,24 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
                     className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
                     style={
                       active
-                        ? { background: "hsl(var(--muted))", color: "hsl(var(--foreground))" }
+                        ? {
+                            background: "hsl(var(--muted))",
+                            color: "hsl(var(--foreground))",
+                          }
                         : { color: "hsl(var(--muted-foreground))" }
                     }
                     onMouseEnter={(e) => {
-                      if (!active) e.currentTarget.style.background = "hsl(var(--muted)/0.6)";
-                      if (!active) e.currentTarget.style.color = "hsl(var(--foreground))";
+                      if (!active)
+                        e.currentTarget.style.background =
+                          "hsl(var(--muted)/0.6)";
+                      if (!active)
+                        e.currentTarget.style.color = "hsl(var(--foreground))";
                     }}
                     onMouseLeave={(e) => {
                       if (!active) e.currentTarget.style.background = "";
-                      if (!active) e.currentTarget.style.color = "hsl(var(--muted-foreground))";
+                      if (!active)
+                        e.currentTarget.style.color =
+                          "hsl(var(--muted-foreground))";
                     }}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
@@ -199,13 +235,20 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
 
         {/* Footer: logout */}
         {user && (
-          <div className="px-3 py-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
+          <div
+            className="px-3 py-4"
+            style={{ borderTop: "1px solid hsl(var(--border))" }}
+          >
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
               style={{ color: "#ffb3ad" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,179,173,0.08)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = ""; }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255,179,173,0.08)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "";
+              }}
             >
               <LogOut className="h-4 w-4 shrink-0" />
               {t.sidebar.signOut}

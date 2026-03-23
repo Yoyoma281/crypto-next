@@ -1,13 +1,27 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Shield, RotateCcw, Lock, User as UserIcon, Github } from "lucide-react";
+import {
+  Shield,
+  RotateCcw,
+  Lock,
+  User as UserIcon,
+  Github,
+} from "lucide-react";
 import AuthRequired from "@/components/auth-required";
 import { useI18n } from "@/lib/i18n";
 
 const AVATAR_COLORS = [
-  "#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8",
-  "#F7DC6F", "#BB8FCE", "#85C1E2", "#F8B988", "#C39BD3",
+  "#FF6B6B",
+  "#4ECDC4",
+  "#45B7D1",
+  "#FFA07A",
+  "#98D8C8",
+  "#F7DC6F",
+  "#BB8FCE",
+  "#85C1E2",
+  "#F8B988",
+  "#C39BD3",
 ];
 
 const GITHUB_AVATARS = [
@@ -25,7 +39,12 @@ const GITHUB_AVATARS = [
   "https://api.dicebear.com/7.x/avataaars/svg?seed=12",
 ];
 
-function Section({ icon: Icon, title, description, children }: {
+function Section({
+  icon: Icon,
+  title,
+  description,
+  children,
+}: {
   icon: React.ElementType;
   title: string;
   description: string;
@@ -34,7 +53,10 @@ function Section({ icon: Icon, title, description, children }: {
   return (
     <div
       className="rounded-xl px-6 py-6 flex flex-col gap-5"
-      style={{ border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
+      style={{
+        border: "1px solid hsl(var(--border))",
+        background: "hsl(var(--card))",
+      }}
     >
       <div className="flex items-center gap-3">
         <Icon className="h-5 w-5 text-primary" />
@@ -58,17 +80,29 @@ export default function SettingsPage() {
   const [showAvatarOptions, setShowAvatarOptions] = useState(false);
 
   // Password change state
-  const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirm: "" });
-  const [pwStatus, setPwStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [pwForm, setPwForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirm: "",
+  });
+  const [pwStatus, setPwStatus] = useState<{ ok: boolean; msg: string } | null>(
+    null,
+  );
   const [pwLoading, setPwLoading] = useState(false);
 
   // Reset portfolio state
-  const [resetStatus, setResetStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [resetStatus, setResetStatus] = useState<{
+    ok: boolean;
+    msg: string;
+  } | null>(null);
   const [resetLoading, setResetLoading] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
 
   // Avatar state
-  const [avatarStatus, setAvatarStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [avatarStatus, setAvatarStatus] = useState<{
+    ok: boolean;
+    msg: string;
+  } | null>(null);
   const [avatarLoading, setAvatarLoading] = useState(false);
 
   useEffect(() => {
@@ -116,7 +150,10 @@ export default function SettingsPage() {
         setAvatarStatus({ ok: true, msg: "Avatar updated successfully!" });
         setShowAvatarOptions(false);
       } else {
-        setAvatarStatus({ ok: false, msg: data.error ?? "Failed to update avatar" });
+        setAvatarStatus({
+          ok: false,
+          msg: data.error ?? "Failed to update avatar",
+        });
       }
     } catch {
       setAvatarStatus({ ok: false, msg: "Network error" });
@@ -138,14 +175,20 @@ export default function SettingsPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
+        body: JSON.stringify({
+          currentPassword: pwForm.currentPassword,
+          newPassword: pwForm.newPassword,
+        }),
       });
       const data = await res.json();
       if (res.ok) {
         setPwStatus({ ok: true, msg: data.message ?? t.settings.updated });
         setPwForm({ currentPassword: "", newPassword: "", confirm: "" });
       } else {
-        setPwStatus({ ok: false, msg: data.error ?? t.settings.somethingWrong });
+        setPwStatus({
+          ok: false,
+          msg: data.error ?? t.settings.somethingWrong,
+        });
       }
     } catch {
       setPwStatus({ ok: false, msg: t.settings.networkError });
@@ -170,7 +213,10 @@ export default function SettingsPage() {
       if (res.ok) {
         setResetStatus({ ok: true, msg: data.message ?? t.settings.reset });
       } else {
-        setResetStatus({ ok: false, msg: data.error ?? t.settings.somethingWrong });
+        setResetStatus({
+          ok: false,
+          msg: data.error ?? t.settings.somethingWrong,
+        });
       }
     } catch {
       setResetStatus({ ok: false, msg: t.settings.networkError });
@@ -188,19 +234,21 @@ export default function SettingsPage() {
       </div>
 
       {/* Avatar Settings */}
-      <Section icon={UserIcon} title="Profile Avatar" description="Choose your profile avatar from our collection">
+      <Section
+        icon={UserIcon}
+        title="Profile Avatar"
+        description="Choose your profile avatar from our collection"
+      >
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             {currentAvatar ? (
-              <img 
-                src={currentAvatar} 
-                alt="Current avatar" 
+              <img
+                src={currentAvatar}
+                alt="Current avatar"
                 className="w-16 h-16 rounded-full border-2 border-primary object-cover"
               />
             ) : (
-              <div 
-                className="w-16 h-16 rounded-full border-2 border-border flex items-center justify-center bg-muted"
-              >
+              <div className="w-16 h-16 rounded-full border-2 border-border flex items-center justify-center bg-muted">
                 <UserIcon className="h-8 w-8 text-muted-foreground" />
               </div>
             )}
@@ -217,7 +265,9 @@ export default function SettingsPage() {
               className="text-xs px-3 py-2 rounded-md"
               style={{
                 color: avatarStatus.ok ? "#4edea3" : "#ffb3ad",
-                background: avatarStatus.ok ? "rgba(78,222,163,0.1)" : "rgba(255,179,173,0.1)",
+                background: avatarStatus.ok
+                  ? "rgba(78,222,163,0.1)"
+                  : "rgba(255,179,173,0.1)",
               }}
             >
               {avatarStatus.msg}
@@ -232,10 +282,16 @@ export default function SettingsPage() {
                   onClick={() => handleAvatarChange(avatar)}
                   disabled={avatarLoading}
                   className={`w-12 h-12 rounded-full overflow-hidden border-2 transition hover:scale-110 ${
-                    currentAvatar === avatar ? "border-primary" : "border-border"
+                    currentAvatar === avatar
+                      ? "border-primary"
+                      : "border-border"
                   }`}
                 >
-                  <img src={avatar} alt={`Avatar ${idx + 1}`} className="w-full h-full object-cover" />
+                  <img
+                    src={avatar}
+                    alt={`Avatar ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
                 </button>
               ))}
             </div>
@@ -244,31 +300,47 @@ export default function SettingsPage() {
       </Section>
 
       {/* Change Password */}
-      <Section icon={Lock} title={t.settings.changePassword} description={t.settings.changePasswordDesc}>
+      <Section
+        icon={Lock}
+        title={t.settings.changePassword}
+        description={t.settings.changePasswordDesc}
+      >
         <form onSubmit={handlePasswordChange} className="flex flex-col gap-3">
-          {(["currentPassword", "newPassword", "confirm"] as const).map((field) => (
-            <div key={field} className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground capitalize">
-                {field === "confirm" ? t.settings.confirmNewPassword : field === "currentPassword" ? t.settings.currentPassword : t.settings.newPassword}
-              </label>
-              <input
-                type="password"
-                value={pwForm[field]}
-                onChange={(e) => setPwForm((p) => ({ ...p, [field]: e.target.value }))}
-                required
-                minLength={field !== "currentPassword" ? 6 : undefined}
-                className="rounded-md px-3 py-2 text-sm bg-background border border-border outline-none focus:ring-2 focus:ring-primary/50 transition"
-                placeholder={field === "confirm" ? t.settings.reEnter : "••••••••"}
-              />
-            </div>
-          ))}
+          {(["currentPassword", "newPassword", "confirm"] as const).map(
+            (field) => (
+              <div key={field} className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-muted-foreground capitalize">
+                  {field === "confirm"
+                    ? t.settings.confirmNewPassword
+                    : field === "currentPassword"
+                      ? t.settings.currentPassword
+                      : t.settings.newPassword}
+                </label>
+                <input
+                  type="password"
+                  value={pwForm[field]}
+                  onChange={(e) =>
+                    setPwForm((p) => ({ ...p, [field]: e.target.value }))
+                  }
+                  required
+                  minLength={field !== "currentPassword" ? 6 : undefined}
+                  className="rounded-md px-3 py-2 text-sm bg-background border border-border outline-none focus:ring-2 focus:ring-primary/50 transition"
+                  placeholder={
+                    field === "confirm" ? t.settings.reEnter : "••••••••"
+                  }
+                />
+              </div>
+            ),
+          )}
 
           {pwStatus && (
             <p
               className="text-xs px-3 py-2 rounded-md"
               style={{
                 color: pwStatus.ok ? "#4edea3" : "#ffb3ad",
-                background: pwStatus.ok ? "rgba(78,222,163,0.1)" : "rgba(255,179,173,0.1)",
+                background: pwStatus.ok
+                  ? "rgba(78,222,163,0.1)"
+                  : "rgba(255,179,173,0.1)",
               }}
             >
               {pwStatus.msg}
@@ -294,7 +366,10 @@ export default function SettingsPage() {
         <div className="flex flex-col gap-3">
           <div
             className="text-xs px-3 py-2.5 rounded-md text-muted-foreground"
-            style={{ background: "rgba(255,179,173,0.07)", border: "1px solid rgba(255,179,173,0.2)" }}
+            style={{
+              background: "rgba(255,179,173,0.07)",
+              border: "1px solid rgba(255,179,173,0.2)",
+            }}
           >
             ⚠️ {t.settings.resetWarning}
           </div>
@@ -304,7 +379,9 @@ export default function SettingsPage() {
               className="text-xs px-3 py-2 rounded-md"
               style={{
                 color: resetStatus.ok ? "#4edea3" : "#ffb3ad",
-                background: resetStatus.ok ? "rgba(78,222,163,0.1)" : "rgba(255,179,173,0.1)",
+                background: resetStatus.ok
+                  ? "rgba(78,222,163,0.1)"
+                  : "rgba(255,179,173,0.1)",
               }}
             >
               {resetStatus.msg}
@@ -320,7 +397,11 @@ export default function SettingsPage() {
               color: confirmReset ? "#fff" : "#ffb3ad",
             }}
           >
-            {resetLoading ? t.settings.resetting : confirmReset ? t.settings.confirmReset : t.settings.reset}
+            {resetLoading
+              ? t.settings.resetting
+              : confirmReset
+                ? t.settings.confirmReset
+                : t.settings.reset}
           </button>
 
           {confirmReset && (
@@ -335,11 +416,28 @@ export default function SettingsPage() {
       </Section>
 
       {/* Account Info */}
-      <Section icon={Shield} title={t.settings.account} description={t.settings.accountDetails}>
+      <Section
+        icon={Shield}
+        title={t.settings.account}
+        description={t.settings.accountDetails}
+      >
         <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-          <p>{t.settings.startingBalance}<span className="text-foreground font-semibold">$1,000 USDT</span></p>
-          <p>{t.settings.trading}<span className="text-foreground font-semibold">{t.settings.tradingDesc}</span></p>
-          <p>{t.settings.dataSource}<span className="text-foreground font-semibold">{t.settings.dataSourceDesc}</span></p>
+          <p>
+            {t.settings.startingBalance}
+            <span className="text-foreground font-semibold">$1,000 USDT</span>
+          </p>
+          <p>
+            {t.settings.trading}
+            <span className="text-foreground font-semibold">
+              {t.settings.tradingDesc}
+            </span>
+          </p>
+          <p>
+            {t.settings.dataSource}
+            <span className="text-foreground font-semibold">
+              {t.settings.dataSourceDesc}
+            </span>
+          </p>
         </div>
       </Section>
     </div>

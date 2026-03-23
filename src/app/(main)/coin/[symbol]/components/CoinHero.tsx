@@ -61,7 +61,9 @@ export default function CoinHero({
 
         {/* Price row */}
         <div className="flex items-end gap-3 flex-wrap">
-          <span className="text-4xl font-bold tracking-tight">{currentPrice}</span>
+          <span className="text-4xl font-bold tracking-tight">
+            {currentPrice}
+          </span>
           <span
             className="flex items-center gap-1 text-sm font-semibold px-2.5 py-1 rounded-lg mb-1"
             style={{ color: changeColor, background: changeBg }}
@@ -71,7 +73,9 @@ export default function CoinHero({
         </div>
 
         {/* Sub-label */}
-        <p className="text-xs text-muted-foreground">1 {coinTicker} = {currentPrice} USD</p>
+        <p className="text-xs text-muted-foreground">
+          1 {coinTicker} = {currentPrice} USD
+        </p>
       </div>
 
       {/* Action buttons – pushed to the right */}
@@ -92,8 +96,12 @@ export default function CoinHero({
             borderColor: "hsl(var(--border))",
             color: "hsl(var(--foreground))",
           }}
-          onMouseOver={(e) => (e.currentTarget.style.background = "hsl(var(--muted))")}
-          onMouseOut={(e) => (e.currentTarget.style.background = "hsl(var(--card))")}
+          onMouseOver={(e) =>
+            (e.currentTarget.style.background = "hsl(var(--muted))")
+          }
+          onMouseOut={(e) =>
+            (e.currentTarget.style.background = "hsl(var(--card))")
+          }
         >
           ★ Watchlist
         </button>

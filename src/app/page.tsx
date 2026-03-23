@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Zap, BarChart2, ShieldCheck,
@@ -10,71 +10,79 @@ import {
 import CoinListClient from "./(main)/coin/CoinListClient";
 import { useI18n } from "@/lib/i18n";
 
-const PRIMARY   = "#8ccdff"; // Stitch blue
-const GREEN     = "#42e09a"; // Stitch green (positive/secondary)
-const RED       = "#ffb4ab"; // unchanged
+const PRIMARY   = "#8ccdff";
+const GREEN     = "#42e09a";
+const RED       = "#ffb4ab";
 
 const FEATURES = [
-  {
-    icon: Layers,
-    title: "Multi-Chain Bridge",
-    desc: "Swap assets across 12+ networks seamlessly without leaving the interface.",
-    color: PRIMARY,
-  },
-  {
-    icon: BrainCircuit,
-    title: "AI Yield Optimizer",
-    desc: "Automated strategies that rebalance your portfolio for maximum capital efficiency.",
-    color: GREEN,
-    badge: "NEW",
-  },
-  {
-    icon: Zap,
-    title: "Ultra-Low Latency",
-    desc: "Sub-millisecond price updates via our shared WebSocket engine.",
-    color: "#4edea3",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Secure by Default",
-    desc: "HTTP-only cookies, JWT auth, and rate-limited endpoints protect every session.",
-    color: "#b9c7e0",
-  },
+  { icon: Layers,      title: "Multi-Chain Bridge",   desc: "Swap assets across 12+ networks seamlessly without leaving the interface.", color: PRIMARY },
+  { icon: BrainCircuit,title: "AI Yield Optimizer",   desc: "Automated strategies that rebalance your portfolio for maximum capital efficiency.", color: GREEN, badge: "NEW" },
+  { icon: Zap,         title: "Ultra-Low Latency",    desc: "Sub-millisecond price updates via our shared WebSocket engine.", color: "#8ccdff" },
+  { icon: ShieldCheck, title: "Secure by Default",    desc: "HTTP-only cookies, JWT auth, and rate-limited endpoints protect every session.", color: "#b9c7e0" },
 ];
 
 const MARKET_CARDS = [
-  { symbol: "BTC",  name: "Bitcoin",   icon: Bitcoin,   color: "#f97316", change: "+1.2%",  pos: true },
-  { symbol: "ETH",  name: "Ethereum",  icon: Coins,     color: "#8ccdff", change: "+4.2%",  pos: true },
-  { symbol: "SOL",  name: "Solana",    icon: BarChart2, color: "#c0c7d6", change: "-2.4%",  pos: false },
-  { symbol: "LINK", name: "Chainlink", icon: Link2,     color: "#42e09a", change: "+0.4%",  pos: true },
+  { symbol: "BTC",  name: "Bitcoin",   icon: Bitcoin,   color: "#f97316", change: "+1.2%", pos: true  },
+  { symbol: "ETH",  name: "Ethereum",  icon: Coins,     color: "#8ccdff", change: "+4.2%", pos: true  },
+  { symbol: "SOL",  name: "Solana",    icon: BarChart2, color: "#c0c7d6", change: "-2.4%", pos: false },
+  { symbol: "LINK", name: "Chainlink", icon: Link2,     color: "#42e09a", change: "+0.4%", pos: true  },
 ];
 
 const CHART_BARS = [40, 35, 55, 45, 75, 85, 70, 95];
 
+/** Returns [ref, isVisible]. Element fades+slides up once when it enters the viewport. */
+function useReveal<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.08 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  return [ref, visible] as const;
+}
+
 export default function HomePage() {
   const { t } = useI18n();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn]   = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [heroVisible, setHeroVisible] = useState(false);
 
-  // Check if user is logged in
+  const [marketRef,   marketVisible]   = useReveal<HTMLElement>();
+  const [featuresRef, featuresVisible] = useReveal<HTMLElement>();
+  const [ctaRef,      ctaVisible]      = useReveal<HTMLElement>();
+  const [tableRef,    tableVisible]    = useReveal<HTMLElement>();
+
+  useEffect(() => {
+    // Tiny delay so the hero entrance runs after hydration
+    const id = setTimeout(() => setHeroVisible(true), 60);
+    return () => clearTimeout(id);
+  }, []);
+
   useEffect(() => {
     const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
     fetch(`${BASE}/GetUserInfo`, { credentials: "include" })
-      .then((r) => {
-        setIsLoggedIn(r.ok);
-        setAuthChecked(true);
-      })
-      .catch(() => {
-        setIsLoggedIn(false);
-        setAuthChecked(true);
-      });
+      .then((r) => { setIsLoggedIn(r.ok); setAuthChecked(true); })
+      .catch(() => { setIsLoggedIn(false); setAuthChecked(true); });
   }, []);
 
-  // Smooth scroll to coins table
   const scrollToCoinsTable = () => {
-    const coinsSection = document.getElementById("coins-table-section");
-    coinsSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("coins-table-section")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  const revealClass = (visible: boolean, delay = "0ms") =>
+    `transition-all duration-700 ease-out ${delay !== "0ms" ? "" : ""}` +
+    (visible
+      ? " opacity-100 translate-y-0"
+      : " opacity-0 translate-y-8 pointer-events-none");
 
   return (
     <div className="flex flex-col gap-24">
@@ -83,78 +91,68 @@ export default function HomePage() {
       <section className="relative flex flex-col lg:flex-row items-center gap-16 pt-10 pb-4 overflow-hidden">
 
         {/* Glow blobs */}
-        <div
-          className="pointer-events-none absolute -top-20 -right-40 w-[500px] h-[500px] rounded-full blur-[120px] opacity-10"
-          style={{ background: PRIMARY }}
-        />
-        <div
-          className="pointer-events-none absolute -bottom-20 -left-40 w-[350px] h-[350px] rounded-full blur-[100px] opacity-5"
-          style={{ background: GREEN }}
-        />
+        <div className="pointer-events-none absolute -top-20 -right-40 w-[500px] h-[500px] rounded-full blur-[120px] opacity-10" style={{ background: PRIMARY }} />
+        <div className="pointer-events-none absolute -bottom-20 -left-40 w-[350px] h-[350px] rounded-full blur-[100px] opacity-5"  style={{ background: GREEN }} />
 
-        {/* Left copy */}
+        {/* Left copy — staggered children */}
         <div className="relative z-10 flex flex-col gap-7 flex-1">
+
           <div
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border w-fit"
-            style={{ color: GREEN, borderColor: `${GREEN}40`, background: `${GREEN}10` }}
+            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border w-fit transition-all duration-700 ease-out ${heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+            style={{ color: GREEN, borderColor: `${GREEN}40`, background: `${GREEN}10`, transitionDelay: "0ms" }}
           >
             <span className="w-2 h-2 rounded-full bg-current animate-pulse" />
             {t.home.badge}
           </div>
 
-          <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight leading-[1.1]">
+          <h1
+            className={`text-5xl sm:text-6xl font-extrabold tracking-tight leading-[1.1] transition-all duration-700 ease-out ${heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+            style={{ transitionDelay: "80ms" }}
+          >
             {t.home.heroTitle1}{" "}
-            <span
-              className="bg-clip-text text-transparent"
-              style={{ backgroundImage: `linear-gradient(135deg, ${PRIMARY}, #006493)` }}
-            >
+            <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(135deg, ${PRIMARY}, #006493)` }}>
               {t.home.heroTitle2}
             </span>
             <br />
             {t.home.heroTitle3}
           </h1>
 
-          <p className="text-base text-muted-foreground max-w-lg leading-relaxed">
+          <p
+            className={`text-base text-muted-foreground max-w-lg leading-relaxed transition-all duration-700 ease-out ${heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+            style={{ transitionDelay: "160ms" }}
+          >
             {t.home.heroDesc.split(/(\$1,000[^.]*USDT[^.]*)/)[0]}
-            <strong className="text-foreground">
-              {t.home.heroDesc.match(/\$1,000[^.]*USDT[^.]*/)?.[0]}
-            </strong>
+            <strong className="text-foreground">{t.home.heroDesc.match(/\$1,000[^.]*USDT[^.]*/)?.[0]}</strong>
             {t.home.heroDesc.split(/\$1,000[^.]*USDT[^.]*/)[1]}
           </p>
 
-          <div className="flex items-center gap-3 flex-wrap">
+          <div
+            className={`flex items-center gap-3 flex-wrap transition-all duration-700 ease-out ${heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+            style={{ transitionDelay: "240ms" }}
+          >
             {authChecked && !isLoggedIn && (
-              <Link
-                href="/signup"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90 active:scale-95"
-                style={{ background: `linear-gradient(135deg, ${PRIMARY}, #004e7c)` }}
-              >
+              <Link href="/signup" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90 active:scale-95" style={{ background: `linear-gradient(135deg, ${PRIMARY}, #004e7c)` }}>
                 {t.home.startTrading} <ArrowRight className="h-4 w-4" />
               </Link>
             )}
             {authChecked && isLoggedIn && (
-              <button
-                onClick={scrollToCoinsTable}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90 active:scale-95"
-                style={{ background: `linear-gradient(135deg, ${PRIMARY}, #004e7c)` }}
-              >
+              <button onClick={scrollToCoinsTable} className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90 active:scale-95" style={{ background: `linear-gradient(135deg, ${PRIMARY}, #004e7c)` }}>
                 View Markets <ChevronDown className="h-4 w-4" />
               </button>
             )}
-            <Link
-              href="/Exchange/BTCUSDT"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold border border-border hover:bg-muted transition-colors active:scale-95"
-            >
+            <Link href="/Exchange/BTCUSDT" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold border border-border hover:bg-muted transition-colors active:scale-95">
               {t.home.viewLiveChart}
             </Link>
           </div>
 
-          {/* Stats */}
-          <div className="flex items-center gap-10 flex-wrap pt-2">
+          <div
+            className={`flex items-center gap-10 flex-wrap pt-2 transition-all duration-700 ease-out ${heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+            style={{ transitionDelay: "320ms" }}
+          >
             {[
-              { label: t.home.tradingPairs,   value: "400+" },
-              { label: t.home.virtualBalance, value: "$1,000" },
-              { label: t.home.dataDelay,      value: "0ms" },
+              { label: t.home.tradingPairs,   value: "400+"    },
+              { label: t.home.virtualBalance, value: "$1,000"  },
+              { label: t.home.dataDelay,      value: "0ms"     },
             ].map((s) => (
               <div key={s.label} className="flex flex-col">
                 <span className="text-2xl font-black text-foreground">{s.value}</span>
@@ -165,7 +163,10 @@ export default function HomePage() {
         </div>
 
         {/* Right — mock chart widget */}
-        <div className="relative z-10 hidden lg:block w-[380px] shrink-0">
+        <div
+          className={`relative z-10 hidden lg:block w-[380px] shrink-0 transition-all duration-700 ease-out ${heroVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-10"}`}
+          style={{ transitionDelay: "200ms" }}
+        >
           <div className="rounded-xl border border-border bg-card p-6 shadow-2xl">
             <div className="flex justify-between items-start mb-8">
               <div>
@@ -181,13 +182,12 @@ export default function HomePage() {
               {CHART_BARS.map((h, i) => (
                 <div
                   key={i}
-                  className="flex-1 rounded-t-sm transition-all"
+                  className="flex-1 rounded-t-sm transition-all duration-300 hover:opacity-80"
                   style={{
                     height: `${h}%`,
-                    background: i >= 4
-                      ? `${PRIMARY}30`
-                      : "hsl(var(--muted))",
-                    borderTop: i >= 4 ? `2px solid ${PRIMARY}` : undefined,
+                    background:  i >= 4 ? `${PRIMARY}30` : "hsl(var(--muted))",
+                    borderTop:   i >= 4 ? `2px solid ${PRIMARY}` : undefined,
+                    transitionDelay: heroVisible ? `${400 + i * 40}ms` : "0ms",
                   }}
                 />
               ))}
@@ -197,36 +197,30 @@ export default function HomePage() {
       </section>
 
       {/* ── Market Pulse ──────────────────────────────────────────── */}
-      <section className="flex flex-col gap-8">
-        <div className="flex justify-between items-end">
+      <section ref={marketRef} className={revealClass(marketVisible)}>
+        <div className="flex justify-between items-end mb-8">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Market Pulse</h2>
             <p className="text-sm text-muted-foreground mt-1">Synchronized liquidity across global providers.</p>
           </div>
-          <Link
-            href="/coin"
-            className="flex items-center gap-1 text-sm font-bold hover:underline"
-            style={{ color: PRIMARY }}
-          >
+          <Link href="/coin" className="flex items-center gap-1 text-sm font-bold hover:underline" style={{ color: PRIMARY }}>
             View All Assets <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {MARKET_CARDS.map((coin) => {
+          {MARKET_CARDS.map((coin, i) => {
             const Icon = coin.icon;
             return (
               <Link
                 key={coin.symbol}
                 href={`/Exchange/${coin.symbol}USDT`}
-                className="group flex flex-col gap-5 p-5 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors"
+                className="group flex flex-col gap-5 p-5 rounded-xl border border-border bg-card hover:bg-muted/50 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300"
+                style={{ transitionDelay: marketVisible ? `${i * 60}ms` : "0ms" }}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center"
-                      style={{ background: `${coin.color}15`, border: `1px solid ${coin.color}30` }}
-                    >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110" style={{ background: `${coin.color}15`, border: `1px solid ${coin.color}30` }}>
                       <Icon className="h-5 w-5" style={{ color: coin.color }} />
                     </div>
                     <div>
@@ -234,13 +228,7 @@ export default function HomePage() {
                       <p className="text-[0.65rem] text-muted-foreground uppercase tracking-widest">{coin.name}</p>
                     </div>
                   </div>
-                  <span
-                    className="px-2 py-1 rounded text-[0.65rem] font-bold"
-                    style={{
-                      background: coin.pos ? `${GREEN}18` : `${RED}18`,
-                      color: coin.pos ? GREEN : RED,
-                    }}
-                  >
+                  <span className="px-2 py-1 rounded text-[0.65rem] font-bold" style={{ background: coin.pos ? `${GREEN}18` : `${RED}18`, color: coin.pos ? GREEN : RED }}>
                     {coin.change}
                   </span>
                 </div>
@@ -255,46 +243,32 @@ export default function HomePage() {
       </section>
 
       {/* ── Features ──────────────────────────────────────────────── */}
-      <section className="flex flex-col gap-10">
+      <section ref={featuresRef} className={revealClass(featuresVisible)}>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
 
-          {/* Left text */}
           <div className="lg:col-span-4 flex flex-col gap-6">
-            <span
-              className="text-[0.65rem] uppercase tracking-widest font-semibold"
-              style={{ color: PRIMARY }}
-            >
+            <span className="text-[0.65rem] uppercase tracking-widest font-semibold" style={{ color: PRIMARY }}>
               The Platform Advantage
             </span>
-            <h2 className="text-4xl font-extrabold tracking-tight leading-tight">
-              {t.home.featuresTitle}
-            </h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {t.home.featuresSubtitle}
-            </p>
+            <h2 className="text-4xl font-extrabold tracking-tight leading-tight">{t.home.featuresTitle}</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">{t.home.featuresSubtitle}</p>
           </div>
 
-          {/* Right grid */}
           <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {FEATURES.map((f) => {
+            {FEATURES.map((f, i) => {
               const Icon = f.icon;
               return (
                 <div
                   key={f.title}
-                  className="relative flex flex-col gap-4 p-6 rounded-xl border border-border bg-card hover:border-primary/40 transition-colors"
+                  className="relative flex flex-col gap-4 p-6 rounded-xl border border-border bg-card hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-300"
+                  style={{ transitionDelay: featuresVisible ? `${i * 70}ms` : "0ms" }}
                 >
                   {f.badge && (
-                    <span
-                      className="absolute top-4 right-4 text-[0.6rem] font-bold px-2 py-0.5 rounded-full border"
-                      style={{ color: GREEN, borderColor: `${GREEN}40`, background: `${GREEN}12` }}
-                    >
+                    <span className="absolute top-4 right-4 text-[0.6rem] font-bold px-2 py-0.5 rounded-full border" style={{ color: GREEN, borderColor: `${GREEN}40`, background: `${GREEN}12` }}>
                       {f.badge}
                     </span>
                   )}
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center"
-                    style={{ background: `${f.color}15` }}
-                  >
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: `${f.color}15` }}>
                     <Icon className="h-5 w-5" style={{ color: f.color }} />
                   </div>
                   <div>
@@ -310,42 +284,29 @@ export default function HomePage() {
 
       {/* ── CTA Banner ────────────────────────────────────────────── */}
       <section
-        className="relative flex flex-col sm:flex-row items-center justify-between gap-6 px-8 py-10 rounded-2xl border overflow-hidden text-center sm:text-left"
-        style={{
-          background: `linear-gradient(135deg, ${PRIMARY}10 0%, ${GREEN}08 100%)`,
-          borderColor: `${PRIMARY}30`,
-        }}
+        ref={ctaRef}
+        className={`relative flex flex-col sm:flex-row items-center justify-between gap-6 px-8 py-10 rounded-2xl border overflow-hidden text-center sm:text-left ${revealClass(ctaVisible)}`}
+        style={{ background: `linear-gradient(135deg, ${PRIMARY}10 0%, ${GREEN}08 100%)`, borderColor: `${PRIMARY}30` }}
       >
-        <div
-          className="pointer-events-none absolute inset-0 blur-[120px] opacity-20"
-          style={{ background: PRIMARY }}
-        />
+        <div className="pointer-events-none absolute inset-0 blur-[120px] opacity-20" style={{ background: PRIMARY }} />
         <div className="relative z-10">
           <h2 className="text-2xl font-extrabold tracking-tight mb-2">{t.home.ctaTitle}</h2>
           <p className="text-sm text-muted-foreground max-w-md">{t.home.ctaDesc}</p>
         </div>
         {authChecked && !isLoggedIn && (
-          <Link
-            href="/signup"
-            className="relative z-10 shrink-0 inline-flex items-center gap-2 px-7 py-3 rounded-lg text-sm font-bold text-white hover:opacity-90 transition-opacity active:scale-95"
-            style={{ background: `linear-gradient(135deg, ${PRIMARY}, #004e7c)` }}
-          >
+          <Link href="/signup" className="relative z-10 shrink-0 inline-flex items-center gap-2 px-7 py-3 rounded-lg text-sm font-bold text-white hover:opacity-90 hover:scale-105 transition-all active:scale-95" style={{ background: `linear-gradient(135deg, ${PRIMARY}, #004e7c)` }}>
             {t.home.getStarted} <ArrowRight className="h-4 w-4" />
           </Link>
         )}
         {authChecked && isLoggedIn && (
-          <button
-            onClick={scrollToCoinsTable}
-            className="relative z-10 shrink-0 inline-flex items-center gap-2 px-7 py-3 rounded-lg text-sm font-bold text-white hover:opacity-90 transition-opacity active:scale-95"
-            style={{ background: `linear-gradient(135deg, ${PRIMARY}, #004e7c)` }}
-          >
+          <button onClick={scrollToCoinsTable} className="relative z-10 shrink-0 inline-flex items-center gap-2 px-7 py-3 rounded-lg text-sm font-bold text-white hover:opacity-90 hover:scale-105 transition-all active:scale-95" style={{ background: `linear-gradient(135deg, ${PRIMARY}, #004e7c)` }}>
             View Markets <ChevronDown className="h-4 w-4" />
           </button>
         )}
       </section>
 
       {/* ── Live Markets Table ────────────────────────────────────── */}
-      <section id="coins-table-section" className="flex flex-col gap-4 scroll-mt-20">
+      <section ref={tableRef} id="coins-table-section" className={`flex flex-col gap-4 scroll-mt-20 ${revealClass(tableVisible)}`}>
         <div>
           <h2 className="text-2xl font-bold tracking-tight mb-1">{t.home.liveMarketsTitle}</h2>
           <p className="text-sm text-muted-foreground">{t.home.liveMarketsDesc}</p>

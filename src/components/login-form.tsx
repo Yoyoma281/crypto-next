@@ -35,10 +35,15 @@ export function LoginForm({
   onSwitchToSignup,
   focusFirst,
   ...props
-}: React.ComponentPropsWithoutRef<"form"> & { onSwitchToSignup?: () => void; focusFirst?: boolean }) {
+}: React.ComponentPropsWithoutRef<"form"> & {
+  onSwitchToSignup?: () => void;
+  focusFirst?: boolean;
+}) {
   const router = useRouter();
   const { t } = useI18n();
-  const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [state, setState] = useState<"idle" | "loading" | "success" | "error">(
+    "idle",
+  );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const firstFieldRef = useRef<HTMLInputElement | null>(null);
 
@@ -85,8 +90,12 @@ export function LoginForm({
           <CheckCircle2 className="h-8 w-8" style={{ color: "#4edea3" }} />
         </div>
         <div className="text-center">
-          <p className="text-lg font-semibold text-foreground">{t.auth.welcomeBack}!</p>
-          <p className="text-sm text-muted-foreground mt-0.5">{t.auth.redirectingMarkets}</p>
+          <p className="text-lg font-semibold text-foreground">
+            {t.auth.welcomeBack}!
+          </p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {t.auth.redirectingMarkets}
+          </p>
         </div>
         <div className="flex gap-1 mt-1">
           {[0, 1, 2].map((i) => (
@@ -127,14 +136,19 @@ export function LoginForm({
             }}
           />
           {errors.username && (
-            <p className="text-xs text-destructive">{errors.username.message}</p>
+            <p className="text-xs text-destructive">
+              {errors.username.message}
+            </p>
           )}
         </div>
 
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">{t.auth.password}</Label>
-            <a href="#" className="text-xs text-muted-foreground underline-offset-4 hover:underline hover:text-foreground transition-colors">
+            <a
+              href="#"
+              className="text-xs text-muted-foreground underline-offset-4 hover:underline hover:text-foreground transition-colors"
+            >
               {t.auth.forgotPassword}
             </a>
           </div>
@@ -145,14 +159,20 @@ export function LoginForm({
             {...register("password")}
           />
           {errors.password && (
-            <p className="text-xs text-destructive">{errors.password.message}</p>
+            <p className="text-xs text-destructive">
+              {errors.password.message}
+            </p>
           )}
         </div>
 
-        {(state === "error" && errorMsg) && (
+        {state === "error" && errorMsg && (
           <div
             className="text-xs text-center px-3 py-2.5 rounded-lg border"
-            style={{ color: "#ffb3ad", background: "rgba(255,179,173,0.07)", borderColor: "rgba(255,179,173,0.25)" }}
+            style={{
+              color: "#ffb3ad",
+              background: "rgba(255,179,173,0.07)",
+              borderColor: "rgba(255,179,173,0.25)",
+            }}
           >
             {errorMsg}
           </div>
@@ -168,7 +188,9 @@ export function LoginForm({
               <Loader2 className="h-4 w-4 animate-spin" />
               {t.auth.signingIn}
             </span>
-          ) : t.auth.signIn}
+          ) : (
+            t.auth.signIn
+          )}
         </Button>
       </div>
 
@@ -183,7 +205,10 @@ export function LoginForm({
             {t.auth.signUpFree}
           </button>
         ) : (
-          <a href="/signup" className="text-foreground font-medium underline underline-offset-4 hover:opacity-80 transition-opacity">
+          <a
+            href="/signup"
+            className="text-foreground font-medium underline underline-offset-4 hover:opacity-80 transition-opacity"
+          >
             {t.auth.signUpFree}
           </a>
         )}

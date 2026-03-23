@@ -26,7 +26,15 @@ const schema = z
 
 type FormData = z.infer<typeof schema>;
 
-export function SignupForm({ className, onSwitchToLogin, focusFirst }: { className?: string; onSwitchToLogin?: () => void; focusFirst?: boolean }) {
+export function SignupForm({
+  className,
+  onSwitchToLogin,
+  focusFirst,
+}: {
+  className?: string;
+  onSwitchToLogin?: () => void;
+  focusFirst?: boolean;
+}) {
   const router = useRouter();
   const { t } = useI18n();
   const [state, setState] = useState<"idle" | "loading" | "success">("idle");
@@ -54,7 +62,10 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: data.username, password: data.password }),
+        body: JSON.stringify({
+          username: data.username,
+          password: data.password,
+        }),
       });
 
       if (!res.ok) {
@@ -89,13 +100,21 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
           />
         </div>
         <div className="text-center">
-          <p className="text-xl font-bold text-foreground">{t.auth.accountCreated}</p>
-          <p className="text-sm text-muted-foreground mt-1">{t.auth.redirectingLogin}</p>
+          <p className="text-xl font-bold text-foreground">
+            {t.auth.accountCreated}
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t.auth.redirectingLogin}
+          </p>
         </div>
         {/* Virtual balance badge */}
         <div
           className="flex items-center gap-2 px-4 py-2.5 rounded-full border text-sm font-semibold"
-          style={{ background: "rgba(78,222,163,0.08)", borderColor: "rgba(78,222,163,0.3)", color: "#4edea3" }}
+          style={{
+            background: "rgba(78,222,163,0.08)",
+            borderColor: "rgba(78,222,163,0.3)",
+            color: "#4edea3",
+          }}
         >
           <Wallet className="h-4 w-4" />
           {t.auth.virtualBalance}
@@ -137,7 +156,11 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
               firstFieldRef.current = el;
             }}
           />
-          {errors.username && <p className="text-xs text-destructive">{errors.username.message}</p>}
+          {errors.username && (
+            <p className="text-xs text-destructive">
+              {errors.username.message}
+            </p>
+          )}
         </div>
 
         <div className="grid gap-1.5">
@@ -148,7 +171,11 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
             autoComplete="new-password"
             {...register("password")}
           />
-          {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+          {errors.password && (
+            <p className="text-xs text-destructive">
+              {errors.password.message}
+            </p>
+          )}
         </div>
 
         <div className="grid gap-1.5">
@@ -159,13 +186,19 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
             autoComplete="new-password"
             {...register("confirm")}
           />
-          {errors.confirm && <p className="text-xs text-destructive">{errors.confirm.message}</p>}
+          {errors.confirm && (
+            <p className="text-xs text-destructive">{errors.confirm.message}</p>
+          )}
         </div>
 
         {serverError && (
           <div
             className="text-xs text-center px-3 py-2.5 rounded-lg border"
-            style={{ color: "#ffb3ad", background: "rgba(255,179,173,0.07)", borderColor: "rgba(255,179,173,0.25)" }}
+            style={{
+              color: "#ffb3ad",
+              background: "rgba(255,179,173,0.07)",
+              borderColor: "rgba(255,179,173,0.25)",
+            }}
           >
             {serverError}
           </div>
@@ -181,7 +214,9 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
               <Loader2 className="h-4 w-4 animate-spin" />
               {t.auth.creatingAccount}
             </span>
-          ) : t.auth.signUp}
+          ) : (
+            t.auth.signUp
+          )}
         </Button>
       </div>
 
@@ -196,7 +231,10 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
             {t.auth.signInLink}
           </button>
         ) : (
-          <Link href="/login" className="text-foreground font-medium underline underline-offset-4 hover:opacity-80 transition-opacity">
+          <Link
+            href="/login"
+            className="text-foreground font-medium underline underline-offset-4 hover:opacity-80 transition-opacity"
+          >
             {t.auth.signInLink}
           </Link>
         )}

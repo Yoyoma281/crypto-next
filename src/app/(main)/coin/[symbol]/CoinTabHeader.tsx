@@ -12,7 +12,9 @@ function CoinImage({ ticker }: { ticker: string }) {
     return (
       <div
         className="h-8 w-8 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
-        style={{ background: `hsl(${(ticker.charCodeAt(0) * 47) % 360}, 55%, 45%)` }}
+        style={{
+          background: `hsl(${(ticker.charCodeAt(0) * 47) % 360}, 55%, 45%)`,
+        }}
       >
         {ticker[0]}
       </div>
@@ -43,7 +45,12 @@ interface Props {
   changePct?: string;
 }
 
-export default function CoinTabHeader({ symbol, price, isUp, changePct }: Props) {
+export default function CoinTabHeader({
+  symbol,
+  price,
+  isUp,
+  changePct,
+}: Props) {
   const { t } = useI18n();
   const searchParams = useSearchParams();
   const activeTab = searchParams.get("tab") ?? "overview";
@@ -71,11 +78,17 @@ export default function CoinTabHeader({ symbol, price, isUp, changePct }: Props)
         </div>
         {price && (
           <div className="flex items-center gap-2 ml-2">
-            <span className="font-bold tabular-nums text-sm" style={{ color: changeColor }}>
+            <span
+              className="font-bold tabular-nums text-sm"
+              style={{ color: changeColor }}
+            >
               {price}
             </span>
             {changePct && (
-              <span className="text-xs font-semibold" style={{ color: changeColor }}>
+              <span
+                className="text-xs font-semibold"
+                style={{ color: changeColor }}
+              >
                 {isUp ? "▲" : "▼"} {Math.abs(parseFloat(changePct)).toFixed(2)}%
               </span>
             )}

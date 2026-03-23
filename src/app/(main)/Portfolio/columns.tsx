@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { portfolioCoin } from "@/app/types/coin";
 import { ColumnDef } from "@tanstack/react-table";
@@ -18,7 +18,13 @@ function fmtAmount(val: string) {
 }
 
 function fmtUSD(n: number) {
-  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (
+    "$" +
+    n.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  );
 }
 
 function fmtWorth(val: string) {
@@ -85,7 +91,8 @@ export function makeColumns(t: T): ColumnDef<EnrichedCoin>[] {
       header: t.portfolio.colAvgBuy,
       cell: (props) => {
         const avg = props.row.original.avgBuyPrice;
-        if (avg == null || avg === 0) return <span className="text-muted-foreground text-sm">—</span>;
+        if (avg == null || avg === 0)
+          return <span className="text-muted-foreground text-sm">—</span>;
         return <span className="font-medium text-[14px]">{fmtUSD(avg)}</span>;
       },
     },
@@ -95,17 +102,20 @@ export function makeColumns(t: T): ColumnDef<EnrichedCoin>[] {
       cell: (props) => {
         const pnl = props.row.original.unrealizedPnl;
         const pct = props.row.original.unrealizedPnlPct;
-        if (pnl == null) return <span className="text-muted-foreground text-sm">—</span>;
+        if (pnl == null)
+          return <span className="text-muted-foreground text-sm">—</span>;
         const color = pnl >= 0 ? "#4edea3" : "#ffb3ad";
         const sign = pnl >= 0 ? "+" : "";
         return (
           <div className="flex flex-col leading-tight">
             <span className="font-semibold text-[14px]" style={{ color }}>
-              {sign}{fmtUSD(Math.abs(pnl)).replace("$", pnl >= 0 ? "+$" : "-$")}
+              {sign}
+              {fmtUSD(Math.abs(pnl)).replace("$", pnl >= 0 ? "+$" : "-$")}
             </span>
             {pct != null && (
               <span className="text-[11px]" style={{ color }}>
-                {sign}{pct.toFixed(2)}%
+                {sign}
+                {pct.toFixed(2)}%
               </span>
             )}
           </div>
