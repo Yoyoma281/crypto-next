@@ -103,7 +103,7 @@ export default function TradingClient({ symbol, hiddenHeader }: { symbol: string
   }, [symbol]);
 
   const isUp = tickerData ? parseFloat(tickerData.changePct) >= 0 : true;
-  const changeColor = isUp ? '#16c784' : '#ea3943';
+  const changeColor = isUp ? '#4edea3' : '#ffb3ad';
 
   const fmtPrice = (v: string) =>
     parseFloat(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 });
@@ -119,36 +119,48 @@ export default function TradingClient({ symbol, hiddenHeader }: { symbol: string
     <div className="flex flex-col gap-0 min-h-0">
       {/* ── Ticker Header ─────────────────────────────────────── */}
       {!hiddenHeader && (
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 border-b border-border bg-card">
-          {/* Pair identity */}
-          <div className="flex items-center gap-2">
-            <CoinImage ticker={ticker} />
+        <div className="flex flex-col gap-4 px-6 py-5 border-b border-border bg-card">
+          {/* Pair identity + Price Row */}
+          <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
+            {/* Pair identity */}
+            <div className="flex items-center gap-3">
+              <CoinImage ticker={ticker} />
+              <div className="flex flex-col leading-tight">
+                <span className="font-bold text-lg">{ticker}/USDT</span>
+                <span className="text-muted-foreground text-[11px]">{symbol}</span>
+              </div>
+            </div>
+
+            {/* Price */}
             <div className="flex flex-col leading-tight">
-              <span className="font-bold text-base">{ticker}/USDT</span>
-              <span className="text-muted-foreground text-[11px]">{symbol}</span>
+              <span className="text-4xl font-bold tabular-nums" style={{ color: changeColor }}>
+                {tickerData ? fmtPrice(tickerData.price) : '—'}
+              </span>
+              <span className="text-sm tabular-nums" style={{ color: changeColor }}>
+                {tickerData
+                  ? `${isUp ? '+' : ''}${parseFloat(tickerData.change).toFixed(2)} (${parseFloat(tickerData.changePct).toFixed(2)}%)`
+                  : '—'}
+              </span>
             </div>
-          </div>
 
-          {/* Price */}
-          <div className="flex flex-col leading-tight">
-            <span className="text-2xl font-bold tabular-nums" style={{ color: changeColor }}>
-              {tickerData ? fmtPrice(tickerData.price) : '—'}
-            </span>
-            <span className="text-xs tabular-nums" style={{ color: changeColor }}>
-              {tickerData
-                ? `${isUp ? '+' : ''}${parseFloat(tickerData.change).toFixed(2)} (${parseFloat(tickerData.changePct).toFixed(2)}%)`
-                : '—'}
-            </span>
+            {/* Stats in columns */}
+            {tickerData && (
+              <div className="flex gap-8 text-sm ml-auto flex-wrap">
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground text-xs uppercase tracking-widest font-semibold">{t.trading.high24h}</span>
+                  <span className="font-bold text-foreground tabular-nums mt-1">{fmtPrice(tickerData.high)}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground text-xs uppercase tracking-widest font-semibold">{t.trading.low24h}</span>
+                  <span className="font-bold text-foreground tabular-nums mt-1">{fmtPrice(tickerData.low)}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground text-xs uppercase tracking-widest font-semibold">{t.trading.volume24h}</span>
+                  <span className="font-bold text-foreground tabular-nums mt-1">{fmtVol(tickerData.volume)}</span>
+                </div>
+              </div>
+            )}
           </div>
-
-          {/* Stats */}
-          {tickerData && (
-            <div className="flex gap-6 text-xs ml-auto flex-wrap">
-              <StatCell label={t.trading.high24h} value={fmtPrice(tickerData.high)} />
-              <StatCell label={t.trading.low24h} value={fmtPrice(tickerData.low)} />
-              <StatCell label={t.trading.volume24h} value={fmtVol(tickerData.volume)} />
-            </div>
-          )}
         </div>
       )}
 

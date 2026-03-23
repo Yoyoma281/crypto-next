@@ -12,7 +12,7 @@ export default function PrivacyPage() {
         </Link>
         <div className="flex items-center gap-3 mb-2">
           <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ background: "rgba(16,161,231,0.1)" }}>
-            <Shield className="h-4 w-4" style={{ color: "#10a1e7" }} />
+            <Shield className="h-4 w-4" style={{ color: "#4edea3" }} />
           </div>
           <h1 className="text-3xl font-bold">Privacy Policy</h1>
         </div>

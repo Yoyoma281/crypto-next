@@ -19,10 +19,10 @@ const COINS = [
 ];
 
 const PERKS = [
-  { icon: Wallet,     color: "#16c784", text: "$1,000 virtual USDT on signup" },
-  { icon: TrendingUp, color: "#10a1e7", text: "Live Binance prices, 400+ pairs" },
-  { icon: Zap,        color: "#f59e0b", text: "Professional charts & order book" },
-  { icon: ShieldCheck,color: "#a855f7", text: "No real money — 100% risk free" },
+  { icon: Wallet,     color: "#4edea3", text: "$1,000 virtual USDT on signup" },
+  { icon: TrendingUp, color: "#4edea3", text: "Live Binance prices, 400+ pairs" },
+  { icon: Zap,        color: "#b9c7e0", text: "Professional charts & order book" },
+  { icon: ShieldCheck,color: "#4edea3", text: "No real money — 100% risk free" },
 ];
 
 type Mode = "login" | "signup";
@@ -91,11 +91,11 @@ export default function AuthPage({ initial }: { initial: Mode }) {
         {/* Glow blobs */}
         <div
           className="absolute top-[-80px] left-[-80px] h-64 w-64 rounded-full opacity-20 blur-3xl"
-          style={{ background: `radial-gradient(circle, ${isLogin ? "#10a1e7" : "#16c784"}, transparent)` }}
+          style={{ background: `radial-gradient(circle, #4edea3, transparent)` }}
         />
         <div
           className="absolute bottom-[-60px] right-[-60px] h-52 w-52 rounded-full opacity-15 blur-3xl"
-          style={{ background: `radial-gradient(circle, ${isLogin ? "#16c784" : "#10a1e7"}, transparent)` }}
+          style={{ background: `radial-gradient(circle, #4edea3, transparent)` }}
         />
 
         {/* Brand */}

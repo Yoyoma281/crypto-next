@@ -82,7 +82,7 @@ export function LoginForm({
           className="h-16 w-16 rounded-full flex items-center justify-center"
           style={{ background: "rgba(22,199,132,0.12)" }}
         >
-          <CheckCircle2 className="h-8 w-8" style={{ color: "#16c784" }} />
+          <CheckCircle2 className="h-8 w-8" style={{ color: "#4edea3" }} />
         </div>
         <div className="text-center">
           <p className="text-lg font-semibold text-foreground">{t.auth.welcomeBack}!</p>
@@ -152,7 +152,7 @@ export function LoginForm({
         {(state === "error" && errorMsg) && (
           <div
             className="text-xs text-center px-3 py-2.5 rounded-lg border"
-            style={{ color: "#ea3943", background: "rgba(234,57,67,0.07)", borderColor: "rgba(234,57,67,0.25)" }}
+            style={{ color: "#ffb3ad", background: "rgba(255,179,173,0.07)", borderColor: "rgba(255,179,173,0.25)" }}
           >
             {errorMsg}
           </div>

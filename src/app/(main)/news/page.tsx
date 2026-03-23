@@ -63,11 +63,11 @@ function SentimentBar({ votes }: { votes: CPVotes }) {
   const posPct = Math.round((pos / total) * 100);
   return (
     <div className="flex items-center gap-1.5 mt-1.5">
-      <span className="text-[10px] font-semibold" style={{ color: "#16c784" }}>{posPct}%</span>
+      <span className="text-[10px] font-semibold" style={{ color: "#4edea3" }}>{posPct}%</span>
       <div className="flex-1 h-1 rounded-full overflow-hidden bg-muted">
-        <div className="h-full rounded-full" style={{ width: `${posPct}%`, background: "#16c784" }} />
+        <div className="h-full rounded-full" style={{ width: `${posPct}%`, background: "#4edea3" }} />
       </div>
-      <span className="text-[10px] font-semibold" style={{ color: "#ea3943" }}>{100 - posPct}%</span>
+      <span className="text-[10px] font-semibold" style={{ color: "#ffb3ad" }}>{100 - posPct}%</span>
     </div>
   );
 }
@@ -218,10 +218,10 @@ export default function NewsPage() {
                   {(post.votes.positive + post.votes.negative) > 0 && (
                     <div className="flex items-center gap-2 ml-auto">
                       <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                        <span style={{ color: "#16c784" }}>▲</span> {post.votes.positive + post.votes.liked}
+                        <span style={{ color: "#4edea3" }}>▲</span> {post.votes.positive + post.votes.liked}
                       </span>
                       <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                        <span style={{ color: "#ea3943" }}>▼</span> {post.votes.negative}
+                        <span style={{ color: "#ffb3ad" }}>▼</span> {post.votes.negative}
                       </span>
                     </div>
                   )}
@@ -274,7 +274,7 @@ export default function NewsPage() {
                       </div>
                       {pct != null && (
                         <span className="text-xs font-semibold shrink-0"
-                          style={{ color: pct >= 0 ? "#16c784" : "#ea3943" }}>
+                          style={{ color: pct >= 0 ? "#4edea3" : "#ffb3ad" }}>
                           {pct >= 0 ? "+" : ""}{pct.toFixed(1)}%
                         </span>
                       )}

@@ -114,14 +114,14 @@ export default function CoinListClient() {
             {tabKey === "favorites" && (
               <Star
                 className="h-3.5 w-3.5"
-                style={tab === "favorites" ? { fill: "#f59e0b", color: "#f59e0b" } : {}}
+                style={tab === "favorites" ? { fill: "#4edea3", color: "#4edea3" } : {}}
               />
             )}
             {tabKey === "all" ? t.markets.allCoins : t.markets.favorites}
             {tabKey === "favorites" && favorites.size > 0 && (
               <span
                 className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center"
-                style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}
+                style={{ background: "rgba(78,222,163,0.15)", color: "#4edea3" }}
               >
                 {favorites.size}
               </span>
@@ -143,16 +143,16 @@ export default function CoinListClient() {
           {status === "live" && (
             <span
               className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
-              style={{ color: "#16c784", background: "rgba(22,199,132,0.1)" }}
+              style={{ color: "#4edea3", background: "rgba(78,222,163,0.1)" }}
             >
               <span className="relative flex h-2 w-2">
                 <span
                   className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                  style={{ background: "#16c784" }}
+                  style={{ background: "#4edea3" }}
                 />
                 <span
                   className="relative inline-flex rounded-full h-2 w-2"
-                  style={{ background: "#16c784" }}
+                  style={{ background: "#4edea3" }}
                 />
               </span>
               {t.markets.live}
@@ -164,7 +164,7 @@ export default function CoinListClient() {
           {status === "error" && (
             <span
               className="text-xs font-semibold px-2.5 py-1 rounded-full"
-              style={{ color: "#ea3943", background: "rgba(234,57,67,0.1)" }}
+              style={{ color: "#ffb3ad", background: "rgba(255,179,173,0.1)" }}
             >
               {t.markets.disconnected}
             </span>

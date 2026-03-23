@@ -12,6 +12,7 @@ import { useI18n } from "@/lib/i18n";
 interface UserInfo {
   username: string;
   _id: string;
+  avatar?: string;
 }
 
 interface Props {
@@ -114,12 +115,20 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
         <div className="px-5 py-4" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
           {user ? (
             <div className="flex items-center gap-3">
-              <div
-                className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
-                style={{ background: "hsl(var(--primary))" }}
-              >
-                {initials}
-              </div>
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.username}
+                  className="h-10 w-10 rounded-full object-cover shrink-0"
+                />
+              ) : (
+                <div
+                  className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                  style={{ background: "hsl(var(--primary))" }}
+                >
+                  {initials}
+                </div>
+              )}
               <div className="flex flex-col min-w-0">
                 <span className="font-semibold text-sm truncate">{user.username}</span>
                 <span className="text-xs text-muted-foreground">{t.sidebar.paperTrader}</span>
@@ -194,8 +203,8 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-              style={{ color: "#ea3943" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(234,57,67,0.08)"; }}
+              style={{ color: "#ffb3ad" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,179,173,0.08)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = ""; }}
             >
               <LogOut className="h-4 w-4 shrink-0" />

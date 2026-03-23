@@ -49,16 +49,16 @@ export default function WatchlistPage() {
           {synced && (
             <span
               className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full"
-              style={{ color: "#16c784", background: "rgba(22,199,132,0.1)" }}
+              style={{ color: "#4edea3", background: "rgba(78,222,163,0.1)" }}
             >
               <span className="relative flex h-2 w-2">
                 <span
                   className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                  style={{ background: "#16c784" }}
+                  style={{ background: "#4edea3" }}
                 />
                 <span
                   className="relative inline-flex rounded-full h-2 w-2"
-                  style={{ background: "#16c784" }}
+                  style={{ background: "#4edea3" }}
                 />
               </span>
               {t.watchlist.synced}

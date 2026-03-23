@@ -63,8 +63,8 @@ function PctBadge({ value }: { value: string }) {
     return (
         <span
             style={{
-                color: isUp ? "#16c784" : "#ea3943",
-                background: isUp ? "rgba(22,199,132,0.1)" : "rgba(234,57,67,0.1)",
+                color: isUp ? "#4edea3" : "#ffb3ad",
+                background: isUp ? "rgba(78,222,163,0.1)" : "rgba(255,179,173,0.1)",
                 borderRadius: "6px",
                 padding: "3px 8px",
                 fontWeight: 600,
@@ -103,7 +103,7 @@ export function makeColumns(
                     <Star
                         className="h-4 w-4 transition-colors"
                         style={isFav
-                            ? { fill: "#f59e0b", color: "#f59e0b" }
+                            ? { fill: "#4edea3", color: "#4edea3" }
                             : { fill: "transparent", color: "hsl(var(--muted-foreground))" }
                         }
                     />
@@ -155,7 +155,7 @@ export function makeColumns(
             const isUp = val >= 0;
             const formatted = fmtCoinPrice(Math.abs(val));
             return (
-                <span style={{ color: isUp ? "#16c784" : "#ea3943", fontWeight: 500, fontSize: "13px" }}>
+                <span style={{ color: isUp ? "#4edea3" : "#ffb3ad", fontWeight: 500, fontSize: "13px" }}>
                     {isUp ? "+" : "-"}{formatted}
                 </span>
             );

@@ -1,9 +1,29 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Shield, RotateCcw, Lock } from "lucide-react";
+import { Shield, RotateCcw, Lock, User as UserIcon, Github } from "lucide-react";
 import AuthRequired from "@/components/auth-required";
 import { useI18n } from "@/lib/i18n";
+
+const AVATAR_COLORS = [
+  "#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8",
+  "#F7DC6F", "#BB8FCE", "#85C1E2", "#F8B988", "#C39BD3",
+];
+
+const GITHUB_AVATARS = [
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=1",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=2",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=3",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=4",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=5",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=6",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=7",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=8",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=9",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=10",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=11",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=12",
+];
 
 function Section({ icon: Icon, title, description, children }: {
   icon: React.ElementType;
@@ -34,6 +54,8 @@ export default function SettingsPage() {
 
   // Auth check — must be first so hooks are unconditional
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [currentAvatar, setCurrentAvatar] = useState<string>("");
+  const [showAvatarOptions, setShowAvatarOptions] = useState(false);
 
   // Password change state
   const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirm: "" });
@@ -45,9 +67,26 @@ export default function SettingsPage() {
   const [resetLoading, setResetLoading] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
 
+  // Avatar state
+  const [avatarStatus, setAvatarStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+
   useEffect(() => {
     fetch(`${BASE}/GetUserInfo`, { credentials: "include" })
-      .then((r) => setAuthed(r.ok))
+      .then((r) => {
+        if (r.ok) {
+          setAuthed(true);
+          return r.json();
+        } else {
+          setAuthed(false);
+          return null;
+        }
+      })
+      .then((data) => {
+        if (data?.avatar) {
+          setCurrentAvatar(data.avatar);
+        }
+      })
       .catch(() => setAuthed(false));
   }, [BASE]);
 
@@ -59,6 +98,31 @@ export default function SettingsPage() {
         description={t.settings.signInSubtitle}
       />
     );
+  }
+
+  async function handleAvatarChange(avatar: string) {
+    setAvatarLoading(true);
+    setAvatarStatus(null);
+    try {
+      const res = await fetch(`${BASE}/user/avatar`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ avatar }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCurrentAvatar(avatar);
+        setAvatarStatus({ ok: true, msg: "Avatar updated successfully!" });
+        setShowAvatarOptions(false);
+      } else {
+        setAvatarStatus({ ok: false, msg: data.error ?? "Failed to update avatar" });
+      }
+    } catch {
+      setAvatarStatus({ ok: false, msg: "Network error" });
+    } finally {
+      setAvatarLoading(false);
+    }
   }
 
   async function handlePasswordChange(e: React.FormEvent) {
@@ -123,6 +187,62 @@ export default function SettingsPage() {
         <p className="text-sm text-muted-foreground">{t.settings.subtitle}</p>
       </div>
 
+      {/* Avatar Settings */}
+      <Section icon={UserIcon} title="Profile Avatar" description="Choose your profile avatar from our collection">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-4">
+            {currentAvatar ? (
+              <img 
+                src={currentAvatar} 
+                alt="Current avatar" 
+                className="w-16 h-16 rounded-full border-2 border-primary object-cover"
+              />
+            ) : (
+              <div 
+                className="w-16 h-16 rounded-full border-2 border-border flex items-center justify-center bg-muted"
+              >
+                <UserIcon className="h-8 w-8 text-muted-foreground" />
+              </div>
+            )}
+            <button
+              onClick={() => setShowAvatarOptions(!showAvatarOptions)}
+              className="px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition"
+            >
+              {showAvatarOptions ? "Hide Avatars" : "Change Avatar"}
+            </button>
+          </div>
+
+          {avatarStatus && (
+            <p
+              className="text-xs px-3 py-2 rounded-md"
+              style={{
+                color: avatarStatus.ok ? "#4edea3" : "#ffb3ad",
+                background: avatarStatus.ok ? "rgba(78,222,163,0.1)" : "rgba(255,179,173,0.1)",
+              }}
+            >
+              {avatarStatus.msg}
+            </p>
+          )}
+
+          {showAvatarOptions && (
+            <div className="grid grid-cols-6 gap-3">
+              {GITHUB_AVATARS.map((avatar, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleAvatarChange(avatar)}
+                  disabled={avatarLoading}
+                  className={`w-12 h-12 rounded-full overflow-hidden border-2 transition hover:scale-110 ${
+                    currentAvatar === avatar ? "border-primary" : "border-border"
+                  }`}
+                >
+                  <img src={avatar} alt={`Avatar ${idx + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </Section>
+
       {/* Change Password */}
       <Section icon={Lock} title={t.settings.changePassword} description={t.settings.changePasswordDesc}>
         <form onSubmit={handlePasswordChange} className="flex flex-col gap-3">
@@ -147,8 +267,8 @@ export default function SettingsPage() {
             <p
               className="text-xs px-3 py-2 rounded-md"
               style={{
-                color: pwStatus.ok ? "#16c784" : "#ea3943",
-                background: pwStatus.ok ? "rgba(22,199,132,0.1)" : "rgba(234,57,67,0.1)",
+                color: pwStatus.ok ? "#4edea3" : "#ffb3ad",
+                background: pwStatus.ok ? "rgba(78,222,163,0.1)" : "rgba(255,179,173,0.1)",
               }}
             >
               {pwStatus.msg}
@@ -174,7 +294,7 @@ export default function SettingsPage() {
         <div className="flex flex-col gap-3">
           <div
             className="text-xs px-3 py-2.5 rounded-md text-muted-foreground"
-            style={{ background: "rgba(234,57,67,0.07)", border: "1px solid rgba(234,57,67,0.2)" }}
+            style={{ background: "rgba(255,179,173,0.07)", border: "1px solid rgba(255,179,173,0.2)" }}
           >
             ⚠️ {t.settings.resetWarning}
           </div>
@@ -183,8 +303,8 @@ export default function SettingsPage() {
             <p
               className="text-xs px-3 py-2 rounded-md"
               style={{
-                color: resetStatus.ok ? "#16c784" : "#ea3943",
-                background: resetStatus.ok ? "rgba(22,199,132,0.1)" : "rgba(234,57,67,0.1)",
+                color: resetStatus.ok ? "#4edea3" : "#ffb3ad",
+                background: resetStatus.ok ? "rgba(78,222,163,0.1)" : "rgba(255,179,173,0.1)",
               }}
             >
               {resetStatus.msg}
@@ -196,8 +316,8 @@ export default function SettingsPage() {
             disabled={resetLoading}
             className="px-4 py-2 rounded-md text-sm font-semibold transition disabled:opacity-50"
             style={{
-              background: confirmReset ? "#ea3943" : "rgba(234,57,67,0.1)",
-              color: confirmReset ? "#fff" : "#ea3943",
+              background: confirmReset ? "#ffb3ad" : "rgba(255,179,173,0.1)",
+              color: confirmReset ? "#fff" : "#ffb3ad",
             }}
           >
             {resetLoading ? t.settings.resetting : confirmReset ? t.settings.confirmReset : t.settings.reset}

@@ -96,7 +96,7 @@ export function makeColumns(t: T): ColumnDef<EnrichedCoin>[] {
         const pnl = props.row.original.unrealizedPnl;
         const pct = props.row.original.unrealizedPnlPct;
         if (pnl == null) return <span className="text-muted-foreground text-sm">—</span>;
-        const color = pnl >= 0 ? "#16c784" : "#ea3943";
+        const color = pnl >= 0 ? "#4edea3" : "#ffb3ad";
         const sign = pnl >= 0 ? "+" : "";
         return (
           <div className="flex flex-col leading-tight">

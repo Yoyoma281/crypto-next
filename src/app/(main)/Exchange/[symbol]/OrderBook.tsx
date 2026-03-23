@@ -124,7 +124,7 @@ export default function OrderBook({ symbol }: { symbol: string }) {
         {displayAsks.map(([price, qty], i) => (
           <div key={i} className="relative flex justify-between px-3 py-[2px]">
             <Bar pct={(parseFloat(qty) / maxQty) * 100} isAsk />
-            <span className="relative font-mono" style={{ color: '#ea3943' }}>
+            <span className="relative font-mono" style={{ color: '#ffb3ad' }}>
               {fmt(price)}
             </span>
             <span className="relative text-foreground">{fmt(qty, 4)}</span>
@@ -143,7 +143,7 @@ export default function OrderBook({ symbol }: { symbol: string }) {
         {book.bids.map(([price, qty], i) => (
           <div key={i} className="relative flex justify-between px-3 py-[2px]">
             <Bar pct={(parseFloat(qty) / maxQty) * 100} isAsk={false} />
-            <span className="relative font-mono" style={{ color: '#16c784' }}>
+            <span className="relative font-mono" style={{ color: '#4edea3' }}>
               {fmt(price)}
             </span>
             <span className="relative text-foreground">{fmt(qty, 4)}</span>

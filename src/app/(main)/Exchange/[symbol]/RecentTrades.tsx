@@ -94,7 +94,7 @@ export default function RecentTrades({ symbol }: { symbol: string }) {
           <div key={t.id} className="flex justify-between px-3 py-[3px]">
             <span
               className="font-mono tabular-nums"
-              style={{ color: t.isBuyerMaker ? '#ea3943' : '#16c784' }}
+              style={{ color: t.isBuyerMaker ? '#ffb3ad' : '#4edea3' }}
             >
               {parseFloat(t.price).toLocaleString('en-US', {
                 minimumFractionDigits: 2,

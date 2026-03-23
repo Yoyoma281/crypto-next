@@ -22,27 +22,6 @@ function fmtPnl(n: number) {
   return (n >= 0 ? "+" : "-") + abs;
 }
 
-function StatCard({
-  label, value, sub, valueColor,
-}: {
-  label: string; value: string; sub?: string; valueColor?: string;
-}) {
-  return (
-    <div
-      className="flex flex-col gap-1 px-6 py-5 rounded-xl flex-1 min-w-[160px]"
-      style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
-    >
-      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-        {label}
-      </span>
-      <span className="text-2xl font-bold tracking-tight" style={valueColor ? { color: valueColor } : {}}>
-        {value}
-      </span>
-      {sub && <span className="text-xs text-muted-foreground">{sub}</span>}
-    </div>
-  );
-}
-
 export default function PortfolioLiveClient({ initialCoins, initialBalance, costBasis }: Props) {
   const { t } = useI18n();
   const [coins, setCoins] = useState<portfolioCoin[]>(initialCoins);
@@ -78,7 +57,17 @@ export default function PortfolioLiveClient({ initialCoins, initialBalance, cost
   const STARTING_BALANCE = 1000;
   const pnl = totalValue - STARTING_BALANCE;
   const pnlPct = (pnl / STARTING_BALANCE) * 100;
-  const pnlColor = pnl >= 0 ? "#16c784" : "#ea3943";
+  const pnlColor = pnl >= 0 ? "#4edea3" : "#ffb3ad";
+
+  // Calculate allocation percentages
+  const allocationData = holdings
+    .filter((c) => parseFloat(c.CurrentWorth || "0") > 0)
+    .map((c) => ({
+      symbol: c.symbol,
+      worth: parseFloat(c.CurrentWorth || "0"),
+      percentage: (parseFloat(c.CurrentWorth || "0") / holdingsTotal) * 100,
+    }))
+    .sort((a, b) => b.percentage - a.percentage);
 
   // Enrich each holding with its avg buy price and unrealized P&L
   const enrichedHoldings = holdings.map((c) => {
@@ -96,49 +85,178 @@ export default function PortfolioLiveClient({ initialCoins, initialBalance, cost
 
   return (
     <>
-      {/* Summary cards */}
-      <div className="flex gap-4 flex-wrap">
-        <StatCard label={t.portfolio.totalValue} value={fmtUSD(totalValue)} sub={t.portfolio.holdingsPlusCash} />
-        <StatCard
-          label={t.portfolio.totalPnl}
-          value={fmtPnl(pnl)}
-          sub={`${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}% ${t.portfolio.vsStart}`}
-          valueColor={pnlColor}
-        />
-        <StatCard label={t.portfolio.holdingsValue} value={fmtUSD(holdingsTotal)} />
-        <StatCard label={t.portfolio.availableBalance} value={fmtUSD(cashBalance)} sub="USDT" />
-        <StatCard label={t.portfolio.assets} value={String(numAssets)} sub={t.portfolio.activePositions} />
+      {/* KINETIC Hero Section: Portfolio Stats */}
+      <div className="mb-12 flex flex-col md:flex-row items-end justify-between gap-8">
+        <div className="space-y-3">
+          <h2 className="text-6xl md:text-7xl font-extrabold tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
+            {fmtUSD(totalValue)}
+          </h2>
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-2 font-semibold" style={{ color: pnlColor }}>
+              <span>{pnlPct >= 0 ? "↑" : "↓"}</span>
+              {fmtPnl(pnl)} ({pnlPct.toFixed(2)}%)
+            </span>
+            <span className="text-sm text-muted-foreground">vs $1,000 starting balance</span>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button
+            className="px-6 py-3 rounded-md font-bold text-sm"
+            style={{
+              background: "#4edea3",
+              color: "#003824",
+            }}
+          >
+            + Deposit
+          </button>
+          <button
+            className="px-6 py-3 rounded-md font-bold text-sm border"
+            style={{
+              borderColor: "hsl(var(--border))",
+              background: "hsl(var(--card))",
+            }}
+          >
+            → Withdraw
+          </button>
+        </div>
       </div>
 
-      {/* Holdings table */}
-      <div>
-        <div className="flex items-center gap-3 mb-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            {t.portfolio.colHoldings}
-          </h2>
-          {streamStatus === "live" && (
-            <span
-              className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full"
-              style={{ color: "#16c784", background: "rgba(22,199,132,0.1)" }}
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#16c784" }} />
-                <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#16c784" }} />
-              </span>
-              {t.portfolio.live}
-            </span>
-          )}
-          {streamStatus === "connecting" && (
-            <span className="text-xs text-muted-foreground animate-pulse">{t.portfolio.connecting}</span>
-          )}
-          {streamStatus === "error" && (
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ color: "#ea3943", background: "rgba(234,57,67,0.1)" }}>
-              {t.portfolio.disconnected}
-            </span>
-          )}
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <div className="rounded-xl p-6" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Holdings Value</p>
+          <p className="text-3xl font-bold mb-2">{fmtUSD(holdingsTotal)}</p>
+          <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full"
+              style={{
+                background: "#4edea3",
+                width: totalValue > 0 ? `${(holdingsTotal / totalValue) * 100}%` : "0%",
+              }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            {totalValue > 0 ? ((holdingsTotal / totalValue) * 100).toFixed(1) : "0"}% of portfolio
+          </p>
         </div>
 
-        <DataTable data={enrichedHoldings} columns={columns} params="symbol" />
+        <div className="rounded-xl p-6" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Available Balance</p>
+          <p className="text-3xl font-bold mb-2">{fmtUSD(cashBalance)}</p>
+          <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full"
+              style={{
+                background: "#b9c7e0",
+                width: totalValue > 0 ? `${(cashBalance / totalValue) * 100}%` : "0%",
+              }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            {totalValue > 0 ? ((cashBalance / totalValue) * 100).toFixed(1) : "0"}% of portfolio
+          </p>
+        </div>
+
+        <div className="rounded-xl p-6" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Active Assets</p>
+          <p className="text-3xl font-bold mb-2">{numAssets}</p>
+          <p className="text-xs text-muted-foreground">coins held</p>
+        </div>
+
+        <div className="rounded-xl p-6" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Stream Status</p>
+          <div className="flex items-center gap-2 mb-3">
+            {streamStatus === "live" && (
+              <>
+                <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#4edea3" }} />
+                <span className="text-sm font-semibold" style={{ color: "#4edea3" }}>LIVE</span>
+              </>
+            )}
+            {streamStatus === "connecting" && (
+              <>
+                <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#b9c7e0" }} />
+                <span className="text-sm font-semibold text-muted-foreground">CONNECTING</span>
+              </>
+            )}
+            {streamStatus === "error" && (
+              <>
+                <span className="w-2 h-2 rounded-full" style={{ background: "#ffb3ad" }} />
+                <span className="text-sm font-semibold" style={{ color: "#ffb3ad" }}>ERROR</span>
+              </>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">real-time updates</p>
+        </div>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        {/* Holdings Table - 2 columns */}
+        <div className="lg:col-span-2">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-xl font-bold">Asset Holdings</h3>
+            <span className="text-xs text-muted-foreground uppercase tracking-widest">
+              {holdings.filter((c) => parseFloat(c.amount || "0") > 0).length} assets
+            </span>
+          </div>
+          <DataTable data={enrichedHoldings} columns={columns} params="symbol" />
+        </div>
+
+        {/* Right Sidebar - Allocation & Info */}
+        <div className="space-y-6">
+          {/* Allocation Card */}
+          <div className="rounded-xl p-6" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}>
+            <h3 className="text-lg font-bold mb-6">Allocation</h3>
+            <div className="space-y-3">
+              {allocationData.slice(0, 5).map((asset) => (
+                <div key={asset.symbol}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-semibold">{asset.symbol}</span>
+                    <span className="text-xs font-bold" style={{ color: "#4edea3" }}>
+                      {asset.percentage.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full"
+                      style={{
+                        background: "#4edea3",
+                        width: `${asset.percentage}%`,
+                      }}
+                    />
+                  </div>
+</div>
+              ))}
+              {allocationData.length > 5 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  +{allocationData.length - 5} more asset(s)
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Performance Card */}
+          <div className="rounded-xl p-6" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}>
+            <h3 className="text-lg font-bold mb-4">Performance Summary</h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Total Gain/Loss</p>
+                <p className="text-2xl font-bold" style={{ color: pnlColor }}>
+                  {fmtPnl(pnl)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Return %</p>
+                <p
+                  className="text-2xl font-bold"
+                  style={{ color: pnlColor }}
+                >
+                  {pnlPct.toFixed(2)}%
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );

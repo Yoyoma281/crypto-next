@@ -17,8 +17,11 @@ export default function PortfolioPageHeader({ errorOnly }: { errorOnly?: boolean
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-0.5">{t.portfolio.title}</h1>
+    <div className="mb-2">
+      <p className="text-xs uppercase tracking-widest font-bold text-muted-foreground mb-4">Wallet & Assets</p>
+      <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-2" style={{ color: 'hsl(var(--foreground))' }}>
+        Total Portfolio Value
+      </h1>
       <p className="text-sm text-muted-foreground">{t.portfolio.subtitle}</p>
     </div>
   );

@@ -31,9 +31,9 @@ function Section({ title, icon: Icon, color, bg, children }: {
 
 function Callout({ type, children }: { type: "tip" | "warning" | "info"; children: React.ReactNode }) {
   const styles = {
-    tip:     { color: "#16c784", bg: "rgba(22,199,132,0.07)",  border: "rgba(22,199,132,0.25)",  icon: Lightbulb,      label: "Tip" },
-    warning: { color: "#f59e0b", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.25)",  icon: AlertTriangle,  label: "Warning" },
-    info:    { color: "#10a1e7", bg: "rgba(16,161,231,0.07)",  border: "rgba(16,161,231,0.25)",  icon: CircleDot,      label: "Note" },
+    tip:     { color: "#4edea3", bg: "rgba(78,222,163,0.07)",  border: "rgba(78,222,163,0.25)",  icon: Lightbulb,      label: "Tip" },
+    warning: { color: "#ffb3ad", bg: "rgba(255,179,173,0.07)",  border: "rgba(255,179,173,0.25)",  icon: AlertTriangle,  label: "Warning" },
+    info:    { color: "#b9c7e0", bg: "rgba(185,199,224,0.07)",  border: "rgba(185,199,224,0.25)",  icon: CircleDot,      label: "Note" },
   }[type];
   const Icon = styles.icon;
   return (
@@ -82,7 +82,7 @@ export default function HowToTradePage() {
         </Link>
         <div className="flex items-center gap-3 mb-3">
           <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(16,161,231,0.1)" }}>
-            <BookOpen className="h-5 w-5" style={{ color: "#10a1e7" }} />
+            <BookOpen className="h-5 w-5" style={{ color: "#4edea3" }} />
           </div>
           <div>
             <h1 className="text-3xl font-bold">How to Trade on CrySer</h1>
@@ -96,7 +96,7 @@ export default function HowToTradePage() {
       </div>
 
       {/* 1. What is paper trading */}
-      <Section title="What is Paper Trading?" icon={BookOpen} color="#10a1e7" bg="rgba(16,161,231,0.1)">
+      <Section title="What is Paper Trading?" icon={BookOpen} color="#4edea3" bg="rgba(78,222,163,0.1)">
         <p>
           Paper trading (also called simulated or virtual trading) is the practice of buying and selling assets using fake money
           while tracking real market prices. The term comes from a time when aspiring traders would record imaginary trades on
@@ -113,29 +113,29 @@ export default function HowToTradePage() {
       </Section>
 
       {/* 2. The Platform */}
-      <Section title="Understanding the Platform" icon={Layers} color="#a855f7" bg="rgba(168,85,247,0.1)">
+      <Section title="Understanding the Platform" icon={Layers} color="#b9c7e0" bg="rgba(185,199,224,0.1)">
         <p>CrySer has three main areas:</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-1">
           {[
             {
               title: "Markets",
               href: "/",
-              color: "#10a1e7",
-              bg: "rgba(16,161,231,0.07)",
+              color: "#4edea3",
+              bg: "rgba(78,222,163,0.07)",
               desc: "Browse 400+ USDT trading pairs with live prices, 24h change, and volume.",
             },
             {
               title: "Exchange",
               href: "/Exchange/BTCUSDT",
-              color: "#16c784",
-              bg: "rgba(22,199,132,0.07)",
+              color: "#b9c7e0",
+              bg: "rgba(185,199,224,0.07)",
               desc: "Place buy and sell orders with a real-time TradingView chart and live order book.",
             },
             {
               title: "Portfolio",
               href: "/Portfolio",
-              color: "#f59e0b",
-              bg: "rgba(245,158,11,0.07)",
+              color: "#ffb3ad",
+              bg: "rgba(255,179,173,0.07)",
               desc: "Track your holdings, see your current value, and review your trade history.",
             },
           ].map((item) => (
@@ -156,7 +156,7 @@ export default function HowToTradePage() {
       </Section>
 
       {/* 3. Placing your first trade */}
-      <Section title="Placing Your First Trade" icon={Target} color="#16c784" bg="rgba(22,199,132,0.1)">
+      <Section title="Placing Your First Trade" icon={Target} color="#4edea3" bg="rgba(78,222,163,0.1)">
         <p>Follow these steps to place your first buy order:</p>
         <div className="mt-2">
           <Step n="1" title="Go to the Markets page">
@@ -187,17 +187,17 @@ export default function HowToTradePage() {
       </Section>
 
       {/* 4. Reading charts */}
-      <Section title="Reading Candlestick Charts" icon={BarChart2} color="#f59e0b" bg="rgba(245,158,11,0.1)">
+      <Section title="Reading Candlestick Charts" icon={BarChart2} color="#b9c7e0" bg="rgba(185,199,224,0.1)">
         <p>
           CrySer uses TradingView candlestick charts — the industry standard. Each candle represents one time period
           (e.g., 1 hour on the 1h chart) and shows four prices:
         </p>
         <div className="grid grid-cols-2 gap-3 mt-1">
           {[
-            { label: "Open", desc: "The price at the start of the period.", color: "#10a1e7" },
-            { label: "Close", desc: "The price at the end of the period.", color: "#10a1e7" },
-            { label: "High", desc: "The highest price reached during the period.", color: "#16c784" },
-            { label: "Low",  desc: "The lowest price reached during the period.", color: "#ea3943" },
+            { label: "Open", desc: "The price at the start of the period.", color: "#b9c7e0" },
+            { label: "Close", desc: "The price at the end of the period.", color: "#b9c7e0" },
+            { label: "High", desc: "The highest price reached during the period.", color: "#4edea3" },
+            { label: "Low",  desc: "The lowest price reached during the period.", color: "#ffb3ad" },
           ].map((c) => (
             <div key={c.label} className="p-3 rounded-lg border border-border bg-muted/30 flex gap-2">
               <span className="font-bold text-sm w-12 shrink-0" style={{ color: c.color }}>{c.label}</span>
@@ -206,8 +206,8 @@ export default function HowToTradePage() {
           ))}
         </div>
         <p className="mt-1">
-          A <span className="font-semibold" style={{ color: "#16c784" }}>green candle</span> means the price closed
-          higher than it opened (bullish). A <span className="font-semibold" style={{ color: "#ea3943" }}>red candle</span> means
+          A <span className="font-semibold" style={{ color: "#4edea3" }}>green candle</span> means the price closed
+          higher than it opened (bullish). A <span className="font-semibold" style={{ color: "#ffb3ad" }}>red candle</span> means
           it closed lower (bearish). The thin lines above and below the body are called <strong className="text-foreground">wicks</strong> — they
           show the full high/low range.
         </p>
@@ -217,7 +217,7 @@ export default function HowToTradePage() {
       </Section>
 
       {/* 5. Order book */}
-      <Section title="The Order Book & Recent Trades" icon={RefreshCw} color="#10a1e7" bg="rgba(16,161,231,0.1)">
+      <Section title="The Order Book & Recent Trades" icon={RefreshCw} color="#4edea3" bg="rgba(78,222,163,0.1)">
         <p>
           The Exchange page shows a live <strong className="text-foreground">Order Book</strong> — a real-time list of all open
           buy (bid) and sell (ask) orders on Binance for that pair.
@@ -225,7 +225,7 @@ export default function HowToTradePage() {
         <div className="rounded-xl border border-border overflow-hidden mt-1">
           <div className="grid grid-cols-2 divide-x divide-border">
             <div className="p-4 flex flex-col gap-2">
-              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#16c784" }}>
+              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#4edea3" }}>
                 <TrendingUp className="h-3 w-3" /> Bids (Buy Orders)
               </div>
               <p className="text-xs text-muted-foreground">
@@ -234,7 +234,7 @@ export default function HowToTradePage() {
               </p>
             </div>
             <div className="p-4 flex flex-col gap-2">
-              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#ea3943" }}>
+              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#ffb3ad" }}>
                 <TrendingDown className="h-3 w-3" /> Asks (Sell Orders)
               </div>
               <p className="text-xs text-muted-foreground">
@@ -255,21 +255,21 @@ export default function HowToTradePage() {
       </Section>
 
       {/* 6. Selling */}
-      <Section title="Taking Profits & Cutting Losses" icon={TrendingDown} color="#ea3943" bg="rgba(234,57,67,0.1)">
+      <Section title="Taking Profits & Cutting Losses" icon={TrendingDown} color="#ffb3ad" bg="rgba(255,179,173,0.1)">
         <p>
           Buying is the easy part — knowing when to sell is what separates good traders from bad ones. On CrySer,
           selling works the same as buying: go to the Exchange page for the coin you hold and place a Sell order.
         </p>
         <div className="flex flex-col gap-2 mt-1">
           <div className="flex gap-3 items-start p-3 rounded-lg border border-border bg-card">
-            <TrendingUp className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#16c784" }} />
+            <TrendingUp className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#4edea3" }} />
             <div>
               <p className="text-sm font-semibold text-foreground">Taking profit</p>
               <p className="text-xs text-muted-foreground">Sell when the price has risen to your target. Set a goal <em>before</em> you enter the trade (e.g., &quot;I&apos;ll sell when I&apos;m up 10%&quot;). Greed is one of the biggest trading mistakes.</p>
             </div>
           </div>
           <div className="flex gap-3 items-start p-3 rounded-lg border border-border bg-card">
-            <TrendingDown className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#ea3943" }} />
+            <TrendingDown className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#ffb3ad" }} />
             <div>
               <p className="text-sm font-semibold text-foreground">Cutting losses (stop-loss)</p>
               <p className="text-xs text-muted-foreground">Decide your maximum acceptable loss before entering (e.g., &quot;I&apos;ll exit if I&apos;m down 5%&quot;). Holding a losing trade hoping it recovers is called &quot;holding a bag&quot; and can wipe accounts.</p>
@@ -293,22 +293,22 @@ export default function HowToTradePage() {
             {
               title: "Position Sizing",
               desc: "Never risk more than 1–5% of your total balance on a single trade. Smaller positions mean a single bad trade can't ruin you.",
-              color: "#10a1e7",
+              color: "#b9c7e0",
             },
             {
               title: "Diversification",
               desc: "Don't put everything into one coin. Spreading across several assets reduces the impact of any one going against you.",
-              color: "#16c784",
+              color: "#4edea3",
             },
             {
               title: "Risk/Reward Ratio",
               desc: "Aim for trades where the potential gain is at least 2× the potential loss. A 2:1 reward-to-risk ratio means you profit even if you're wrong half the time.",
-              color: "#f59e0b",
+              color: "#7a9db4",
             },
             {
               title: "Avoid FOMO",
               desc: "Fear Of Missing Out causes impulsive entries near price peaks. If you missed a big move, wait for the next setup — there's always another opportunity.",
-              color: "#ea3943",
+              color: "#ffb3ad",
             },
           ].map((item) => (
             <div key={item.title} className="p-4 rounded-xl border border-border bg-card flex flex-col gap-1.5">
@@ -320,7 +320,7 @@ export default function HowToTradePage() {
       </Section>
 
       {/* 8. Key Terms */}
-      <Section title="Key Trading Terms" icon={BookOpen} color="#10a1e7" bg="rgba(16,161,231,0.1)">
+      <Section title="Key Trading Terms" icon={BookOpen} color="#b9c7e0" bg="rgba(185,199,224,0.1)">
         <div className="rounded-xl border border-border overflow-hidden">
           <div className="px-4">
             <TermRow term="USDT" def="Tether — a stablecoin pegged to $1 USD. All pairs on CrySer are quoted against USDT." />
@@ -342,7 +342,7 @@ export default function HowToTradePage() {
       {/* CTA */}
       <div
         className="flex flex-col sm:flex-row items-center justify-between gap-6 px-8 py-8 rounded-2xl border"
-        style={{ background: "linear-gradient(135deg, rgba(16,161,231,0.08) 0%, rgba(22,199,132,0.08) 100%)", borderColor: "rgba(16,161,231,0.2)" }}
+        style={{ background: "linear-gradient(135deg, rgba(185,199,224,0.08) 0%, rgba(78,222,163,0.08) 100%)", borderColor: "rgba(185,199,224,0.2)" }}
       >
         <div>
           <h2 className="text-lg font-bold mb-1">Ready to put it into practice?</h2>
@@ -351,7 +351,7 @@ export default function HowToTradePage() {
         <Link
           href="/Exchange/BTCUSDT"
           className="shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold text-white"
-          style={{ background: "#10a1e7" }}
+          style={{ background: "#4edea3" }}
         >
           Go to Exchange <ArrowRight className="h-4 w-4" />
         </Link>

@@ -11,15 +11,15 @@ export default function TermsPage() {
           <ArrowLeft className="h-3 w-3" /> Back to Legal
         </Link>
         <div className="flex items-center gap-3 mb-2">
-          <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ background: "rgba(22,199,132,0.1)" }}>
-            <FileText className="h-4 w-4" style={{ color: "#16c784" }} />
+          <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ background: "rgba(78,222,163,0.1)" }}>
+            <FileText className="h-4 w-4" style={{ color: "#4edea3" }} />
           </div>
           <h1 className="text-3xl font-bold">Terms of Service</h1>
         </div>
         <p className="text-sm text-muted-foreground">Last updated: March 2026</p>
       </div>
 
-      <div className="p-4 rounded-xl border text-sm" style={{ background: "rgba(245,158,11,0.06)", borderColor: "rgba(245,158,11,0.3)", color: "#f59e0b" }}>
+      <div className="p-4 rounded-xl border text-sm" style={{ background: "rgba(255,179,173,0.06)", borderColor: "rgba(255,179,173,0.3)", color: "#ffb3ad" }}>
         <strong>Important:</strong> CrySer is a paper trading simulator for educational purposes only. No real money,
         assets, or financial instruments are involved. Nothing on this platform constitutes financial advice.
       </div>

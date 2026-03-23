@@ -92,8 +92,8 @@ export default function HistoryContent({ trades }: { trades: Trade[] }) {
                     <span
                       className="px-2 py-0.5 rounded-full text-xs font-bold"
                       style={{
-                        color: trade.type === 'BUY' ? '#16c784' : '#ea3943',
-                        background: trade.type === 'BUY' ? 'rgba(22,199,132,0.1)' : 'rgba(234,57,67,0.1)',
+                        color: trade.type === 'BUY' ? '#4edea3' : '#ffb3ad',
+                        background: trade.type === 'BUY' ? 'rgba(78,222,163,0.1)' : 'rgba(255,179,173,0.1)',
                       }}
                     >
                       {trade.type}

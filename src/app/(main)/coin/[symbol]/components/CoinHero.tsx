@@ -19,7 +19,7 @@ export default function CoinHero({
   priceChangePct,
   onExchange,
 }: CoinHeroProps) {
-  const changeColor = isUp ? "#16c784" : "#ea3943";
+  const changeColor = isUp ? "#4edea3" : "#ffb3ad";
   const changeBg = isUp ? "rgba(22,199,132,0.1)" : "rgba(234,57,67,0.1)";
 
   return (

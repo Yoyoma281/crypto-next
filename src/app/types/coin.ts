@@ -37,6 +37,7 @@ export type User = {
   username: string;
   portfolio: string;
   online: boolean;
+  avatar?: string;
 };
 
 export type portfolioCoin = {

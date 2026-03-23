@@ -82,21 +82,21 @@ export default function TickerBar() {
   return (
     <div
       className="w-full border-b border-border bg-background/80 overflow-hidden"
-      style={{ height: "30px" }}
+      style={{ height: "28px" }}
     >
       <div className="ticker-track flex items-center h-full">
         {looped.map((item, i) => {
           const isUp = item.change >= 0;
           const flashColor =
-            item.flash === "up" ? "#16c784" :
-            item.flash === "down" ? "#ea3943" :
+            item.flash === "up" ? "#4edea3" :
+            item.flash === "down" ? "#ffb3ad" :
             undefined;
           return (
             <div
               key={i}
-              className="flex items-center gap-1.5 px-5 shrink-0 text-xs select-none"
+              className="flex items-center gap-0.5 md:gap-1.5 px-2 sm:px-3 md:px-5 shrink-0 text-[10px] md:text-xs select-none whitespace-nowrap"
             >
-              <span className="font-semibold text-foreground">{item.symbol}</span>
+              <span className="font-semibold text-foreground min-w-fit">{item.symbol}</span>
               <span
                 className="tabular-nums transition-colors duration-300"
                 style={{ color: flashColor ?? "hsl(var(--muted-foreground))" }}
@@ -104,16 +104,16 @@ export default function TickerBar() {
                 ${fmtPrice(item.price)}
               </span>
               <span
-                className="flex items-center gap-0.5 font-semibold"
-                style={{ color: isUp ? "#16c784" : "#ea3943" }}
+                className="flex items-center gap-0.5 font-semibold hidden sm:flex"
+                style={{ color: isUp ? "#4edea3" : "#ffb3ad" }}
               >
                 {isUp
-                  ? <ArrowUpRight className="h-3 w-3" />
-                  : <ArrowDownRight className="h-3 w-3" />}
+                  ? <ArrowUpRight className="h-2 md:h-3 w-2 md:w-3" />
+                  : <ArrowDownRight className="h-2 md:h-3 w-2 md:w-3" />}
                 {isUp ? "+" : ""}{item.change.toFixed(2)}%
               </span>
 
-              <span className="text-border ml-2">·</span>
+              <span className="text-border ml-0.5 md:ml-2 hide-on-mobile">·</span>
             </div>
           );
         })}

@@ -55,7 +55,7 @@ export default function LeaderboardContent({ leaderboard }: { leaderboard: Leade
                     className="w-2 rounded-full mt-1"
                     style={{
                       height: i === 0 ? 40 : i === 1 ? 28 : 18,
-                      background: i === 0 ? '#f59e0b' : i === 1 ? '#9ca3af' : '#b45309',
+                      background: i === 0 ? '#4edea3' : i === 1 ? '#b9c7e0' : '#7a9db4',
                     }}
                   />
                 </div>
@@ -102,7 +102,7 @@ export default function LeaderboardContent({ leaderboard }: { leaderboard: Leade
                             className="h-1 rounded-full"
                             style={{
                               width: `${barWidth}%`,
-                              background: isUp ? '#16c784' : '#ea3943',
+                              background: isUp ? '#4edea3' : '#ffb3ad',
                             }}
                           />
                         </div>
@@ -112,7 +112,7 @@ export default function LeaderboardContent({ leaderboard }: { leaderboard: Leade
                       {fmtUSD(entry.totalValue)}
                     </td>
                     <td className="px-5 py-3.5 text-right font-mono text-xs">
-                      <span style={{ color: isUp ? '#16c784' : '#ea3943' }}>
+                      <span style={{ color: isUp ? '#4edea3' : '#ffb3ad' }}>
                         {isUp ? '+' : ''}
                         {pnlPct.toFixed(1)}%
                       </span>

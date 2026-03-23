@@ -93,9 +93,9 @@ export default function PriceChart({ symbol }: { symbol: string }) {
     });
 
     const series = chart.addCandlestickSeries({
-      upColor: '#16c784', downColor: '#ea3943',
-      borderUpColor: '#16c784', borderDownColor: '#ea3943',
-      wickUpColor: '#16c784', wickDownColor: '#ea3943',
+      upColor: '#4edea3', downColor: '#ffb3ad',
+      borderUpColor: '#4edea3', borderDownColor: '#ffb3ad',
+      wickUpColor: '#4edea3', wickDownColor: '#ffb3ad',
     });
 
     chartRef.current = chart;
@@ -165,7 +165,7 @@ export default function PriceChart({ symbol }: { symbol: string }) {
       spikes.forEach((s) => markers.push({
         time: s.time as Time,
         position: s.direction === 'up' ? 'belowBar' : 'aboveBar',
-        color: s.direction === 'up' ? '#16c784' : '#ea3943',
+        color: s.direction === 'up' ? '#4edea3' : '#ffb3ad',
         shape: s.direction === 'up' ? 'arrowUp' : 'arrowDown',
         text: `${s.pct >= 0 ? '+' : ''}${(s.pct * 100).toFixed(1)}%`,
         size: 1,
@@ -175,7 +175,7 @@ export default function PriceChart({ symbol }: { symbol: string }) {
           markers.push({
             time: t as Time,
             position: 'aboveBar',
-            color: '#f59e0b',
+            color: '#7a9db4',
             shape: 'circle',
             text: '●',
             size: 0,
@@ -248,9 +248,9 @@ export default function PriceChart({ symbol }: { symbol: string }) {
           >{iv}</button>
         ))}
         <div className="ml-auto flex items-center gap-3 text-[10px] text-muted-foreground">
-          <span className="flex items-center gap-1"><span style={{color:'#16c784'}}>▲</span> Spike up</span>
-          <span className="flex items-center gap-1"><span style={{color:'#ea3943'}}>▼</span> Spike down</span>
-          <span className="flex items-center gap-1"><span style={{color:'#f59e0b'}}>●</span> News</span>
+          <span className="flex items-center gap-1"><span style={{color:'#4edea3'}}>▲</span> Spike up</span>
+          <span className="flex items-center gap-1"><span style={{color:'#ffb3ad'}}>▼</span> Spike down</span>
+          <span className="flex items-center gap-1"><span style={{color:'#7a9db4'}}>●</span> News</span>
           <span className="opacity-60">Click markers for details</span>
         </div>
       </div>
@@ -273,10 +273,10 @@ export default function PriceChart({ symbol }: { symbol: string }) {
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 {clicked.spike.direction === 'up'
-                  ? <TrendingUp className="h-4 w-4" style={{color:'#16c784'}} />
-                  : <TrendingDown className="h-4 w-4" style={{color:'#ea3943'}} />}
+                  ? <TrendingUp className="h-4 w-4" style={{color:'#4edea3'}} />
+                  : <TrendingDown className="h-4 w-4" style={{color:'#ffb3ad'}} />}
                 <span className="font-bold text-sm"
-                  style={{ color: clicked.spike.direction === 'up' ? '#16c784' : '#ea3943' }}>
+                  style={{ color: clicked.spike.direction === 'up' ? '#4edea3' : '#ffb3ad' }}>
                   {clicked.spike.pct >= 0 ? '+' : ''}{(clicked.spike.pct * 100).toFixed(2)}% candle
                 </span>
               </div>

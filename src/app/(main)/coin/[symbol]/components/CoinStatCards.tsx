@@ -32,9 +32,9 @@ export default function CoinStatCards({ stats }: CoinStatCardsProps) {
         {stats.map((s) => {
           const subColor =
             s.up === true
-              ? "#16c784"
+              ? "#4edea3"
               : s.up === false
-              ? "#ea3943"
+              ? "#ffb3ad"
               : "hsl(var(--muted-foreground))";
           const subBg =
             s.up === true

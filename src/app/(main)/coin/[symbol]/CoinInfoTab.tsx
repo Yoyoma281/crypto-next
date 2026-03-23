@@ -61,7 +61,7 @@ function PctBadge({ value }: { value: number }) {
     <span
       className="text-xs font-semibold px-1.5 py-0.5 rounded"
       style={{
-        color: isUp ? "#16c784" : "#ea3943",
+        color: isUp ? "#4edea3" : "#ffb3ad",
         background: isUp ? "rgba(22,199,132,0.1)" : "rgba(234,57,67,0.1)",
       }}
     >
@@ -130,7 +130,7 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
   }
 
   const md = data.market_data;
-  const description = data.description?.en?.replace(/<[^>]*>/g, "").split(". ").slice(0, 4).join(". ") + (data.description?.en ? "." : "");
+  const description = data.description?.en?.replace(/<[^>]*>/g, "");
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -181,7 +181,7 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
             className="rounded-xl p-4"
             style={{ background: "hsl(var(--muted)/0.4)", border: "1px solid hsl(var(--border))" }}
           >
-            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-6">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               {description}
             </p>
           </div>

@@ -24,8 +24,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`bg-siteBg ${geistSans.variable} ${geistMono.variable} ${robotto.variable} font-geist antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <body
+        className={`bg-siteBg ${geistSans.variable} ${geistMono.variable} ${robotto.variable} font-geist antialiased`}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+        >
           <ClientLayout>{children}</ClientLayout>
         </ThemeProvider>
       </body>

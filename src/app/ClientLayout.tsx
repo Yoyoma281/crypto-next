@@ -9,19 +9,20 @@ import { I18nProvider } from "@/lib/i18n";
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLoginPage = pathname === "/login";
+  const isSignupPage = pathname === "/signup";
 
   return (
     <I18nProvider>
-      {!isLoginPage && (
+      {!isLoginPage && !isSignupPage && (
         <>
           <TopBarStats />
           <TickerBar />
         </>
       )}
-      <main className="max-w-screen-xl mx-auto px-4 py-4">
+      <main key={pathname} className="w-full max-w-screen-2xl mx-auto px-2 sm:px-4 md:px-6 py-3 md:py-4 min-h-screen animate-page-enter">
         {children}
       </main>
-      {!isLoginPage && <Footer />}
+      {!isLoginPage && !isSignupPage && <Footer />}
     </I18nProvider>
   );
 }

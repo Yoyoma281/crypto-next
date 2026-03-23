@@ -99,7 +99,7 @@ export default function TradeForm({ symbol }: { symbol: string }) {
     setLoading(false);
   };
 
-  const activeColor = side === 'BUY' ? '#16c784' : '#ea3943';
+  const activeColor = side === 'BUY' ? '#4edea3' : '#ffb3ad';
 
   // Guest view — locked
   if (isAuth === false) {
@@ -107,7 +107,7 @@ export default function TradeForm({ symbol }: { symbol: string }) {
       <div className="p-4 flex flex-col gap-3">
         {/* Tab preview (disabled) */}
         <div className="flex rounded-lg overflow-hidden border border-border opacity-40 pointer-events-none select-none">
-          <div className="flex-1 py-2 text-sm font-semibold text-center" style={{ background: '#16c784', color: '#fff' }}>
+          <div className="flex-1 py-2 text-sm font-semibold text-center" style={{ background: '#4edea3', color: '#fff' }}>
             {t.trading.buy} {ticker}
           </div>
           <div className="flex-1 py-2 text-sm font-semibold text-center text-muted-foreground">
@@ -118,7 +118,7 @@ export default function TradeForm({ symbol }: { symbol: string }) {
         {/* Lock card */}
         <div
           className="flex flex-col items-center gap-3 py-6 px-4 rounded-xl border text-center"
-          style={{ background: 'rgba(16,161,231,0.05)', borderColor: 'rgba(16,161,231,0.2)' }}
+          style={{ background: 'rgba(78,222,163,0.05)', borderColor: 'rgba(78,222,163,0.2)' }}
         >
           <div className="text-3xl">🔒</div>
           <div>
@@ -131,7 +131,7 @@ export default function TradeForm({ symbol }: { symbol: string }) {
             <Link
               href="/signup"
               className="flex-1 py-2 rounded-lg text-sm font-semibold text-white text-center transition-opacity hover:opacity-90"
-              style={{ background: '#10a1e7' }}
+              style={{ background: '#4edea3' }}
             >
               {t.trading.signUpFree}
             </Link>
@@ -158,7 +158,7 @@ export default function TradeForm({ symbol }: { symbol: string }) {
             className="flex-1 py-2 text-sm font-semibold transition-colors"
             style={
               side === s
-                ? { background: s === 'BUY' ? '#16c784' : '#ea3943', color: '#fff' }
+                ? { background: s === 'BUY' ? '#4edea3' : '#ffb3ad', color: '#fff' }
                 : { color: 'hsl(var(--muted-foreground))' }
             }
           >
@@ -245,8 +245,8 @@ export default function TradeForm({ symbol }: { symbol: string }) {
         <div
           className="text-xs text-center py-2 rounded-lg font-medium"
           style={{
-            color: msg.ok ? '#16c784' : '#ea3943',
-            background: msg.ok ? 'rgba(22,199,132,0.1)' : 'rgba(234,57,67,0.1)',
+            color: msg.ok ? '#4edea3' : '#ffb3ad',
+            background: msg.ok ? 'rgba(78,222,163,0.1)' : 'rgba(255,179,173,0.1)',
           }}
         >
           {msg.text}

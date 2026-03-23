@@ -48,7 +48,7 @@ export default function CoinTabHeader({ symbol, price, isUp, changePct }: Props)
   const searchParams = useSearchParams();
   const activeTab = searchParams.get("tab") ?? "overview";
   const ticker = symbol.replace("USDT", "");
-  const changeColor = isUp ? "#16c784" : "#ea3943";
+  const changeColor = isUp ? "#4edea3" : "#ffb3ad";
 
   const tabClass = (tab: string) =>
     `px-4 py-2 text-sm font-medium border-b-2 transition-colors ${

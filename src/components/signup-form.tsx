@@ -80,12 +80,12 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
             className="h-20 w-20 rounded-full flex items-center justify-center"
             style={{ background: "rgba(22,199,132,0.12)" }}
           >
-            <CheckCircle2 className="h-10 w-10" style={{ color: "#16c784" }} />
+            <CheckCircle2 className="h-10 w-10" style={{ color: "#4edea3" }} />
           </div>
           {/* Pulse ring */}
           <div
             className="absolute inset-0 rounded-full animate-ping opacity-20"
-            style={{ background: "#16c784" }}
+            style={{ background: "#4edea3" }}
           />
         </div>
         <div className="text-center">
@@ -95,7 +95,7 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
         {/* Virtual balance badge */}
         <div
           className="flex items-center gap-2 px-4 py-2.5 rounded-full border text-sm font-semibold"
-          style={{ background: "rgba(22,199,132,0.08)", borderColor: "rgba(22,199,132,0.3)", color: "#16c784" }}
+          style={{ background: "rgba(78,222,163,0.08)", borderColor: "rgba(78,222,163,0.3)", color: "#4edea3" }}
         >
           <Wallet className="h-4 w-4" />
           {t.auth.virtualBalance}
@@ -165,7 +165,7 @@ export function SignupForm({ className, onSwitchToLogin, focusFirst }: { classNa
         {serverError && (
           <div
             className="text-xs text-center px-3 py-2.5 rounded-lg border"
-            style={{ color: "#ea3943", background: "rgba(234,57,67,0.07)", borderColor: "rgba(234,57,67,0.25)" }}
+            style={{ color: "#ffb3ad", background: "rgba(255,179,173,0.07)", borderColor: "rgba(255,179,173,0.25)" }}
           >
             {serverError}
           </div>

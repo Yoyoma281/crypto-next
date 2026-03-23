@@ -25,6 +25,7 @@ interface GlobalData {
 interface UserInfo {
   username: string;
   _id: string;
+  avatar?: string;
 }
 
 function fmtBig(n: number): string {
@@ -131,27 +132,27 @@ export default function TopBarStats() {
   return (
     <>
       <div className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="flex items-center gap-6 px-5 py-2.5">
+        <div className="flex items-center gap-2 md:gap-6 px-2 md:px-5 py-2 md:py-2.5 flex-wrap md:flex-nowrap">
 
           {/* ── Left: logo + market stats ── */}
-          <div className="flex items-center gap-5 flex-1 min-w-0">
+          <div className="flex items-center gap-2 md:gap-5 flex-shrink-0">
             <Link href="/" className="flex items-center gap-2 shrink-0">
-              <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center">
-                <Bitcoin className="h-4 w-4 text-primary-foreground" />
+              <div className="h-6 md:h-7 w-6 md:w-7 rounded-full bg-primary flex items-center justify-center">
+                <Bitcoin className="h-3 md:h-4 w-3 md:w-4 text-primary-foreground" />
               </div>
-              <span className="font-bold text-sm tracking-tight hidden sm:block">CrySer</span>
+              <span className="font-bold text-xs md:text-sm tracking-tight hidden sm:block">CrySer</span>
             </Link>
 
-            <div className="hidden 2xl:flex items-center gap-4 text-[11px] text-muted-foreground pl-4 border-l border-border/60">
+            <div className="hidden lg:flex items-center gap-2 md:gap-4 text-[9px] md:text-[11px] text-muted-foreground pl-2 md:pl-4 border-l border-border/60">
               {data ? stats.map((s) => (
-                <div key={s.label} className="flex items-center gap-1 whitespace-nowrap">
-                  <s.icon className="h-3 w-3 shrink-0 opacity-50" />
-                  <span className="opacity-70">{s.label}:</span>
-                  <span className="font-medium text-foreground">{s.value}</span>
+                <div key={s.label} className="flex items-center gap-0.5 md:gap-1 whitespace-nowrap">
+                  <s.icon className="h-2.5 md:h-3 w-2.5 md:w-3 shrink-0 opacity-50" />
+                  <span className="opacity-70 hidden xl:inline">{s.label}:</span>
+                  <span className="font-medium text-foreground text-[8px] md:text-xs">{s.value}</span>
                   {"sub" in s && s.sub && (
                     <span
                       className="flex items-center gap-0.5 font-semibold"
-                      style={{ color: s.up ? "#16c784" : "#ea3943" }}
+                      style={{ color: s.up ? "#4edea3" : "#ffb3ad" }}
                     >
                       {s.up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                       {s.sub}
@@ -159,37 +160,39 @@ export default function TopBarStats() {
                   )}
                 </div>
               )) : (
-                <span className="animate-pulse opacity-40">Loading…</span>
+                <span className="animate-pulse opacity-40 text-[8px]">Loading…</span>
               )}
             </div>
           </div>
 
-          {/* ── Center: search + nav (truly centered) ── */}
-          <div className="flex items-center gap-2">
-            <CoinSearch />
+          {/* ── Center: search + nav (mobile-responsive) ── */}
+          <div className="flex items-center gap-1 md:gap-2 order-3 md:order-2 w-full md:w-auto md:flex-1 md:justify-center">
+            <div className="hidden sm:block flex-1 md:flex-none">
+              <CoinSearch />
+            </div>
 
-            <nav className="flex items-center gap-1">
-              {PRIMARY_NAV_KEYS.map((link) => (
+            <nav className="flex items-center gap-0.5 md:gap-1 flex-wrap">
+              {PRIMARY_NAV_KEYS.slice(0, 2).map((link) => (
                 <Link key={link.href} href={link.href} className={navClass(link.href)}>
-                  {t.nav[link.key]}
+                  <span className="hidden md:inline">{t.nav[link.key]}</span>
                 </Link>
               ))}
 
               <div className="relative" ref={moreRef}>
                 <button
                   onClick={() => setMoreOpen((o) => !o)}
-                  className={`flex items-center gap-1 px-3.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  className={`flex items-center gap-0.5 md:gap-1 px-2 md:px-3.5 py-1.5 rounded-md text-[10px] md:text-xs font-medium transition-colors whitespace-nowrap ${
                     moreActive || moreOpen
                       ? "bg-muted text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                   }`}
                 >
-                  {t.nav.more} <ChevronDown className={`h-3 w-3 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
+                  {t.nav.more} <ChevronDown className={`h-2.5 md:h-3 w-2.5 md:w-3 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 {moreOpen && (
                   <div
-                    className="absolute right-0 top-full mt-1.5 w-40 rounded-lg shadow-lg py-1 z-50"
+                    className="absolute right-0 top-full mt-1 md:mt-1.5 w-32 md:w-40 rounded-lg shadow-lg py-1 z-50"
                     style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
                   >
                     {MORE_NAV_KEYS.map((link) => (
@@ -197,7 +200,7 @@ export default function TopBarStats() {
                         key={link.href}
                         href={link.href}
                         onClick={() => setMoreOpen(false)}
-                        className={`block px-3 py-2 text-xs font-medium transition-colors ${
+                        className={`block px-2 md:px-3 py-1.5 md:py-2 text-[10px] md:text-xs font-medium transition-colors ${
                           pathname === link.href || pathname.startsWith(link.href)
                             ? "text-foreground bg-muted"
                             : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
@@ -212,8 +215,8 @@ export default function TopBarStats() {
             </nav>
           </div>
 
-          {/* ── Right: auth + avatar ── */}
-          <div className="flex items-center gap-2 flex-1 justify-end">
+          {/* ── Right: auth + avatar (mobile-optimized) ── */}
+          <div className="flex items-center gap-1 md:gap-2 order-2 md:order-3 flex-shrink-0">
             <LanguageSelector />
             <ThemeToggle />
 
@@ -221,13 +224,13 @@ export default function TopBarStats() {
               <>
                 <Link
                   href="/signup"
-                  className="text-xs px-3 py-1.5 rounded-md font-medium border border-border hover:bg-muted transition-colors hidden sm:block"
+                  className="text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-md font-medium border border-border hover:bg-muted transition-colors hidden md:block"
                 >
                   {t.nav.signup}
                 </Link>
                 <Link
                   href="/login"
-                  className="text-xs px-3 py-1.5 rounded-md font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  className="text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-md font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   {t.nav.login}
                 </Link>
@@ -235,19 +238,25 @@ export default function TopBarStats() {
             )}
 
             <Avatar
-              className="h-7 w-7 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+              className="h-6 md:h-7 w-6 md:w-7 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all flex-shrink-0"
               onClick={() => setSidebarOpen(true)}
             >
-              {initials ? (
+              {currentUser?.avatar ? (
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser.username}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : initials ? (
                 <AvatarFallback
-                  className="text-[10px] font-bold text-white"
+                  className="text-[7px] md:text-[10px] font-bold text-white"
                   style={{ background: "hsl(var(--primary))" }}
                 >
                   {initials}
                 </AvatarFallback>
               ) : (
-                <AvatarFallback className="text-[10px]">
-                  <User className="h-3.5 w-3.5" />
+                <AvatarFallback className="text-[7px] md:text-[10px]">
+                  <User className="h-3 md:h-3.5 w-3 md:w-3.5" />
                 </AvatarFallback>
               )}
             </Avatar>
