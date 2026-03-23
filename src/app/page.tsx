@@ -1,17 +1,18 @@
 'use client';
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Zap, BarChart2, ShieldCheck,
   ArrowRight, TrendingUp, Layers, BrainCircuit,
-  Bitcoin, Coins, Link2,
+  Bitcoin, Coins, Link2, ChevronDown,
 } from "lucide-react";
 import CoinListClient from "./(main)/coin/CoinListClient";
 import { useI18n } from "@/lib/i18n";
 
-const PRIMARY   = "#10a1e7";
-const GREEN     = "#16c784";
-const RED       = "#ea3943";
+const PRIMARY   = "#8ccdff"; // Stitch blue
+const GREEN     = "#42e09a"; // Stitch green (positive/secondary)
+const RED       = "#ffb4ab"; // unchanged
 
 const FEATURES = [
   {
@@ -31,27 +32,49 @@ const FEATURES = [
     icon: Zap,
     title: "Ultra-Low Latency",
     desc: "Sub-millisecond price updates via our shared WebSocket engine.",
-    color: "#f59e0b",
+    color: "#4edea3",
   },
   {
     icon: ShieldCheck,
     title: "Secure by Default",
     desc: "HTTP-only cookies, JWT auth, and rate-limited endpoints protect every session.",
-    color: "#a855f7",
+    color: "#b9c7e0",
   },
 ];
 
 const MARKET_CARDS = [
-  { symbol: "BTC",  name: "Bitcoin",   icon: Bitcoin,  color: "#f97316", change: "+1.2%",  pos: true },
-  { symbol: "ETH",  name: "Ethereum",  icon: Coins,    color: PRIMARY,   change: "+4.2%",  pos: true },
-  { symbol: "SOL",  name: "Solana",    icon: BarChart2, color: "#3b82f6", change: "-2.4%",  pos: false },
-  { symbol: "LINK", name: "Chainlink", icon: Link2,    color: "#a855f7", change: "+0.4%",  pos: true },
+  { symbol: "BTC",  name: "Bitcoin",   icon: Bitcoin,   color: "#f97316", change: "+1.2%",  pos: true },
+  { symbol: "ETH",  name: "Ethereum",  icon: Coins,     color: "#8ccdff", change: "+4.2%",  pos: true },
+  { symbol: "SOL",  name: "Solana",    icon: BarChart2, color: "#c0c7d6", change: "-2.4%",  pos: false },
+  { symbol: "LINK", name: "Chainlink", icon: Link2,     color: "#42e09a", change: "+0.4%",  pos: true },
 ];
 
 const CHART_BARS = [40, 35, 55, 45, 75, 85, 70, 95];
 
 export default function HomePage() {
   const { t } = useI18n();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // Check if user is logged in
+  useEffect(() => {
+    const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
+    fetch(`${BASE}/GetUserInfo`, { credentials: "include" })
+      .then((r) => {
+        setIsLoggedIn(r.ok);
+        setAuthChecked(true);
+      })
+      .catch(() => {
+        setIsLoggedIn(false);
+        setAuthChecked(true);
+      });
+  }, []);
+
+  // Smooth scroll to coins table
+  const scrollToCoinsTable = () => {
+    const coinsSection = document.getElementById("coins-table-section");
+    coinsSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <div className="flex flex-col gap-24">
@@ -83,7 +106,7 @@ export default function HomePage() {
             {t.home.heroTitle1}{" "}
             <span
               className="bg-clip-text text-transparent"
-              style={{ backgroundImage: `linear-gradient(135deg, ${PRIMARY}, #60c4ff)` }}
+              style={{ backgroundImage: `linear-gradient(135deg, ${PRIMARY}, #006493)` }}
             >
               {t.home.heroTitle2}
             </span>
@@ -100,13 +123,24 @@ export default function HomePage() {
           </p>
 
           <div className="flex items-center gap-3 flex-wrap">
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90 active:scale-95"
-              style={{ background: `linear-gradient(135deg, ${PRIMARY}, #0077b6)` }}
-            >
-              {t.home.startTrading} <ArrowRight className="h-4 w-4" />
-            </Link>
+            {authChecked && !isLoggedIn && (
+              <Link
+                href="/signup"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90 active:scale-95"
+                style={{ background: `linear-gradient(135deg, ${PRIMARY}, #004e7c)` }}
+              >
+                {t.home.startTrading} <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
+            {authChecked && isLoggedIn && (
+              <button
+                onClick={scrollToCoinsTable}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90 active:scale-95"
+                style={{ background: `linear-gradient(135deg, ${PRIMARY}, #004e7c)` }}
+              >
+                View Markets <ChevronDown className="h-4 w-4" />
+              </button>
+            )}
             <Link
               href="/Exchange/BTCUSDT"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold border border-border hover:bg-muted transition-colors active:scale-95"
@@ -290,17 +324,28 @@ export default function HomePage() {
           <h2 className="text-2xl font-extrabold tracking-tight mb-2">{t.home.ctaTitle}</h2>
           <p className="text-sm text-muted-foreground max-w-md">{t.home.ctaDesc}</p>
         </div>
-        <Link
-          href="/signup"
-          className="relative z-10 shrink-0 inline-flex items-center gap-2 px-7 py-3 rounded-lg text-sm font-bold text-white hover:opacity-90 transition-opacity active:scale-95"
-          style={{ background: `linear-gradient(135deg, ${PRIMARY}, #0077b6)` }}
-        >
-          {t.home.getStarted} <ArrowRight className="h-4 w-4" />
-        </Link>
+        {authChecked && !isLoggedIn && (
+          <Link
+            href="/signup"
+            className="relative z-10 shrink-0 inline-flex items-center gap-2 px-7 py-3 rounded-lg text-sm font-bold text-white hover:opacity-90 transition-opacity active:scale-95"
+            style={{ background: `linear-gradient(135deg, ${PRIMARY}, #004e7c)` }}
+          >
+            {t.home.getStarted} <ArrowRight className="h-4 w-4" />
+          </Link>
+        )}
+        {authChecked && isLoggedIn && (
+          <button
+            onClick={scrollToCoinsTable}
+            className="relative z-10 shrink-0 inline-flex items-center gap-2 px-7 py-3 rounded-lg text-sm font-bold text-white hover:opacity-90 transition-opacity active:scale-95"
+            style={{ background: `linear-gradient(135deg, ${PRIMARY}, #004e7c)` }}
+          >
+            View Markets <ChevronDown className="h-4 w-4" />
+          </button>
+        )}
       </section>
 
       {/* ── Live Markets Table ────────────────────────────────────── */}
-      <section className="flex flex-col gap-4">
+      <section id="coins-table-section" className="flex flex-col gap-4 scroll-mt-20">
         <div>
           <h2 className="text-2xl font-bold tracking-tight mb-1">{t.home.liveMarketsTitle}</h2>
           <p className="text-sm text-muted-foreground">{t.home.liveMarketsDesc}</p>
