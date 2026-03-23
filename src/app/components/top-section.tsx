@@ -294,6 +294,7 @@ export default function TopBarStats() {
               onClick={() => setSidebarOpen(true)}
             >
               {currentUser?.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={currentUser.avatar}
                   alt={currentUser.username}
