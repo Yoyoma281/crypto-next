@@ -213,7 +213,7 @@ export default function TradingClient({
 
           {/* Trade Form */}
           <div className="bg-card">
-            <TradeForm symbol={symbol} />
+            <TradeForm symbol={symbol} livePrice={tickerData?.price ?? null} />
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+// price comes from TradingClient's WebSocket via prop — no REST polling needed
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 
@@ -9,34 +10,23 @@ interface Coin {
   amount: string;
 }
 
-export default function TradeForm({ symbol }: { symbol: string }) {
+export default function TradeForm({
+  symbol,
+  livePrice,
+}: {
+  symbol: string;
+  livePrice?: string | null;
+}) {
   const { t } = useI18n();
   const ticker = symbol.replace("USDT", "");
   const [side, setSide] = useState<"BUY" | "SELL">("BUY");
   const [amount, setAmount] = useState("");
-  const [price, setPrice] = useState<number | null>(null);
+  const price = livePrice ? parseFloat(livePrice) : null;
   const [usdtBal, setUsdtBal] = useState(0);
   const [coinBal, setCoinBal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [isAuth, setIsAuth] = useState<boolean | null>(null); // null = unknown
-
-  // Live price ticker
-  useEffect(() => {
-    const fetchPrice = () =>
-      fetch(
-        `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`,
-      )
-        .then((r) => r.json())
-        .then((d) =>
-          setPrice(parseFloat(d.result?.list?.[0]?.lastPrice ?? "0")),
-        )
-        .catch(() => {});
-
-    fetchPrice();
-    const id = setInterval(fetchPrice, 3000);
-    return () => clearInterval(id);
-  }, [symbol]);
 
   const refreshBalance = useCallback(() => {
     fetch("/api/portfolio")
