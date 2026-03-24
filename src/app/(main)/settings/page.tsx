@@ -72,7 +72,6 @@ function Section({
 
 export default function SettingsPage() {
   const { t } = useI18n();
-  const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
 
   // Auth check — must be first so hooks are unconditional
   const [authed, setAuthed] = useState<boolean | null>(null);
@@ -106,7 +105,7 @@ export default function SettingsPage() {
   const [avatarLoading, setAvatarLoading] = useState(false);
 
   useEffect(() => {
-    fetch(`${BASE}/GetUserInfo`, { credentials: "include" })
+    fetch("/api/me")
       .then((r) => {
         if (r.ok) {
           setAuthed(true);
@@ -122,7 +121,7 @@ export default function SettingsPage() {
         }
       })
       .catch(() => setAuthed(false));
-  }, [BASE]);
+  }, []);
 
   if (authed === null) return null; // still checking
   if (authed === false) {
@@ -138,10 +137,9 @@ export default function SettingsPage() {
     setAvatarLoading(true);
     setAvatarStatus(null);
     try {
-      const res = await fetch(`${BASE}/user/avatar`, {
+      const res = await fetch("/api/user/avatar", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ avatar }),
       });
       const data = await res.json();
@@ -171,10 +169,9 @@ export default function SettingsPage() {
     setPwLoading(true);
     setPwStatus(null);
     try {
-      const res = await fetch(`${BASE}/user/settings`, {
+      const res = await fetch("/api/user/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({
           currentPassword: pwForm.currentPassword,
           newPassword: pwForm.newPassword,
@@ -205,9 +202,8 @@ export default function SettingsPage() {
     setResetLoading(true);
     setResetStatus(null);
     try {
-      const res = await fetch(`${BASE}/portfolio/reset`, {
+      const res = await fetch("/api/portfolio/reset", {
         method: "POST",
-        credentials: "include",
       });
       const data = await res.json();
       if (res.ok) {

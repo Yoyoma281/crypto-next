@@ -8,15 +8,13 @@ import { useFavoritesCtx } from "@/components/favorites-context";
 import AuthRequired from "@/components/auth-required";
 import { useI18n } from "@/lib/i18n";
 
-const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
-
 export default function WatchlistPage() {
   const { t } = useI18n();
   const [authed, setAuthed] = useState<boolean | null>(null);
   const { favorites, toggle, synced } = useFavoritesCtx();
 
   useEffect(() => {
-    fetch(`${BASE}/GetUserInfo`, { credentials: "include" })
+    fetch("/api/me")
       .then((r) => setAuthed(r.ok))
       .catch(() => setAuthed(false));
   }, []);

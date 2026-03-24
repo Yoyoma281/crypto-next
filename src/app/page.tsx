@@ -67,8 +67,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
-    fetch(`${BASE}/GetUserInfo`, { credentials: "include" })
+    fetch("/api/me")
       .then((r) => { setIsLoggedIn(r.ok); setAuthChecked(true); })
       .catch(() => { setIsLoggedIn(false); setAuthChecked(true); });
   }, []);
