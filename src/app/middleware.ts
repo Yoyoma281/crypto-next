@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME ?? 'auth_token';
+const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME ?? 'token';
 const LOGIN_PATH = process.env.LOGIN_PATH ?? '/login';
 const PUBLIC_PATHS = [LOGIN_PATH, '/signup', '/public', '/api/auth', '/api/register', '/Exchange', '/']; // Paths that don't require auth
 const API_VALIDATE_URL = process.env.API_VALIDATE_URL ?? ''; // optional backend endpoint to validate token

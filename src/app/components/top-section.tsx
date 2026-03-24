@@ -55,8 +55,6 @@ const MORE_NAV_KEYS = [
   { key: "settings" as const, href: "/settings" },
 ];
 
-const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
-
 export default function TopBarStats() {
   const pathname = usePathname();
   const { t } = useI18n();
@@ -90,7 +88,7 @@ export default function TopBarStats() {
 
   // Fetch current user session
   useEffect(() => {
-    fetch(`${BASE}/GetUserInfo`, { credentials: "include" })
+    fetch("/api/me")
       .then((r) => (r.ok ? r.json() : null))
       .then((user) => setCurrentUser(user))
       .catch(() => setCurrentUser(null));
