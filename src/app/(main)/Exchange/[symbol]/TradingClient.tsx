@@ -65,35 +65,39 @@ export default function TradingClient({
   // Store last known values for delta merging
   const lastRef = useRef<Partial<Ticker>>({});
 
-  // Live 24h ticker via Bybit WebSocket
+  // Live 24h ticker via Gate.io WebSocket (same source as the coin table)
   useEffect(() => {
-    const ws = new WebSocket("wss://stream.bybit.com/v5/public/spot");
+    const pair = symbol.replace("USDT", "_USDT"); // e.g. BTCUSDT → BTC_USDT
+    const ws = new WebSocket("wss://api.gateio.ws/ws/v4/");
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ op: "subscribe", args: [`tickers.${symbol}`] }));
+      ws.send(
+        JSON.stringify({
+          time: Math.floor(Date.now() / 1000),
+          channel: "spot.tickers",
+          event: "subscribe",
+          payload: [pair],
+        })
+      );
     };
 
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
-      if (!msg.topic || !msg.topic.startsWith("tickers")) return;
-      const d = msg.data;
+      if (msg.channel !== "spot.tickers" || msg.event !== "update") return;
+      const d = msg.result;
       if (!d) return;
 
-      // Merge delta fields into last known state
-      if (d.lastPrice) lastRef.current.price = d.lastPrice;
-      if (d.highPrice24h) lastRef.current.high = d.highPrice24h;
-      if (d.lowPrice24h) lastRef.current.low = d.lowPrice24h;
-      if (d.turnover24h) lastRef.current.volume = d.turnover24h;
+      // Gate.io ticker fields
+      if (d.last) lastRef.current.price = d.last;
+      if (d.high_24h) lastRef.current.high = d.high_24h;
+      if (d.low_24h) lastRef.current.low = d.low_24h;
+      if (d.quote_volume) lastRef.current.volume = d.quote_volume;
 
-      // price24hPcnt is a decimal fraction (e.g. "0.0234" = 2.34%)
-      if (d.price24hPcnt !== undefined) {
-        const pct = parseFloat(d.price24hPcnt) * 100;
-        lastRef.current.changePct = pct.toFixed(2);
+      if (d.change_percentage !== undefined) {
+        lastRef.current.changePct = parseFloat(d.change_percentage).toFixed(2);
       }
-      if (d.prevPrice24h !== undefined && d.lastPrice !== undefined) {
-        lastRef.current.change = (
-          parseFloat(d.lastPrice) - parseFloat(d.prevPrice24h)
-        ).toFixed(8);
+      if (d.change_utc0 !== undefined) {
+        lastRef.current.change = parseFloat(d.change_utc0).toFixed(8);
       }
 
       const cur = lastRef.current;
