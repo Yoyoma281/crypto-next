@@ -6,11 +6,10 @@ import Image from "next/image";
 import { Search, X } from "lucide-react";
 
 interface CoinEntry {
-  symbol: string; // e.g. "BTCUSDT"
-  base: string;   // e.g. "BTC"
+  symbol: string;
+  base: string;
 }
 
-// Module-level cache — fetched once, reused for the entire browser session
 let _cache: CoinEntry[] | null = null;
 let _promise: Promise<CoinEntry[]> | null = null;
 
@@ -19,16 +18,18 @@ function loadCoins(): Promise<CoinEntry[]> {
   if (_promise) return _promise;
   _promise = fetch("/api/coins/list")
     .then((r) => r.json())
-    .then((data: CoinEntry[]) => {
-      _cache = data;
-      return data;
-    });
+    .then((data: CoinEntry[]) => { _cache = data; return data; });
   return _promise;
 }
 
 function CoinIcon({ ticker }: { ticker: string }) {
   const [stage, setStage] = useState(0);
-  if (stage >= 2) {
+  const srcs = [
+    `/Coin-icons/${ticker.toLowerCase()}.svg`,
+    `https://assets.coincap.io/assets/icons/${ticker.toLowerCase()}@2x.png`,
+    `https://raw.githubusercontent.com/ErikThiart/cryptocurrency-icons/master/32/${ticker.toLowerCase()}.png`,
+  ];
+  if (stage >= srcs.length) {
     return (
       <div
         className="h-6 w-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
@@ -38,14 +39,10 @@ function CoinIcon({ ticker }: { ticker: string }) {
       </div>
     );
   }
-  const src =
-    stage === 0
-      ? `/Coin-icons/${ticker.toLowerCase()}.svg`
-      : `https://raw.githubusercontent.com/ErikThiart/cryptocurrency-icons/master/32/${ticker.toLowerCase()}.png`;
   return (
     <Image
-      key={src}
-      src={src}
+      key={srcs[stage]}
+      src={srcs[stage]}
       alt={ticker}
       width={24}
       height={24}
@@ -63,22 +60,29 @@ export default function CoinSearch() {
   const [results, setResults] = useState<CoinEntry[]>([]);
   const [open, setOpen]       = useState(false);
   const [active, setActive]   = useState(0);
+  const [focused, setFocused] = useState(false);
   const inputRef              = useRef<HTMLInputElement>(null);
   const containerRef          = useRef<HTMLDivElement>(null);
 
-  // Warm the cache as soon as the component mounts
+  useEffect(() => { loadCoins().then(setCoins).catch(() => {}); }, []);
+
+  // Global "/" shortcut to focus search
   useEffect(() => {
-    loadCoins().then(setCoins).catch(() => {});
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "/") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  // Filter locally on every keystroke
   useEffect(() => {
     const q = query.trim().toUpperCase();
-    if (!q) {
-      setResults([]);
-      setOpen(false);
-      return;
-    }
+    if (!q) { setResults([]); setOpen(false); return; }
     const matches = coins
       .filter((c) => c.base.startsWith(q) || c.symbol.startsWith(q))
       .slice(0, 8);
@@ -87,7 +91,6 @@ export default function CoinSearch() {
     setOpen(matches.length > 0);
   }, [query, coins]);
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node))
@@ -104,7 +107,6 @@ export default function CoinSearch() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (!open) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setActive((a) => Math.min(a + 1, results.length - 1));
@@ -116,6 +118,7 @@ export default function CoinSearch() {
       if (results[active]) select(results[active]);
     } else if (e.key === "Escape") {
       setOpen(false);
+      setQuery("");
       inputRef.current?.blur();
     }
   }
@@ -124,52 +127,69 @@ export default function CoinSearch() {
     <div ref={containerRef} className="relative">
       {/* Input */}
       <div
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border bg-muted/40 focus-within:bg-background focus-within:border-primary/50 transition-all"
-        style={{
-          width: query ? "14rem" : "11rem",
-          transition: "width 200ms ease, background 150ms ease, border-color 150ms ease",
-        }}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-150 ${
+          focused
+            ? "bg-background border-primary/60 shadow-[0_0_0_3px_hsl(var(--primary)/0.12)]"
+            : "bg-muted/50 border-border hover:border-border/80 hover:bg-muted/70"
+        }`}
+        style={{ width: focused || query ? "15rem" : "11.5rem", transition: "width 200ms ease, box-shadow 150ms ease" }}
       >
-        <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <Search className={`h-3.5 w-3.5 shrink-0 transition-colors ${focused ? "text-primary" : "text-muted-foreground"}`} />
         <input
           ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          onFocus={() => { if (query && results.length > 0) setOpen(true); }}
+          onFocus={() => { setFocused(true); if (query && results.length > 0) setOpen(true); }}
+          onBlur={() => setFocused(false)}
           placeholder="Search coins…"
-          className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground min-w-0"
+          className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground min-w-0 text-foreground"
         />
-        {query && (
+        {query ? (
           <button
             onMouseDown={(e) => { e.preventDefault(); setQuery(""); setOpen(false); }}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
           >
             <X className="h-3 w-3" />
           </button>
+        ) : (
+          <span
+            className="shrink-0 text-[10px] font-mono font-semibold transition-opacity select-none"
+            style={{ color: "hsl(var(--muted-foreground))", opacity: focused ? 0 : 0.45 }}
+          >
+            /
+          </span>
         )}
       </div>
 
       {/* Dropdown */}
       {open && (
         <div
-          className="absolute top-full mt-1.5 w-64 rounded-xl shadow-xl py-1 z-50 overflow-hidden"
+          className="absolute top-full mt-2 w-72 rounded-xl shadow-2xl py-1.5 z-50 overflow-hidden"
           style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
         >
+          <p className="px-3 pb-1 text-[9px] uppercase tracking-widest font-bold text-muted-foreground">
+            Results
+          </p>
           {results.map((coin, i) => (
             <button
               key={coin.symbol}
               onMouseDown={() => select(coin)}
               onMouseEnter={() => setActive(i)}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors"
               style={{ background: i === active ? "hsl(var(--muted))" : "transparent" }}
             >
               <CoinIcon ticker={coin.base} />
               <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-xs font-semibold text-foreground">{coin.base}</span>
-                <span className="text-[10px] text-muted-foreground">{coin.symbol}</span>
+                <span className="text-xs font-semibold text-foreground leading-tight">{coin.base}</span>
+                <span className="text-[10px] text-muted-foreground leading-tight">{coin.symbol}</span>
               </div>
-              <span className="text-[10px] text-muted-foreground shrink-0">/ USDT</span>
+              <span
+                className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0"
+                style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}
+              >
+                USDT
+              </span>
             </button>
           ))}
         </div>

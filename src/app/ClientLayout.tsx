@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Footer } from "./components/footer";
 import TopBarStats from "./components/top-section";
 import TickerBar from "./components/TickerBar";
@@ -11,13 +11,16 @@ import OnboardingModal from "@/components/onboarding-modal";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isLoginPage  = pathname === "/login";
-  const isSignupPage = pathname === "/signup";
+  const searchParams   = useSearchParams();
+  const isLoginPage    = pathname === "/login";
+  const isSignupPage   = pathname === "/signup";
+  const isTradePage    = pathname.startsWith("/coin/") && searchParams.get("tab") === "trade";
+  const hideChrome = isLoginPage || isSignupPage;
 
   return (
     <I18nProvider>
       <FavoritesProvider>
-        {!isLoginPage && !isSignupPage && (
+        {!hideChrome && (
           <>
             <TopBarStats />
             <TickerBar />
@@ -25,11 +28,15 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         )}
         <main
           key={pathname}
-          className="w-full max-w-screen-2xl mx-auto px-2 sm:px-4 md:px-6 py-3 md:py-4 min-h-screen animate-page-enter"
+          className={
+            isTradePage
+              ? "w-full min-h-screen"
+              : "w-full max-w-screen-2xl mx-auto px-2 sm:px-4 md:px-6 py-3 md:py-4 min-h-screen animate-page-enter"
+          }
         >
           {children}
         </main>
-        {!isLoginPage && !isSignupPage && (
+        {!hideChrome && (
           <>
             <Footer />
             <FloatingFavorites />

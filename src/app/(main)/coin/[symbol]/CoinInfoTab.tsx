@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   ExternalLink,
   TrendingUp,
   BarChart2,
-  DollarSign,
+  MessageCircle,
   Globe,
   Twitter,
   Github,
@@ -127,14 +128,17 @@ const SYMBOL_TO_ID: Record<string, string> = {
   MKR: "maker",
 };
 
+
 export default function CoinInfoTab({ symbol }: { symbol: string }) {
   const { t } = useI18n();
+  const router = useRouter();
   const ticker = symbol.replace("USDT", "");
   const coinId = SYMBOL_TO_ID[ticker] ?? ticker.toLowerCase();
 
   const [data, setData] = useState<CoinGeckoData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
 
   useEffect(() => {
     setLoading(true);
@@ -176,124 +180,84 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
   const description = data.description?.en?.replace(/<[^>]*>/g, "");
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* ── Left column: identity + description ── */}
-      <div className="lg:col-span-2 flex flex-col gap-5">
-        {/* Hero */}
-        <div className="flex items-center gap-4">
-          <Image
-            src={data.image.large}
-            alt={data.name}
-            width={56}
-            height={56}
-            className="rounded-full"
-            unoptimized
-          />
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-xl font-bold">{data.name}</h2>
+    <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-6">
+      {/* ── Hero: full width ── */}
+      <div className="flex items-center gap-4">
+        <Image
+          src={data.image.large}
+          alt={data.name}
+          width={56}
+          height={56}
+          className="rounded-full"
+          unoptimized
+        />
+        <div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-xl font-bold">{data.name}</h2>
+            <span
+              className="text-xs font-semibold px-2 py-0.5 rounded-md uppercase"
+              style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}
+            >
+              {data.symbol}
+            </span>
+            {data.market_cap_rank && (
               <span
-                className="text-xs font-semibold px-2 py-0.5 rounded-md uppercase"
-                style={{
-                  background: "hsl(var(--muted))",
-                  color: "hsl(var(--muted-foreground))",
-                }}
+                className="text-xs font-semibold px-2 py-0.5 rounded-md"
+                style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}
               >
-                {data.symbol}
+                {t.coin.rank}{data.market_cap_rank}
               </span>
-              {data.market_cap_rank && (
-                <span
-                  className="text-xs font-semibold px-2 py-0.5 rounded-md"
-                  style={{
-                    background: "hsl(var(--muted))",
-                    color: "hsl(var(--muted-foreground))",
-                  }}
-                >
-                  {t.coin.rank}
-                  {data.market_cap_rank}
-                </span>
-              )}
-            </div>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="text-2xl font-bold tabular-nums">
-                {fmtUSD(md.current_price.usd)}
-              </span>
-              <PctBadge value={md.price_change_percentage_24h} />
-            </div>
+            )}
           </div>
-        </div>
-
-        {/* Description */}
-        {description && description.length > 5 && (
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background: "hsl(var(--muted)/0.4)",
-              border: "1px solid hsl(var(--border))",
-            }}
-          >
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              {description}
-            </p>
-          </div>
-        )}
-
-        {/* Price performance */}
-        <div
-          className="rounded-xl overflow-hidden"
-          style={{
-            border: "1px solid hsl(var(--border))",
-            background: "hsl(var(--card))",
-          }}
-        >
-          <div className="px-4 py-3 border-b border-border">
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <TrendingUp className="h-3.5 w-3.5" /> {t.coin.pricePerformance}
-            </h3>
-          </div>
-          <div className="px-4">
-            <StatRow
-              label={t.coin.change24h}
-              value={<PctBadge value={md.price_change_percentage_24h} />}
-            />
-            <StatRow
-              label={t.coin.change7d}
-              value={<PctBadge value={md.price_change_percentage_7d} />}
-            />
-            <StatRow
-              label={t.coin.change30d}
-              value={<PctBadge value={md.price_change_percentage_30d} />}
-            />
-            <StatRow label={t.coin.high24h} value={fmtUSD(md.high_24h.usd)} />
-            <StatRow label={t.coin.low24h} value={fmtUSD(md.low_24h.usd)} />
-            <StatRow
-              label={t.coin.ath}
-              value={
-                <span>
-                  {fmtUSD(md.ath.usd)}{" "}
-                  <span className="text-muted-foreground font-normal">
-                    ({new Date(md.ath_date.usd).toLocaleDateString()})
-                  </span>
-                </span>
-              }
-            />
-            <StatRow
-              label={t.coin.atl}
-              value={
-                <span>
-                  {fmtUSD(md.atl.usd)}{" "}
-                  <span className="text-muted-foreground font-normal">
-                    ({new Date(md.atl_date.usd).toLocaleDateString()})
-                  </span>
-                </span>
-              }
-            />
+          <div className="flex items-baseline gap-2 mt-0.5 flex-wrap">
+            <span className="text-2xl font-bold tabular-nums">{fmtUSD(md.current_price.usd)}</span>
+            <PctBadge value={md.price_change_percentage_24h} />
+            <button
+              onClick={() => router.push("?tab=trade")}
+              className="px-4 py-1.5 rounded-lg text-xs font-semibold"
+              style={{ background: "#4edea3", color: "#0c1324" }}
+            >
+              Trade {ticker}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* ── Right column: market data + links ── */}
-      <div className="flex flex-col gap-5">
+      {/* ── Main grid: description+performance left, stats+links right ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left col */}
+        <div className="lg:col-span-2 flex flex-col gap-5">
+          {/* Description */}
+          {description && description.length > 5 && (
+            <div
+              className="rounded-xl p-4"
+              style={{ background: "hsl(var(--muted)/0.4)", border: "1px solid hsl(var(--border))" }}
+            >
+              <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+            </div>
+          )}
+
+          {/* Price performance */}
+          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}>
+            <div className="px-4 py-3 border-b border-border">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <TrendingUp className="h-3.5 w-3.5" /> {t.coin.pricePerformance}
+              </h3>
+            </div>
+            <div className="px-4">
+              <StatRow label={t.coin.change24h} value={<PctBadge value={md.price_change_percentage_24h} />} />
+              <StatRow label={t.coin.change7d} value={<PctBadge value={md.price_change_percentage_7d} />} />
+              <StatRow label={t.coin.change30d} value={<PctBadge value={md.price_change_percentage_30d} />} />
+              <StatRow label={t.coin.high24h} value={fmtUSD(md.high_24h.usd)} />
+              <StatRow label={t.coin.low24h} value={fmtUSD(md.low_24h.usd)} />
+              <StatRow label={t.coin.ath} value={<span>{fmtUSD(md.ath.usd)} <span className="text-muted-foreground font-normal">({new Date(md.ath_date.usd).toLocaleDateString()})</span></span>} />
+              <StatRow label={t.coin.atl} value={<span>{fmtUSD(md.atl.usd)} <span className="text-muted-foreground font-normal">({new Date(md.atl_date.usd).toLocaleDateString()})</span></span>} />
+            </div>
+          </div>
+        </div>
+
+        {/* Right col: market data + links */}
+        <div className="flex flex-col gap-5">
         {/* Market Stats */}
         <div
           className="rounded-xl overflow-hidden"
@@ -320,6 +284,23 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
               label={t.coin.circulatingSupply}
               value={fmtNum(md.circulating_supply)}
             />
+            {md.max_supply && (
+              <div className="py-2" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
+                <div className="flex justify-between text-[10px] text-muted-foreground mb-1.5">
+                  <span>Circulating supply</span>
+                  <span>{((md.circulating_supply / md.max_supply) * 100).toFixed(1)}% of max</span>
+                </div>
+                <div className="h-1.5 rounded-full" style={{ background: "hsl(var(--muted))" }}>
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${Math.min((md.circulating_supply / md.max_supply) * 100, 100)}%`,
+                      background: "#4edea3",
+                    }}
+                  />
+                </div>
+              </div>
+            )}
             {md.total_supply && (
               <StatRow
                 label={t.coin.totalSupply}
@@ -400,13 +381,14 @@ export default function CoinInfoTab({ symbol }: { symbol: string }) {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                <DollarSign className="h-3.5 w-3.5 shrink-0" />
+                <MessageCircle className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">{t.coin.reddit}</span>
                 <ExternalLink className="h-3 w-3 shrink-0 ml-auto" />
               </a>
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

@@ -106,17 +106,17 @@ interface DonutSlice {
   color: string;
 }
 
-function DonutChart({ slices }: { slices: DonutSlice[] }) {
+function DonutChart({ slices, hovered }: { slices: DonutSlice[]; hovered: DonutSlice | null }) {
   const r = 15.9155;
   const circumference = 2 * Math.PI * r; // ~100.0
 
   let offset = 0;
-  // Start from the top (rotate -90deg)
   const paths = slices.map((slice) => {
     const dash = (slice.percentage / 100) * circumference;
     const gap = circumference - dash;
     const currentOffset = offset;
     offset += dash;
+    const isHovered = hovered?.symbol === slice.symbol;
     return (
       <circle
         key={slice.symbol}
@@ -125,18 +125,23 @@ function DonutChart({ slices }: { slices: DonutSlice[] }) {
         r={r}
         fill="none"
         stroke={slice.color}
-        strokeWidth="4"
+        strokeWidth={isHovered ? 5.5 : 4}
         strokeDasharray={`${dash.toFixed(4)} ${gap.toFixed(4)}`}
         strokeDashoffset={circumference - currentOffset}
         strokeLinecap="round"
-        style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }}
+        opacity={hovered && !isHovered ? 0.35 : 1}
+        style={{
+          transform: "rotate(-90deg)",
+          transformOrigin: "50% 50%",
+          transition: "stroke-width 0.15s, opacity 0.15s",
+        }}
       />
     );
   });
 
   return (
-    <div className="relative w-32 h-32 flex-shrink-0">
-      <svg viewBox="0 0 36 36" width={128} height={128}>
+    <div className="relative w-44 h-44 flex-shrink-0">
+      <svg viewBox="0 0 36 36" width={176} height={176} overflow="visible">
         {/* Background track */}
         <circle
           cx="18"
@@ -148,6 +153,17 @@ function DonutChart({ slices }: { slices: DonutSlice[] }) {
           opacity="0.2"
         />
         {paths}
+        {/* Center tooltip */}
+        {hovered ? (
+          <g style={{ pointerEvents: "none" }}>
+            <text x="18" y="16" textAnchor="middle" fill="#dce2f7" fontSize="3.2" fontWeight="bold" fontFamily="monospace">
+              {hovered.symbol}
+            </text>
+            <text x="18" y="21.5" textAnchor="middle" fill={hovered.color} fontSize="4.5" fontWeight="bold" fontFamily="monospace">
+              {hovered.percentage.toFixed(1)}%
+            </text>
+          </g>
+        ) : null}
       </svg>
     </div>
   );
@@ -165,6 +181,7 @@ export default function PortfolioLiveClient({
   >("connecting");
   const [trades, setTrades] = useState<TradeRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [hoveredSlice, setHoveredSlice] = useState<DonutSlice | null>(null);
   const [allocationChartData, setAllocationChartData] = useState<{
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     allocation: any[];
@@ -263,7 +280,7 @@ export default function PortfolioLiveClient({
   const donutSlices: DonutSlice[] = (allocationChartData?.allocation || [])
     .slice(0, DONUT_COLORS.length)
     .map((a, i) => ({
-      symbol: a.symbol,
+      symbol: a.symbol.replace(/USDT$/, ""),
       percentage: a.percentage,
       color: DONUT_COLORS[i],
     }));
@@ -531,7 +548,7 @@ export default function PortfolioLiveClient({
                           <td className="px-6 py-5 text-right">
                             <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Link
-                                href={`/Exchange/${coin.symbol}USDT`}
+                                href={`/coin/${coin.symbol}USDT`}
                                 className="p-1.5 hover:text-primary transition-colors"
                                 title="Trade"
                               >
@@ -695,7 +712,7 @@ export default function PortfolioLiveClient({
           </div>
 
           {/* Allocation Donut card */}
-          <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 flex flex-col gap-5 flex-1 relative overflow-hidden">
+          <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 flex flex-col gap-5 flex-1 relative">
             {/* Gradient accent background */}
             <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -704,14 +721,17 @@ export default function PortfolioLiveClient({
             {donutSlices.length > 0 ? (
               <>
                 <div className="flex flex-row items-center gap-6 relative z-10">
-                  <DonutChart slices={donutSlices} />
+                  <DonutChart slices={donutSlices} hovered={hoveredSlice} />
 
                   {/* Legend */}
                   <div className="space-y-3 flex-1">
                     {donutSlices.map((slice) => (
-                      <div
+                      <Link
                         key={slice.symbol}
-                        className="flex items-center gap-3"
+                        href={`/coin/${slice.symbol}USDT`}
+                        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                        onMouseEnter={() => setHoveredSlice(slice)}
+                        onMouseLeave={() => setHoveredSlice(null)}
                       >
                         <span
                           className="w-3 h-3 rounded-sm flex-shrink-0"
@@ -725,7 +745,7 @@ export default function PortfolioLiveClient({
                             {slice.symbol}
                           </span>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                     {(allocationChartData?.allocation.length ?? 0) >
                       DONUT_COLORS.length && (

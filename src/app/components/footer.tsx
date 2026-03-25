@@ -10,7 +10,7 @@ export function Footer() {
   const LINKS = {
     [t.footer.platform]: [
       { text: t.nav.markets,   href: "/" },
-      { text: t.nav.exchange,  href: "/Exchange/BTCUSDT" },
+      { text: t.nav.exchange,  href: "/coin/BTCUSDT" },
       { text: t.nav.portfolio, href: "/Portfolio" },
     ],
     [t.footer.learn]: [

@@ -64,7 +64,7 @@ export default function FloatingFavorites() {
             return (
               <Link
                 key={sym}
-                href={`/Exchange/${sym}`}
+                href={`/coin/${sym}`}
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-between px-3.5 py-2 hover:bg-muted/50 transition-colors group"
               >

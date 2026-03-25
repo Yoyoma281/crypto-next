@@ -139,7 +139,7 @@ export default function HomePage() {
                 View Markets <ChevronDown className="h-4 w-4" />
               </button>
             )}
-            <Link href="/Exchange/BTCUSDT" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold border border-border hover:bg-muted transition-colors active:scale-95">
+            <Link href="/coin/BTCUSDT" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold border border-border hover:bg-muted transition-colors active:scale-95">
               {t.home.viewLiveChart}
             </Link>
           </div>
@@ -213,7 +213,7 @@ export default function HomePage() {
             return (
               <Link
                 key={coin.symbol}
-                href={`/Exchange/${coin.symbol}USDT`}
+                href={`/coin/${coin.symbol}USDT`}
                 className="group flex flex-col gap-5 p-5 rounded-xl border border-border bg-card hover:bg-muted/50 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300"
                 style={{ transitionDelay: marketVisible ? `${i * 60}ms` : "0ms" }}
               >

@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono, Roboto } from "next/font/google";
+import { Geist, Geist_Mono, Roboto, Manrope } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import ClientLayout from "./ClientLayout";
@@ -16,6 +16,10 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+});
 
 export default function RootLayout({
   children,
@@ -25,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`bg-siteBg ${geistSans.variable} ${geistMono.variable} ${robotto.variable} font-geist antialiased`}
+        className={`bg-siteBg ${geistSans.variable} ${geistMono.variable} ${robotto.variable} ${manrope.variable} font-geist antialiased`}
       >
         <ThemeProvider
           attribute="class"

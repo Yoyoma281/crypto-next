@@ -212,7 +212,7 @@ export default function HowToTradePage() {
             },
             {
               title: "Exchange",
-              href: "/Exchange/BTCUSDT",
+              href: "/coin/BTCUSDT",
               color: "#b9c7e0",
               bg: "rgba(185,199,224,0.07)",
               desc: "Place buy and sell orders with a real-time TradingView chart and live order book.",
@@ -607,7 +607,7 @@ export default function HowToTradePage() {
           </p>
         </div>
         <Link
-          href="/Exchange/BTCUSDT"
+          href="/coin/BTCUSDT"
           className="shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold text-white"
           style={{ background: "#4edea3" }}
         >

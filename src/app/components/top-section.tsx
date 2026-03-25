@@ -159,14 +159,11 @@ export default function TopBarStats() {
           {/* ── Left: logo + market stats ── */}
           <div className="flex items-center gap-2 md:gap-5 flex-shrink-0">
             <Link href="/" className="flex items-center gap-2 shrink-0">
-              <div className="h-6 md:h-7 w-6 md:w-7 rounded-full bg-primary flex items-center justify-center">
-                <Bitcoin className="h-3 md:h-4 w-3 md:w-4 text-primary-foreground" />
-              </div>
-              <span className="font-bold text-xs md:text-sm tracking-tight hidden sm:block">
+<span className="font-bold text-xs md:text-sm tracking-tight hidden sm:block">
                 CrySer
               </span>
             </Link>
-            <span
+            {/* <span
               className="text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden sm:inline-flex items-center gap-1 shrink-0"
               style={{
                 background: "rgba(255,215,0,0.08)",
@@ -175,7 +172,7 @@ export default function TopBarStats() {
               }}
             >
               DEMO
-            </span>
+            </span> */}
 
             <div className="hidden lg:flex items-center gap-2 md:gap-4 text-[9px] md:text-[11px] text-muted-foreground pl-2 md:pl-4 border-l border-border/60">
               {data ? (
