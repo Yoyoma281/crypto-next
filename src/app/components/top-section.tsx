@@ -5,12 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
-  Bitcoin,
-  TrendingUp,
-  BarChart2,
-  Globe,
-  ArrowUpRight,
-  ArrowDownRight,
   ChevronDown,
   User,
 } from "lucide-react";
@@ -20,26 +14,12 @@ import ThemeToggle from "@/components/theme-toggle";
 import LanguageSelector from "@/components/language-selector";
 import { useI18n } from "@/lib/i18n";
 
-interface GlobalData {
-  coins: number;
-  marketCap: number;
-  volume24h: number;
-  btcDominance: number;
-  change24h: number;
-}
-
 interface UserInfo {
   username: string;
   _id: string;
   avatar?: string;
 }
 
-function fmtBig(n: number): string {
-  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`;
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
-  return `$${n.toFixed(0)}`;
-}
 
 const PRIMARY_NAV_KEYS = [
   { key: "markets" as const, href: "/" },
@@ -59,33 +39,10 @@ const MORE_NAV_KEYS = [
 export default function TopBarStats() {
   const pathname = usePathname();
   const { t } = useI18n();
-  const [data, setData] = useState<GlobalData | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
   const moreRef = useRef<HTMLDivElement>(null);
-
-  // Fetch global market stats
-  useEffect(() => {
-    const fetchGlobal = () =>
-      fetch("https://api.coingecko.com/api/v3/global")
-        .then((r) => r.json())
-        .then((json) => {
-          const d = json.data;
-          setData({
-            coins: d.active_cryptocurrencies,
-            marketCap: d.total_market_cap.usd,
-            volume24h: d.total_volume.usd,
-            btcDominance: d.market_cap_percentage.btc,
-            change24h: d.market_cap_change_percentage_24h_usd,
-          });
-        })
-        .catch(() => {});
-
-    fetchGlobal();
-    const id = setInterval(fetchGlobal, 60_000);
-    return () => clearInterval(id);
-  }, []);
 
   // Fetch current user session
   useEffect(() => {
@@ -105,35 +62,6 @@ export default function TopBarStats() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-
-  const isUp = (data?.change24h ?? 0) >= 0;
-
-  const stats = data
-    ? [
-        {
-          icon: Globe,
-          label: t.stats.coins,
-          value: data.coins.toLocaleString(),
-        },
-        {
-          icon: BarChart2,
-          label: t.stats.marketCap,
-          value: fmtBig(data.marketCap),
-          sub: `${isUp ? "+" : ""}${data.change24h.toFixed(1)}%`,
-          up: isUp,
-        },
-        {
-          icon: TrendingUp,
-          label: t.stats.volume24h,
-          value: fmtBig(data.volume24h),
-        },
-        {
-          icon: Bitcoin,
-          label: t.stats.btcDominance,
-          value: `${data.btcDominance.toFixed(1)}%`,
-        },
-      ]
-    : [];
 
   function navClass(href: string) {
     const hrefPath = href.split("?")[0];
@@ -175,46 +103,13 @@ export default function TopBarStats() {
               DEMO
             </span> */}
 
-            <div className="hidden lg:flex items-center gap-2 md:gap-4 text-[9px] md:text-[11px] text-muted-foreground pl-2 md:pl-4 border-l border-border/60">
-              {data ? (
-                stats.map((s) => (
-                  <div
-                    key={s.label}
-                    className="flex items-center gap-0.5 md:gap-1 whitespace-nowrap"
-                  >
-                    <s.icon className="h-2.5 md:h-3 w-2.5 md:w-3 shrink-0 opacity-50" />
-                    <span className="opacity-70 hidden xl:inline">
-                      {s.label}:
-                    </span>
-                    <span className="font-medium text-foreground text-[8px] md:text-xs">
-                      {s.value}
-                    </span>
-                    {"sub" in s && s.sub && (
-                      <span
-                        className="flex items-center gap-0.5 font-semibold"
-                        style={{ color: s.up ? "#4edea3" : "#ffb3ad" }}
-                      >
-                        {s.up ? (
-                          <ArrowUpRight className="h-3 w-3" />
-                        ) : (
-                          <ArrowDownRight className="h-3 w-3" />
-                        )}
-                        {s.sub}
-                      </span>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <span className="animate-pulse opacity-40 text-[8px]">
-                  Loading…
-                </span>
-              )}
+            <div className="hidden">
             </div>
           </div>
 
           {/* ── Center: search + nav ── */}
           <div className="flex items-center gap-1 md:gap-2 order-3 md:order-2 w-full md:w-auto md:flex-1 md:justify-center">
-            <div className="hidden sm:block flex-1 md:flex-none">
+            <div className="hidden sm:block shrink-0">
               <CoinSearch />
             </div>
 

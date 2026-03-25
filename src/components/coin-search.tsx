@@ -124,43 +124,41 @@ export default function CoinSearch() {
   }
 
   return (
-    <div ref={containerRef} className="relative">
-      {/* Input */}
-      <div
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-150 ${
-          focused
-            ? "bg-background border-primary/60 shadow-[0_0_0_3px_hsl(var(--primary)/0.12)]"
-            : "bg-muted/50 border-border hover:border-border/80 hover:bg-muted/70"
-        }`}
-        style={{ width: focused || query ? "15rem" : "11.5rem", transition: "width 200ms ease, box-shadow 150ms ease" }}
-      >
-        <Search className={`h-3.5 w-3.5 shrink-0 transition-colors ${focused ? "text-primary" : "text-muted-foreground"}`} />
-        <input
-          ref={inputRef}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onFocus={() => { setFocused(true); if (query && results.length > 0) setOpen(true); }}
-          onBlur={() => setFocused(false)}
-          placeholder="Search coins…"
-          className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground min-w-0 text-foreground"
-        />
-        {query ? (
-          <button
-            onMouseDown={(e) => { e.preventDefault(); setQuery(""); setOpen(false); }}
-            className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        ) : (
-          <span
-            className="shrink-0 text-[10px] font-mono font-semibold transition-opacity select-none"
-            style={{ color: "hsl(var(--muted-foreground))", opacity: focused ? 0 : 0.45 }}
-          >
-            /
-          </span>
-        )}
-      </div>
+    <div
+      ref={containerRef}
+      className={`relative flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-150 ${
+        focused
+          ? "bg-background border-primary/60 shadow-[0_0_0_3px_hsl(var(--primary)/0.12)]"
+          : "bg-muted/50 border-border hover:border-border/80 hover:bg-muted/70"
+      }`}
+      style={{ width: focused || query ? "15rem" : "11.5rem", transition: "width 200ms ease, box-shadow 150ms ease" }}
+    >
+      <Search className={`h-3.5 w-3.5 shrink-0 transition-colors ${focused ? "text-primary" : "text-muted-foreground"}`} />
+      <input
+        ref={inputRef}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onFocus={() => { setFocused(true); if (query && results.length > 0) setOpen(true); }}
+        onBlur={() => setFocused(false)}
+        placeholder="Search coins…"
+        className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground min-w-0 text-foreground"
+      />
+      {query ? (
+        <button
+          onMouseDown={(e) => { e.preventDefault(); setQuery(""); setOpen(false); }}
+          className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      ) : (
+        <span
+          className="shrink-0 text-[10px] font-mono font-semibold transition-opacity select-none"
+          style={{ color: "hsl(var(--muted-foreground))", opacity: focused ? 0 : 0.45 }}
+        >
+          /
+        </span>
+      )}
 
       {/* Dropdown */}
       {open && (
