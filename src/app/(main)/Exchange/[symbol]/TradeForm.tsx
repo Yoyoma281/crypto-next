@@ -25,8 +25,14 @@ export default function TradeForm({
   const [usdtBal, setUsdtBal] = useState(0);
   const [coinBal, setCoinBal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [msg, setMsg] = useState<{ ok: boolean; text?: string; filledAmount?: string; filledTotal?: string } | null>(null);
   const [isAuth, setIsAuth] = useState<boolean | null>(null); // null = unknown
+
+  useEffect(() => {
+    if (!msg?.ok) return;
+    const id = setTimeout(() => setMsg(null), 4000);
+    return () => clearTimeout(id);
+  }, [msg]);
 
   const refreshBalance = useCallback(() => {
     fetch("/api/portfolio")
@@ -82,14 +88,14 @@ export default function TradeForm({
       });
       const data = await res.json();
       if (res.ok) {
-        setMsg({ text: `${side} ${t.trading.orderFilled}`, ok: true });
+        setMsg({ ok: true, filledAmount: coinAmount.toFixed(6), filledTotal: parseFloat(usdtAmount).toFixed(2) });
         setAmount("");
         refreshBalance();
       } else {
-        setMsg({ text: data.error ?? "Trade failed", ok: false });
+        setMsg({ ok: false, text: data.error ?? "Trade failed" });
       }
     } catch {
-      setMsg({ text: t.trading.networkError, ok: false });
+      setMsg({ ok: false, text: t.trading.networkError });
     }
 
     setLoading(false);
@@ -100,16 +106,16 @@ export default function TradeForm({
   // Guest view — locked
   if (isAuth === false) {
     return (
-      <div className="p-4 flex flex-col gap-3">
+      <div className="p-6 flex flex-col gap-4">
         {/* Tab preview (disabled) */}
-        <div className="flex rounded-lg overflow-hidden border border-border opacity-40 pointer-events-none select-none">
+        <div className="flex rounded-md overflow-hidden border opacity-40 pointer-events-none select-none" style={{ borderColor: "#2e3447" }}>
           <div
-            className="flex-1 py-2 text-sm font-semibold text-center"
-            style={{ background: "#4edea3", color: "#fff" }}
+            className="flex-1 py-2.5 text-sm font-semibold text-center"
+            style={{ background: "#4edea3", color: "#003824" }}
           >
             {t.trading.buy} {ticker}
           </div>
-          <div className="flex-1 py-2 text-sm font-semibold text-center text-muted-foreground">
+          <div className="flex-1 py-2.5 text-sm font-semibold text-center" style={{ background: "#2e3447", color: "#909097" }}>
             {t.trading.sell} {ticker}
           </div>
         </div>
@@ -118,30 +124,31 @@ export default function TradeForm({
         <div
           className="flex flex-col items-center gap-3 py-6 px-4 rounded-xl border text-center"
           style={{
-            background: "rgba(78,222,163,0.05)",
-            borderColor: "rgba(78,222,163,0.2)",
+            background: "rgba(78,222,163,0.08)",
+            borderColor: "rgba(78,222,163,0.25)",
           }}
         >
           <div className="text-3xl">🔒</div>
           <div>
-            <p className="font-semibold text-sm text-foreground">
+            <p className="font-semibold text-sm text-[#dce1fb]">
               {t.trading.signUpToTrade}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-[#909097] mt-1">
               {t.trading.getVirtualFunds}
             </p>
           </div>
-          <div className="flex gap-2 w-full mt-1">
+          <div className="flex gap-2 w-full mt-2">
             <Link
               href="/signup"
-              className="flex-1 py-2 rounded-lg text-sm font-semibold text-white text-center transition-opacity hover:opacity-90"
-              style={{ background: "#4edea3" }}
+              className="flex-1 py-2 rounded-md text-sm font-semibold text-white text-center transition-opacity hover:opacity-90"
+              style={{ background: "#4edea3", color: "#003824" }}
             >
               {t.trading.signUpFree}
             </Link>
             <Link
               href="/login"
-              className="flex-1 py-2 rounded-lg text-sm font-semibold border border-border hover:bg-muted transition-colors text-center"
+              className="flex-1 py-2 rounded-md text-sm font-semibold border transition-colors text-center"
+              style={{ borderColor: "#2e3447", color: "#dce1fb" }}
             >
               {t.trading.logIn}
             </Link>
@@ -152,9 +159,9 @@ export default function TradeForm({
   }
 
   return (
-    <div className="p-4 flex flex-col gap-3">
+    <div className="p-6 flex flex-col gap-4">
       {/* Tabs */}
-      <div className="flex rounded-lg overflow-hidden border border-border">
+      <div className="flex rounded-md overflow-hidden border" style={{ borderColor: "#2e3447" }}>
         {(["BUY", "SELL"] as const).map((s) => (
           <button
             key={s}
@@ -163,14 +170,14 @@ export default function TradeForm({
               setAmount("");
               setMsg(null);
             }}
-            className="flex-1 py-2 text-sm font-semibold transition-colors"
+            className="flex-1 py-3 text-sm font-semibold transition-colors"
             style={
               side === s
                 ? {
                     background: s === "BUY" ? "#4edea3" : "#ffb3ad",
-                    color: "#fff",
+                    color: s === "BUY" ? "#003824" : "#410004",
                   }
-                : { color: "hsl(var(--muted-foreground))" }
+                : { background: "#2e3447", color: "#909097" }
             }
           >
             {s === "BUY"
@@ -181,18 +188,18 @@ export default function TradeForm({
       </div>
 
       {/* Balance & price info row */}
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span>
+      <div className="flex justify-between text-xs">
+        <span style={{ color: "#909097" }}>
           {t.trading.available + ":"}{" "}
-          <span className="text-foreground font-medium">
+          <span className="text-[#dce1fb] font-medium">
             {side === "BUY"
               ? `$${usdtBal.toLocaleString("en-US", { maximumFractionDigits: 2 })} USDT`
               : `${coinBal.toFixed(6)} ${ticker}`}
           </span>
         </span>
-        <span>
+        <span style={{ color: "#909097" }}>
           {t.trading.price + ":"}{" "}
-          <span className="text-foreground font-medium">
+          <span className="text-[#dce1fb] font-medium">
             {price
               ? `$${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "…"}
@@ -202,31 +209,36 @@ export default function TradeForm({
 
       {/* Amount input */}
       <div>
-        <label className="block text-xs text-muted-foreground mb-1">
+        <label className="block text-xs text-[#909097] mb-2 font-semibold uppercase tracking-widest">
           Amount ({ticker})
         </label>
-        <div className="flex items-center border border-border rounded-lg overflow-hidden bg-muted/20 focus-within:border-primary transition-colors">
+        <div className="flex items-center rounded-md overflow-hidden border" style={{ borderColor: "#2e3447", background: "#0c1324" }}>
           <input
             type="number"
             min="0"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
-            className="flex-1 bg-transparent px-3 py-2 text-sm outline-none"
+            className="flex-1 bg-transparent px-4 py-2.5 text-sm outline-none text-[#dce1fb] placeholder:text-[#45464d]"
           />
-          <span className="px-3 text-xs text-muted-foreground border-l border-border py-2">
+          <span className="px-4 text-xs text-[#909097] border-l py-2.5" style={{ borderColor: "#2e3447" }}>
             {ticker}
           </span>
         </div>
       </div>
 
       {/* Quick % */}
-      <div className="flex gap-1.5">
+      <div className="flex gap-2">
         {[25, 50, 75, 100].map((pct) => (
           <button
             key={pct}
             onClick={() => setPercent(pct)}
-            className="flex-1 py-1 text-[11px] border border-border rounded-md hover:bg-muted transition-colors text-muted-foreground"
+            className="flex-1 py-2 text-[11px] border rounded-md font-semibold transition-colors"
+            style={{ 
+              borderColor: "#2e3447", 
+              color: "#c6c6cd",
+              background: "#0c1324"
+            }}
           >
             {pct}%
           </button>
@@ -234,17 +246,17 @@ export default function TradeForm({
       </div>
 
       {/* Total */}
-      <div className="flex justify-between text-xs text-muted-foreground border-t border-border pt-2">
+      <div className="flex justify-between text-xs border-t pt-3" style={{ borderColor: "#2e3447", color: "#909097" }}>
         <span>{t.trading.estTotal}</span>
-        <span className="text-foreground font-medium">${total} USDT</span>
+        <span className="text-[#dce1fb] font-semibold">${total} USDT</span>
       </div>
 
       {/* Submit */}
       <button
         onClick={handleTrade}
         disabled={loading || !coinAmount || !price}
-        className="w-full py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-40"
-        style={{ background: activeColor }}
+        className="w-full py-3 rounded-md text-sm font-bold text-white transition-opacity disabled:opacity-40"
+        style={{ background: activeColor, color: activeColor === "#4edea3" ? "#003824" : "#410004" }}
       >
         {loading
           ? t.trading.processing
@@ -256,15 +268,30 @@ export default function TradeForm({
       {/* Feedback */}
       {msg && (
         <div
-          className="text-xs text-center py-2 rounded-lg font-medium"
+          className="rounded-md overflow-hidden animate-tradeFill"
           style={{
-            color: msg.ok ? "#4edea3" : "#ffb3ad",
-            background: msg.ok
-              ? "rgba(78,222,163,0.1)"
-              : "rgba(255,179,173,0.1)",
+            background: msg.ok ? "rgba(78,222,163,0.12)" : "rgba(255,179,173,0.12)",
+            border: `1px solid ${msg.ok ? "rgba(78,222,163,0.35)" : "rgba(255,179,173,0.35)"}`,
+            boxShadow: msg.ok ? "0 0 24px rgba(78,222,163,0.15)" : "0 0 16px rgba(255,179,173,0.1)",
           }}
         >
-          {msg.text}
+          {msg.ok ? (
+            <div className="flex flex-col items-center gap-2 py-4 px-4 text-center">
+              <span className="text-2xl leading-none">✅</span>
+              <span className="font-bold text-sm" style={{ color: "#4edea3" }}>
+                {side === "BUY" ? "Buy" : "Sell"} order filled!
+              </span>
+              {msg.filledAmount && (
+                <span className="text-xs" style={{ color: "#909097" }}>
+                  {msg.filledAmount} {ticker} · ${msg.filledTotal} USDT
+                </span>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-center py-3 px-4 font-medium" style={{ color: "#ffb3ad" }}>
+              {msg.text}
+            </p>
+          )}
         </div>
       )}
     </div>

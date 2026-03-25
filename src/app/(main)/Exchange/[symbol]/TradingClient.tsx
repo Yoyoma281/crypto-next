@@ -8,7 +8,6 @@ import OrderBook from "./OrderBook";
 import RecentTrades from "./RecentTrades";
 import TradeForm from "./TradeForm";
 
-// Lazy-load the chart (needs DOM, can't SSR)
 const PriceChart = dynamic(() => import("./PriceChart"), { ssr: false });
 
 interface Ticker {
@@ -25,10 +24,8 @@ function CoinImage({ ticker }: { ticker: string }) {
   if (stage === 2) {
     return (
       <div
-        className="h-8 w-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-        style={{
-          background: `hsl(${(ticker.charCodeAt(0) * 47) % 360}, 55%, 45%)`,
-        }}
+        className="h-9 w-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
+        style={{ background: `hsl(${(ticker.charCodeAt(0) * 47) % 360}, 55%, 45%)` }}
       >
         {ticker[0]}
       </div>
@@ -43,8 +40,8 @@ function CoinImage({ ticker }: { ticker: string }) {
       key={src}
       src={src}
       alt={ticker}
-      width={32}
-      height={32}
+      width={36}
+      height={36}
       className="rounded-full"
       onError={() => setStage((s) => s + 1)}
       unoptimized
@@ -62,48 +59,38 @@ export default function TradingClient({
   const ticker = symbol.replace("USDT", "");
   const { t } = useI18n();
   const [tickerData, setTickerData] = useState<Ticker | null>(null);
-  // Store last known values for delta merging
+  const [bottomTab, setBottomTab] = useState<"trades" | "history">("trades");
+  const [mobileTab, setMobileTab] = useState<"chart" | "book" | "form">("chart");
   const lastRef = useRef<Partial<Ticker>>({});
 
-  // Live 24h ticker via Gate.io WebSocket (same source as the coin table)
   useEffect(() => {
-    const pair = symbol.replace("USDT", "_USDT"); // e.g. BTCUSDT → BTC_USDT
+    const pair = symbol.replace("USDT", "_USDT");
     const ws = new WebSocket("wss://api.gateio.ws/ws/v4/");
-
     ws.onopen = () => {
-      ws.send(
-        JSON.stringify({
-          time: Math.floor(Date.now() / 1000),
-          channel: "spot.tickers",
-          event: "subscribe",
-          payload: [pair],
-        })
-      );
+      ws.send(JSON.stringify({
+        time: Math.floor(Date.now() / 1000),
+        channel: "spot.tickers",
+        event: "subscribe",
+        payload: [pair],
+      }));
     };
-
     ws.onmessage = (e) => {
       const msg = JSON.parse(e.data);
       if (msg.channel !== "spot.tickers" || msg.event !== "update") return;
       const d = msg.result;
       if (!d) return;
-
-      // Gate.io ticker fields
       if (d.last) lastRef.current.price = d.last;
       if (d.high_24h) lastRef.current.high = d.high_24h;
       if (d.low_24h) lastRef.current.low = d.low_24h;
       if (d.quote_volume) lastRef.current.volume = d.quote_volume;
-
-      if (d.change_percentage !== undefined) {
+      if (d.change_percentage !== undefined)
         lastRef.current.changePct = parseFloat(d.change_percentage).toFixed(2);
-      }
-      if (d.change_utc0 !== undefined) {
+      if (d.change_utc0 !== undefined)
         lastRef.current.change = parseFloat(d.change_utc0).toFixed(8);
-      }
-
       const cur = lastRef.current;
       if (cur.price) {
         setTickerData({
-          price: cur.price ?? "0",
+          price: cur.price,
           change: cur.change ?? "0",
           changePct: cur.changePct ?? "0",
           high: cur.high ?? "0",
@@ -112,7 +99,6 @@ export default function TradingClient({
         });
       }
     };
-
     return () => ws.close();
   }, [symbol]);
 
@@ -133,184 +119,260 @@ export default function TradingClient({
   };
 
   return (
-    <div className="flex flex-col gap-0 min-h-0">
-      {/* ── Ticker Header ─────────────────────────────────────── */}
+    <div className="flex flex-col gap-0 min-h-0 bg-[#0c1324]">
+
+      {/* ── Ticker Header ──────────────────────────────────────── */}
       {!hiddenHeader && (
-        <div className="flex flex-col gap-4 px-6 py-5 border-b border-border bg-card">
-          {/* Pair identity + Price Row */}
-          <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
-            {/* Pair identity */}
-            <div className="flex items-center gap-3">
-              <CoinImage ticker={ticker} />
-              <div className="flex flex-col leading-tight">
-                <span className="font-bold text-lg">{ticker}/USDT</span>
-                <span className="text-muted-foreground text-[11px]">
-                  {symbol}
-                </span>
+        <div
+          className="flex flex-wrap items-center gap-6 px-6 py-5 border-b"
+          style={{ background: "#151b2d", borderColor: "#2e3447" }}
+        >
+          {/* Pair identity */}
+          <div className="flex items-center gap-3">
+            <div className="flex -space-x-2.5">
+              <div className="w-10 h-10 rounded-full z-10 ring-2 ring-[#151b2d] overflow-hidden flex items-center justify-center" style={{ background: "#2e3447" }}>
+                <CoinImage ticker={ticker} />
+              </div>
+              <div
+                className="w-10 h-10 rounded-full z-0 flex items-center justify-center text-[11px] font-black text-[#c6c6cd]"
+                style={{ background: "#2e3447", border: "2px solid #151b2d" }}
+              >
+                ₮
               </div>
             </div>
-
-            {/* Price */}
-            <div className="flex flex-col leading-tight">
-              <span
-                className="text-4xl font-bold tabular-nums"
-                style={{ color: changeColor }}
-              >
-                {tickerData ? fmtPrice(tickerData.price) : "—"}
-              </span>
-              <span
-                className="text-sm tabular-nums"
-                style={{ color: changeColor }}
-              >
-                {tickerData
-                  ? `${isUp ? "+" : ""}${parseFloat(tickerData.change).toFixed(2)} (${parseFloat(tickerData.changePct).toFixed(2)}%)`
-                  : "—"}
-              </span>
+            <div>
+              <h1 className="font-black text-lg tracking-tight leading-tight text-[#dce1fb]">
+                {ticker} <span className="text-[#c6c6cd] font-medium">/ USDT</span>
+              </h1>
+              <p className="text-[10px] uppercase tracking-widest font-bold text-[#909097]">
+                {symbol}
+              </p>
             </div>
-
-            {/* Stats in columns */}
-            {tickerData && (
-              <div className="flex gap-8 text-sm ml-auto flex-wrap">
-                <div className="flex flex-col">
-                  <span className="text-muted-foreground text-xs uppercase tracking-widest font-semibold">
-                    {t.trading.high24h}
-                  </span>
-                  <span className="font-bold text-foreground tabular-nums mt-1">
-                    {fmtPrice(tickerData.high)}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-muted-foreground text-xs uppercase tracking-widest font-semibold">
-                    {t.trading.low24h}
-                  </span>
-                  <span className="font-bold text-foreground tabular-nums mt-1">
-                    {fmtPrice(tickerData.low)}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-muted-foreground text-xs uppercase tracking-widest font-semibold">
-                    {t.trading.volume24h}
-                  </span>
-                  <span className="font-bold text-foreground tabular-nums mt-1">
-                    {fmtVol(tickerData.volume)}
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
+
+          <div className="h-8 w-px hidden sm:block" style={{ background: "#2e3447" }} />
+
+          {/* Price */}
+          <div className="flex flex-col leading-tight">
+            <span
+              className="text-2xl font-black tabular-nums tracking-tighter"
+              style={{ color: changeColor }}
+            >
+              {tickerData ? fmtPrice(tickerData.price) : "—"}
+            </span>
+            <span
+              className="text-[11px] font-bold tabular-nums flex items-center gap-1"
+              style={{ color: changeColor }}
+            >
+              {isUp ? "↑" : "↓"}
+              {tickerData
+                ? `${isUp ? "+" : ""}${parseFloat(tickerData.change).toFixed(2)} (${parseFloat(tickerData.changePct).toFixed(2)}%)`
+                : "—"}
+            </span>
+          </div>
+
+          {/* Stats */}
+          {tickerData && (
+            <div className="hidden lg:flex gap-8 flex-wrap">
+              {[
+                { label: t.trading.high24h,   value: fmtPrice(tickerData.high),   accent: false },
+                { label: t.trading.low24h,    value: fmtPrice(tickerData.low),    accent: false },
+                { label: t.trading.volume24h, value: fmtVol(tickerData.volume),   accent: true  },
+              ].map((s) => (
+                <div key={s.label} className="flex flex-col">
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-[#909097]">
+                    {s.label}
+                  </span>
+                  <span
+                    className="text-sm font-bold tabular-nums mt-1"
+                    style={s.accent ? { color: "#4edea3" } : { color: "#dce1fb" }}
+                  >
+                    {s.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* ── Main Layout ───────────────────────────────────────── */}
-      <div className="flex flex-1 min-h-0 divide-x divide-border">
-        {/* Left — Order Book */}
-        <div className="w-40 lg:w-48 xl:w-56 flex-shrink-0 overflow-y-auto border-r border-border">
-          <OrderBook symbol={symbol} />
-        </div>
+      {/* ── Mobile tab bar ─────────────────────────────────────── */}
+      <div className="md:hidden flex border-b shrink-0" style={{ background: "#151b2d", borderColor: "#2e3447" }}>
+        {(["chart", "book", "form"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setMobileTab(tab)}
+            className={`flex-1 py-3 text-xs font-semibold transition-colors ${
+              mobileTab === tab
+                ? "border-b-2 text-[#4edea3]"
+                : "text-[#909097] hover:text-[#c6c6cd]"
+            }`}
+            style={mobileTab === tab ? { borderColor: "#4edea3" } : undefined}
+          >
+            {tab === "chart" ? "Chart" : tab === "book" ? "Order Book" : "Trade"}
+          </button>
+        ))}
+      </div>
 
-        {/* Center — Chart + Trade Form */}
-        <div className="flex flex-col flex-1 min-w-0 divide-y divide-border">
+      {/* ── Mobile layout ──────────────────────────────────────── */}
+      <div className="md:hidden flex flex-col">
+        {mobileTab === "chart" && (
+          <div className="h-72 sm:h-80" style={{ background: "#0c1324", borderBottom: "1px solid #2e3447" }}>
+            <PriceChart symbol={symbol} />
+          </div>
+        )}
+        {mobileTab === "book" && <OrderBook symbol={symbol} />}
+        {mobileTab === "form" && (
+          <div style={{ background: "#0c1324" }}>
+            <TradeForm symbol={symbol} livePrice={tickerData?.price ?? null} />
+          </div>
+        )}
+      </div>
+
+      {/* ── Desktop layout — 12-col grid ────────────────────────── */}
+      <div className="hidden md:grid grid-cols-12 flex-1 min-h-0" style={{ background: "#0c1324", borderColor: "#2e3447" }}>
+
+        {/* LEFT 9 cols: Chart + bottom panel */}
+        <div className="col-span-9 flex flex-col" style={{ borderRight: "1px solid #2e3447" }}>
+
           {/* Chart */}
-          <div className="flex-1 p-3 bg-card">
+          <div className="flex-1 overflow-hidden" style={{ minHeight: 480, background: "#151b2d", borderBottom: "1px solid #2e3447" }}>
             <PriceChart symbol={symbol} />
           </div>
 
-          {/* Trade Form */}
-          <div className="bg-card">
-            <TradeForm symbol={symbol} livePrice={tickerData?.price ?? null} />
+          {/* Bottom panel */}
+          <div
+            className="flex flex-col shrink-0"
+            style={{ height: 220, background: "#151b2d" }}
+          >
+            {/* Tabs */}
+            <div
+              className="flex border-b shrink-0 px-6"
+              style={{ background: "#151b2d", borderColor: "#2e3447" }}
+            >
+              {[
+                { key: "trades"  as const, label: "Recent Trades" },
+                { key: "history" as const, label: "Trade History" },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setBottomTab(tab.key)}
+                  className={`px-5 py-3 text-xs font-bold transition-colors whitespace-nowrap ${
+                    bottomTab === tab.key
+                      ? "text-[#4edea3] border-b-2"
+                      : "text-[#909097] hover:text-[#c6c6cd]"
+                  }`}
+                  style={bottomTab === tab.key ? { borderColor: "#4edea3" } : undefined}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Panel content */}
+            <div className="flex-1 overflow-y-auto">
+              {bottomTab === "trades" ? (
+                <RecentTrades symbol={symbol} />
+              ) : (
+                <TradeHistoryPanel />
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Right — Recent Trades */}
-        <div className="w-40 lg:w-48 xl:w-56 flex-shrink-0 border-l border-border overflow-y-auto">
-          <RecentTrades symbol={symbol} />
+        {/* RIGHT 3 cols: Trade form + Order book */}
+        <div className="col-span-3 flex flex-col overflow-y-auto" style={{ background: "#0c1324" }}>
+          <div style={{ background: "#151b2d", borderBottom: "1px solid #2e3447" }} className="shrink-0">
+            <TradeForm symbol={symbol} livePrice={tickerData?.price ?? null} />
+          </div>
+          <div className="flex-1 overflow-y-auto" style={{ background: "#151b2d" }}>
+            <OrderBook symbol={symbol} />
+          </div>
         </div>
 
-        {/* News panel — only on xl+ */}
-        <div className="hidden xl:flex w-56 flex-shrink-0 border-l border-border overflow-y-auto flex-col">
-          <NewsPanel base={ticker} />
-        </div>
       </div>
     </div>
   );
 }
 
-function StatCell({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium text-foreground tabular-nums">{value}</span>
-    </div>
-  );
-}
-
-function NewsPanel({ base }: { base: string }) {
-  const [news, setNews] = useState<
+function TradeHistoryPanel() {
+  const [trades, setTrades] = useState<
     Array<{
-      id: number;
-      title: string;
-      url: string;
-      source: { title: string };
-      published_at: string;
+      symbol: string;
+      type: string;
+      usdAmount: string;
+      coinAmount: string;
+      price: string;
+      createdAt: string;
     }>
   >([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/news?currency=${base}`)
-      .then((r) => r.json())
-      .then((d) => {
-        setNews((d.results ?? []).slice(0, 15));
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [base]);
+    fetch("/api/trades")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.trades) setTrades(d.trades.slice(0, 30)); })
+      .catch(() => {});
+  }, []);
 
-  function timeAgo(iso: string) {
-    const diff = Date.now() - new Date(iso).getTime();
-    const m = Math.floor(diff / 60000);
-    if (m < 60) return `${m}m ago`;
-    const h = Math.floor(m / 60);
-    if (h < 24) return `${h}h ago`;
-    return `${Math.floor(h / 24)}d ago`;
+  if (trades.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground p-4">No trade history yet.</p>
+    );
   }
 
   return (
-    <>
-      <div className="px-3 py-2.5 border-b border-border shrink-0">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-          News
-        </span>
-      </div>
-      <div className="flex flex-col overflow-y-auto">
-        {loading ? (
-          Array.from({ length: 6 }).map((_, i) => (
-            <div
+    <table className="w-full text-left text-xs">
+      <thead className="sticky top-0" style={{ background: "hsl(var(--card))" }}>
+        <tr
+          className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground border-b border-border"
+        >
+          <th className="px-4 py-2">Pair</th>
+          <th className="px-4 py-2">Side</th>
+          <th className="px-4 py-2 text-right">Price</th>
+          <th className="px-4 py-2 text-right">Amount</th>
+          <th className="px-4 py-2 text-right hidden lg:table-cell">Total</th>
+          <th className="px-4 py-2 text-right hidden xl:table-cell">Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {trades.map((t, i) => {
+          const priceFmt = parseFloat(t.price).toLocaleString("en-US", {
+            maximumFractionDigits: 6,
+          });
+          const timeFmt = new Date(t.createdAt).toLocaleTimeString(undefined, {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          return (
+            <tr
               key={i}
-              className="mx-2 my-1.5 h-14 rounded-lg animate-pulse bg-muted"
-            />
-          ))
-        ) : news.length === 0 ? (
-          <p className="text-xs text-muted-foreground p-3">No news found.</p>
-        ) : (
-          news.map((item) => (
-            <a
-              key={item.id}
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex flex-col gap-0.5 px-3 py-2.5 hover:bg-muted/40 transition-colors border-b border-border/50"
+              className="border-b border-border/40 hover:bg-muted/30 transition-colors"
             >
-              <span className="text-[11px] font-medium leading-snug line-clamp-3 text-foreground">
-                {item.title}
-              </span>
-              <span className="text-[10px] text-muted-foreground mt-0.5">
-                {item.source.title} · {timeAgo(item.published_at)}
-              </span>
-            </a>
-          ))
-        )}
-      </div>
-    </>
+              <td className="px-4 py-2 font-bold">
+                {t.symbol.replace("USDT", "/USDT")}
+              </td>
+              <td className="px-4 py-2">
+                <span
+                  className="font-bold text-[10px] uppercase"
+                  style={{ color: t.type === "BUY" ? "#4edea3" : "#ffb3ad" }}
+                >
+                  {t.type}
+                </span>
+              </td>
+              <td className="px-4 py-2 text-right font-mono">${priceFmt}</td>
+              <td className="px-4 py-2 text-right font-mono">
+                {parseFloat(t.coinAmount).toFixed(6)}
+              </td>
+              <td className="px-4 py-2 text-right font-mono hidden lg:table-cell">
+                ${parseFloat(t.usdAmount).toFixed(2)}
+              </td>
+              <td className="px-4 py-2 text-right text-muted-foreground hidden xl:table-cell">
+                {timeFmt}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }

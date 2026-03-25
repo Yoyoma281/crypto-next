@@ -7,6 +7,7 @@ import TickerBar from "./components/TickerBar";
 import { I18nProvider } from "@/lib/i18n";
 import { FavoritesProvider } from "@/components/favorites-context";
 import FloatingFavorites from "@/components/floating-favorites";
+import OnboardingModal from "@/components/onboarding-modal";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -32,6 +33,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           <>
             <Footer />
             <FloatingFavorites />
+            <OnboardingModal />
           </>
         )}
       </FavoritesProvider>

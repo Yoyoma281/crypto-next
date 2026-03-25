@@ -105,7 +105,7 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
       {/* Drawer */}
       <div
         ref={ref}
-        className="fixed top-0 right-0 z-50 h-full w-72 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out"
+        className="fixed top-0 right-0 z-50 h-full w-[85vw] sm:w-72 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out"
         style={{
           background: "hsl(var(--card))",
           borderLeft: "1px solid hsl(var(--border))",

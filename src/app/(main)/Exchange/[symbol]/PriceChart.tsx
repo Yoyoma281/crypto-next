@@ -325,16 +325,17 @@ export default function PriceChart({ symbol }: { symbol: string }) {
           <button
             key={iv}
             onClick={() => setInterval(iv)}
-            className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
-              interval === iv
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
+            className="px-3 py-1 text-xs rounded-md font-medium transition-colors"
+            style={{
+              background: interval === iv ? "#4edea3" : "#151b2d",
+              color: interval === iv ? "#000000" : "#909097",
+              border: interval === iv ? "1px solid #4edea3" : "1px solid #2e3447",
+            }}
           >
             {iv}
           </button>
         ))}
-        <div className="ml-auto flex items-center gap-3 text-[10px] text-muted-foreground">
+        <div className="ml-auto flex items-center gap-3 text-[10px]" style={{ color: "#909097" }}>
           <span className="flex items-center gap-1">
             <span style={{ color: "#4edea3" }}>▲</span> Spike up
           </span>
@@ -344,7 +345,7 @@ export default function PriceChart({ symbol }: { symbol: string }) {
           <span className="flex items-center gap-1">
             <span style={{ color: "#7a9db4" }}>●</span> News
           </span>
-          <span className="opacity-60">Click markers for details</span>
+          <span style={{ color: "#c6c6cd" }}>Click markers for details</span>
         </div>
       </div>
 
@@ -354,19 +355,20 @@ export default function PriceChart({ symbol }: { symbol: string }) {
       {/* Detail panel */}
       {clicked && (
         <div
-          className="mx-3 mb-3 mt-2 rounded-xl p-4 flex flex-col gap-3"
+          className="mx-3 mb-3 mt-2 rounded-lg p-4 flex flex-col gap-3"
           style={{
-            background: "hsl(var(--card))",
-            border: "1px solid hsl(var(--border))",
+            background: "#151b2d",
+            border: "1px solid #2e3447",
           }}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
+            <span style={{ fontSize: "12px", color: "#909097" }}>
               {fmtTime(clicked.time)}
             </span>
             <button
               onClick={() => setClicked(null)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="transition-colors"
+              style={{ color: "#909097" }}
             >
               <X className="h-4 w-4" />
             </button>
@@ -402,12 +404,12 @@ export default function PriceChart({ symbol }: { symbol: string }) {
                   <div
                     key={k}
                     className="flex flex-col gap-0.5 rounded-lg px-2.5 py-1.5"
-                    style={{ background: "hsl(var(--muted)/0.5)" }}
+                    style={{ background: "rgba(78,222,163,0.08)" }}
                   >
-                    <span className="text-[10px] text-muted-foreground capitalize">
+                    <span style={{ fontSize: "10px", color: "#909097", textTransform: "capitalize" }}>
                       {k}
                     </span>
-                    <span className="text-xs font-semibold tabular-nums">
+                    <span style={{ fontSize: "12px", fontWeight: "600", color: "#dce1fb" }} className="tabular-nums">
                       {fmtPrice(clicked.spike![k])}
                     </span>
                   </div>
@@ -419,8 +421,8 @@ export default function PriceChart({ symbol }: { symbol: string }) {
           {clicked.news.length > 0 && (
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-1.5">
-                <Newspaper className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                <Newspaper className="h-3.5 w-3.5" style={{ color: "#909097" }} />
+                <span style={{ fontSize: "11px", fontWeight: "600", color: "#909097", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   News around this time
                 </span>
               </div>
@@ -430,13 +432,13 @@ export default function PriceChart({ symbol }: { symbol: string }) {
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex flex-col gap-0.5 px-2.5 py-2 rounded-lg hover:bg-muted transition-colors"
-                  style={{ border: "1px solid hsl(var(--border))" }}
+                  className="flex flex-col gap-0.5 px-2.5 py-2 rounded-lg transition-colors"
+                  style={{ border: "1px solid #2e3447" }}
                 >
-                  <span className="text-xs font-medium leading-snug line-clamp-2">
+                  <span style={{ fontSize: "12px", fontWeight: "500", color: "#dce1fb" }} className="leading-snug line-clamp-2">
                     {item.title}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span style={{ fontSize: "10px", color: "#909097" }}>
                     {item.source.title} ·{" "}
                     {new Date(item.published_at).toLocaleDateString()}
                   </span>

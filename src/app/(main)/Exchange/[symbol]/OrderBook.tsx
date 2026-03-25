@@ -126,13 +126,13 @@ export default function OrderBook({ symbol }: { symbol: string }) {
     });
 
   return (
-    <div className="flex flex-col h-full overflow-hidden text-[12px]">
-      <p className="text-xs font-semibold px-3 py-2 border-b border-border">
+    <div className="flex flex-col h-full overflow-hidden text-[12px]" style={{ background: "#0c1324" }}>
+      <p className="text-xs font-semibold px-3 py-2" style={{ borderBottomColor: "#2e3447", borderBottomWidth: "1px", color: "#dce1fb" }}>
         {t.trading.orderBook}
       </p>
 
       {/* Column headers */}
-      <div className="flex justify-between text-muted-foreground px-3 py-1 text-[11px]">
+      <div className="flex justify-between px-3 py-1 text-[11px]" style={{ color: "#909097" }}>
         <span>{t.trading.priceUsdt}</span>
         <span>{t.trading.qty}</span>
       </div>
@@ -140,31 +140,31 @@ export default function OrderBook({ symbol }: { symbol: string }) {
       {/* Asks — red, highest first */}
       <div className="flex flex-col">
         {displayAsks.map(([price, qty], i) => (
-          <div key={i} className="relative flex justify-between px-3 py-[2px]">
+          <div key={i} className="relative flex justify-between px-3 py-[2px]" style={{ color: "#dce1fb" }}>
             <Bar pct={(parseFloat(qty) / maxQty) * 100} isAsk />
             <span className="relative font-mono" style={{ color: "#ffb3ad" }}>
               {fmt(price)}
             </span>
-            <span className="relative text-foreground">{fmt(qty, 4)}</span>
+            <span className="relative" style={{ color: "#c6c6cd" }}>{fmt(qty, 4)}</span>
           </div>
         ))}
       </div>
 
       {/* Spread row */}
-      <div className="flex items-center justify-center gap-2 py-1.5 border-y border-border bg-muted/20 text-[11px]">
-        <span className="text-muted-foreground">{t.trading.spread}</span>
-        <span className="font-medium text-foreground">{spread}</span>
+      <div className="flex items-center justify-center gap-2 py-1.5 text-[11px]" style={{ borderTopColor: "#2e3447", borderTopWidth: "1px", borderBottomColor: "#2e3447", borderBottomWidth: "1px", background: "rgba(78,222,163,0.06)" }}>
+        <span style={{ color: "#909097" }}>{t.trading.spread}</span>
+        <span className="font-medium" style={{ color: "#4edea3" }}>{spread}</span>
       </div>
 
       {/* Bids — green */}
       <div className="flex flex-col">
         {book.bids.map(([price, qty], i) => (
-          <div key={i} className="relative flex justify-between px-3 py-[2px]">
+          <div key={i} className="relative flex justify-between px-3 py-[2px]" style={{ color: "#dce1fb" }}>
             <Bar pct={(parseFloat(qty) / maxQty) * 100} isAsk={false} />
             <span className="relative font-mono" style={{ color: "#4edea3" }}>
               {fmt(price)}
             </span>
-            <span className="relative text-foreground">{fmt(qty, 4)}</span>
+            <span className="relative" style={{ color: "#c6c6cd" }}>{fmt(qty, 4)}</span>
           </div>
         ))}
       </div>

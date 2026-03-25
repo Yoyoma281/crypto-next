@@ -49,15 +49,19 @@ export async function fetchPortfolioAnalytics(): Promise<{ costBasis: Record<str
 }
 
 export async function fetchTradeHistory(): Promise<{ trades: TradeRecord[] }> {
-  const res = await backendFetch("GET", "/Trades");
+  const res = await backendFetch("GET", "/trades");
   if (!res.ok) return { trades: [] };
   return res.json();
 }
 
 export async function fetchLeaderboard(): Promise<{ leaderboard: LeaderboardEntry[] }> {
-  const res = await backendFetch("GET", "/leaderboard");
-  if (!res.ok) return { leaderboard: [] };
-  return res.json();
+  try {
+    const res = await backendFetch("GET", "/leaderboard");
+    if (!res.ok) return { leaderboard: [] };
+    return res.json();
+  } catch {
+    return { leaderboard: [] };
+  }
 }
 
 export type TradeRecord = {

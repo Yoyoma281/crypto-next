@@ -29,7 +29,7 @@ export default function PortfolioPageHeader({
         Wallet & Assets
       </p>
       <h1
-        className="text-5xl md:text-6xl font-extrabold tracking-tight mb-2"
+        className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-2"
         style={{ color: "hsl(var(--foreground))" }}
       >
         Total Portfolio Value

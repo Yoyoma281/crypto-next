@@ -89,13 +89,13 @@ export default function RecentTrades({ symbol }: { symbol: string }) {
   }, [symbol]);
 
   return (
-    <div className="flex flex-col overflow-hidden text-[12px]">
-      <p className="text-xs font-semibold px-3 py-2 border-b border-border">
+    <div className="flex flex-col overflow-hidden text-[12px]" style={{ background: "#0c1324" }}>
+      <p className="text-xs font-semibold px-3 py-2" style={{ borderBottomColor: "#2e3447", borderBottomWidth: "1px", color: "#dce1fb" }}>
         {t.trading.recentTrades}
       </p>
 
       {/* Headers */}
-      <div className="flex justify-between text-muted-foreground px-3 py-1 text-[11px]">
+      <div className="flex justify-between px-3 py-1 text-[11px]" style={{ color: "#909097" }}>
         <span>{t.trading.priceUsdt}</span>
         <span>{t.trading.amount}</span>
         <span>{t.trading.time}</span>
@@ -113,10 +113,10 @@ export default function RecentTrades({ symbol }: { symbol: string }) {
                 maximumFractionDigits: 2,
               })}
             </span>
-            <span className="text-foreground tabular-nums">
+            <span className="tabular-nums" style={{ color: "#c6c6cd" }}>
               {parseFloat(t.qty).toFixed(4)}
             </span>
-            <span className="text-muted-foreground">
+            <span style={{ color: "#909097" }}>
               {new Date(t.time).toLocaleTimeString("en-US", {
                 hour12: false,
                 hour: "2-digit",

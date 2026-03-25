@@ -10,5 +10,5 @@ export default async function LeaderboardPage() {
 
   const { leaderboard } = await fetchLeaderboard();
 
-  return <LeaderboardContent leaderboard={leaderboard} />;
+  return <LeaderboardContent leaderboard={leaderboard ?? []} />;
 }

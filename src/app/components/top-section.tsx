@@ -166,6 +166,16 @@ export default function TopBarStats() {
                 CrySer
               </span>
             </Link>
+            <span
+              className="text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden sm:inline-flex items-center gap-1 shrink-0"
+              style={{
+                background: "rgba(255,215,0,0.08)",
+                color: "#ffd700",
+                border: "1px solid rgba(255,215,0,0.25)",
+              }}
+            >
+              DEMO
+            </span>
 
             <div className="hidden lg:flex items-center gap-2 md:gap-4 text-[9px] md:text-[11px] text-muted-foreground pl-2 md:pl-4 border-l border-border/60">
               {data ? (
@@ -204,20 +214,20 @@ export default function TopBarStats() {
             </div>
           </div>
 
-          {/* ── Center: search + nav (mobile-responsive) ── */}
+          {/* ── Center: search + nav ── */}
           <div className="flex items-center gap-1 md:gap-2 order-3 md:order-2 w-full md:w-auto md:flex-1 md:justify-center">
             <div className="hidden sm:block flex-1 md:flex-none">
               <CoinSearch />
             </div>
 
             <nav className="flex items-center gap-0.5 md:gap-1 flex-wrap">
-              {PRIMARY_NAV_KEYS.slice(0, 2).map((link) => (
+              {PRIMARY_NAV_KEYS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   className={navClass(link.href)}
                 >
-                  <span className="hidden md:inline">{t.nav[link.key]}</span>
+                  {t.nav[link.key]}
                 </Link>
               ))}
 
@@ -238,7 +248,7 @@ export default function TopBarStats() {
 
                 {moreOpen && (
                   <div
-                    className="absolute right-0 top-full mt-1 md:mt-1.5 w-32 md:w-40 rounded-lg shadow-lg py-1 z-50"
+                    className="absolute right-0 top-full mt-1 md:mt-1.5 w-36 md:w-44 rounded-lg shadow-lg py-1 z-50"
                     style={{
                       background: "hsl(var(--card))",
                       border: "1px solid hsl(var(--border))",
@@ -249,7 +259,7 @@ export default function TopBarStats() {
                         key={link.href}
                         href={link.href}
                         onClick={() => setMoreOpen(false)}
-                        className={`block px-2 md:px-3 py-1.5 md:py-2 text-[10px] md:text-xs font-medium transition-colors ${
+                        className={`block px-3 py-2 text-xs font-medium transition-colors ${
                           pathname === link.href ||
                           pathname.startsWith(link.href)
                             ? "text-foreground bg-muted"
@@ -265,7 +275,7 @@ export default function TopBarStats() {
             </nav>
           </div>
 
-          {/* ── Right: auth + avatar (mobile-optimized) ── */}
+          {/* ── Right: auth + avatar ── */}
           <div className="flex items-center gap-1 md:gap-2 order-2 md:order-3 flex-shrink-0">
             <LanguageSelector />
             <ThemeToggle />
@@ -274,13 +284,13 @@ export default function TopBarStats() {
               <>
                 <Link
                   href="/signup"
-                  className="text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-md font-medium border border-border hover:bg-muted transition-colors hidden md:block"
+                  className="text-[10px] md:text-xs px-2 md:px-3 py-1.5 rounded-md font-medium border border-border hover:bg-muted transition-colors hidden sm:block"
                 >
                   {t.nav.signup}
                 </Link>
                 <Link
                   href="/login"
-                  className="text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-md font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  className="text-[10px] md:text-xs px-2.5 md:px-3 py-1.5 rounded-md font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   {t.nav.login}
                 </Link>
@@ -288,7 +298,7 @@ export default function TopBarStats() {
             )}
 
             <Avatar
-              className="h-6 md:h-7 w-6 md:w-7 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all flex-shrink-0"
+              className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all flex-shrink-0"
               onClick={() => setSidebarOpen(true)}
             >
               {currentUser?.avatar ? (
@@ -300,14 +310,14 @@ export default function TopBarStats() {
                 />
               ) : initials ? (
                 <AvatarFallback
-                  className="text-[7px] md:text-[10px] font-bold text-white"
+                  className="text-[10px] font-bold text-white"
                   style={{ background: "hsl(var(--primary))" }}
                 >
                   {initials}
                 </AvatarFallback>
               ) : (
-                <AvatarFallback className="text-[7px] md:text-[10px]">
-                  <User className="h-3 md:h-3.5 w-3 md:w-3.5" />
+                <AvatarFallback className="text-[10px]">
+                  <User className="h-3.5 w-3.5" />
                 </AvatarFallback>
               )}
             </Avatar>
