@@ -53,6 +53,7 @@ const MORE_NAV_KEYS = [
   { key: "leaderboard" as const, href: "/leaderboard" },
   { key: "news" as const, href: "/news" },
   { key: "settings" as const, href: "/settings" },
+  { key: "learn" as const, href: "/learn/how-to-trade" },
 ];
 
 export default function TopBarStats() {

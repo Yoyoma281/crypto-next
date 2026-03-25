@@ -12,6 +12,7 @@ export interface T {
     leaderboard: string;
     news: string;
     settings: string;
+    learn: string;
     more: string;
     login: string;
     signup: string;
@@ -321,6 +322,7 @@ const en: T = {
     leaderboard: "Leaderboard",
     news: "News",
     settings: "Settings",
+    learn: "Learn",
     more: "More",
     login: "Login",
     signup: "Sign Up",
@@ -637,6 +639,7 @@ const he: T = {
     leaderboard: "טבלת מובילים",
     news: "חדשות",
     settings: "הגדרות",
+    learn: "למד",
     more: "עוד",
     login: "התחבר",
     signup: "הרשמה",
@@ -950,6 +953,7 @@ const ar: T = {
     leaderboard: "لوحة المتصدرين",
     news: "الأخبار",
     settings: "الإعدادات",
+    learn: "تعلّم",
     more: "المزيد",
     login: "تسجيل الدخول",
     signup: "إنشاء حساب",
@@ -1265,6 +1269,7 @@ const ru: T = {
     leaderboard: "Рейтинг",
     news: "Новости",
     settings: "Настройки",
+    learn: "Обучение",
     more: "Ещё",
     login: "Войти",
     signup: "Регистрация",
@@ -1585,6 +1590,7 @@ const es: T = {
     leaderboard: "Clasificación",
     news: "Noticias",
     settings: "Configuración",
+    learn: "Aprende",
     more: "Más",
     login: "Iniciar sesión",
     signup: "Registrarse",
@@ -1908,6 +1914,7 @@ const fr: T = {
     leaderboard: "Classement",
     news: "Actualités",
     settings: "Paramètres",
+    learn: "Apprendre",
     more: "Plus",
     login: "Connexion",
     signup: "S'inscrire",
@@ -2234,6 +2241,7 @@ const zh: T = {
     leaderboard: "排行榜",
     news: "新闻",
     settings: "设置",
+    learn: "学习",
     more: "更多",
     login: "登录",
     signup: "注册",
