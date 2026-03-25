@@ -6,23 +6,10 @@ import {
   RotateCcw,
   Lock,
   User as UserIcon,
-  Github,
 } from "lucide-react";
 import AuthRequired from "@/components/auth-required";
 import { useI18n } from "@/lib/i18n";
 
-const AVATAR_COLORS = [
-  "#FF6B6B",
-  "#4ECDC4",
-  "#45B7D1",
-  "#FFA07A",
-  "#98D8C8",
-  "#F7DC6F",
-  "#BB8FCE",
-  "#85C1E2",
-  "#F8B988",
-  "#C39BD3",
-];
 
 const GITHUB_AVATARS = [
   "https://api.dicebear.com/7.x/avataaars/svg?seed=1",

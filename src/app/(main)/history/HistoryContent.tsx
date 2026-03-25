@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 
 interface Trade {
@@ -111,9 +112,9 @@ export default function HistoryContent() {
       ) : trades.length === 0 ? (
         <div className="rounded-xl px-6 py-16 text-center text-muted-foreground text-sm border border-border bg-card">
           {t.history.noTrades}{" "}
-          <a href="/coin/BTCUSDT?tab=trade" className="underline hover:text-foreground">
+          <Link href="/coin/BTCUSDT?tab=trade" className="underline hover:text-foreground">
             {t.history.goToExchange}
-          </a>{" "}
+          </Link>{" "}
           {t.history.firstTrade}
         </div>
       ) : (

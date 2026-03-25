@@ -10,17 +10,6 @@ interface BookState {
   asks: Level[]; // stored asks[0] = lowest ask
 }
 
-function Bar({ pct, isAsk }: { pct: number; isAsk: boolean }) {
-  return (
-    <div
-      className="absolute inset-y-0 right-0"
-      style={{
-        width: `${pct}%`,
-        background: isAsk ? "rgba(234,57,67,0.12)" : "rgba(22,199,132,0.12)",
-      }}
-    />
-  );
-}
 
 export default function OrderBook({ symbol }: { symbol: string }) {
   const { t } = useI18n();

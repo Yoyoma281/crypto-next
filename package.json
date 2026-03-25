@@ -7,7 +7,7 @@
     "server": "npx nodemon C:\\Users\\shai_s\\Desktop\\CrySer\\CryptoServer\\api\\index.js",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint src"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

@@ -152,8 +152,6 @@ export default function TradeForm({
     setLoading(false);
   };
 
-  const activeColor = side === "BUY" ? "#42e09a" : "#ffb4ab";
-
   const submitLabel = () => {
     if (loading) return t.trading.processing;
     if (orderMode === "MARKET") {
