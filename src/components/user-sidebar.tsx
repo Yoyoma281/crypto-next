@@ -15,6 +15,7 @@ import {
   Settings,
   Star,
   Bitcoin,
+  Copy,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
@@ -55,6 +56,7 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
       label: t.sidebar.account,
       items: [
         { icon: Wallet, label: t.nav.portfolio, href: "/Portfolio" },
+        { icon: Copy, label: "Copy Trading", href: "/copy-trading" },
         { icon: History, label: t.nav.history, href: "/history" },
         { icon: Settings, label: t.nav.settings, href: "/settings" },
       ],

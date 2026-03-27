@@ -225,6 +225,18 @@ export default function PortfolioLiveClient({
       .catch(() => setTrades([]));
   }, []);
 
+  // Fetch open copy positions
+  const [copyPositions, setCopyPositions] = useState<Array<{
+    _id: string; symbol: string; coinAmount: string; entryUsdAmount: string;
+    currentWorth: string | null; pnl: string | null; leaderUsername: string; openedAt: string;
+  }>>([]);
+  useEffect(() => {
+    fetch("/api/copy-trading/positions")
+      .then((r) => r.ok ? r.json() : { positions: [] })
+      .then((d) => setCopyPositions(d.positions ?? []))
+      .catch(() => {});
+  }, []);
+
   // Fetch allocation data for the chart
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/portfolio/allocation`, {
@@ -946,6 +958,65 @@ export default function PortfolioLiveClient({
           </div>
         </div>
       </section>
+
+      {/* Copy Positions */}
+      {copyPositions.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+              Copy Positions
+            </h2>
+            <a href="/copy-trading" className="text-xs underline" style={{ color: "#4edea3" }}>
+              Manage
+            </a>
+          </div>
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{ border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
+          >
+            <table className="w-full text-sm">
+              <thead>
+                <tr
+                  className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                  style={{ borderBottom: "1px solid hsl(var(--border))" }}
+                >
+                  <th className="text-left px-5 py-3">Asset</th>
+                  <th className="text-right px-5 py-3">Entry</th>
+                  <th className="text-right px-5 py-3">Current</th>
+                  <th className="text-right px-5 py-3">PnL</th>
+                  <th className="text-left px-5 py-3">Copied from</th>
+                </tr>
+              </thead>
+              <tbody>
+                {copyPositions.map((pos, i) => {
+                  const pnl = pos.pnl !== null ? Number(pos.pnl) : null;
+                  const isUp = pnl !== null && pnl >= 0;
+                  const ticker = pos.symbol.replace("USDT", "");
+                  return (
+                    <tr
+                      key={pos._id}
+                      className="transition-colors hover:bg-muted/40"
+                      style={i < copyPositions.length - 1 ? { borderBottom: "1px solid hsl(var(--border))" } : {}}
+                    >
+                      <td className="px-5 py-3.5 font-semibold">{ticker} <span className="text-xs text-muted-foreground font-normal">/ USDT</span></td>
+                      <td className="px-5 py-3.5 text-right font-mono text-xs">{fmtUSD(Number(pos.entryUsdAmount))}</td>
+                      <td className="px-5 py-3.5 text-right font-mono text-xs">{pos.currentWorth ? fmtUSD(Number(pos.currentWorth)) : "—"}</td>
+                      <td className="px-5 py-3.5 text-right font-mono text-xs">
+                        {pnl !== null ? (
+                          <span style={{ color: isUp ? "#4edea3" : "#ffb3ad" }}>
+                            {isUp ? "+" : ""}{fmtPnl(pnl)}
+                          </span>
+                        ) : "—"}
+                      </td>
+                      <td className="px-5 py-3.5 text-xs text-muted-foreground">{pos.leaderUsername}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </>
   );
 }

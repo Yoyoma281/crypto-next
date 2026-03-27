@@ -59,13 +59,11 @@ export function SignupForm({
     setServerError(null);
 
     try {
+      // Step 1: Register
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: data.username,
-          password: data.password,
-        }),
+        body: JSON.stringify({ username: data.username, password: data.password }),
       });
 
       if (!res.ok) {
@@ -75,8 +73,20 @@ export function SignupForm({
         return;
       }
 
+      // Step 2: Auto-login so user lands in the app directly
+      await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: data.username, password: data.password }),
+      });
+
+      // Mark as new user so the onboarding tutorial shows immediately
+      localStorage.setItem("crySer_newUser", "1");
+      // Clear any prior "welcomed" flag so the tutorial fires
+      localStorage.removeItem("crySer_welcomed");
+
       setState("success");
-      setTimeout(() => router.push("/login"), 2200);
+      setTimeout(() => router.push("/"), 2000);
     } catch {
       setServerError(t.auth.networkError);
       setState("idle");
@@ -93,7 +103,6 @@ export function SignupForm({
           >
             <CheckCircle2 className="h-10 w-10" style={{ color: "#4edea3" }} />
           </div>
-          {/* Pulse ring */}
           <div
             className="absolute inset-0 rounded-full animate-ping opacity-20"
             style={{ background: "#4edea3" }}
@@ -104,10 +113,9 @@ export function SignupForm({
             {t.auth.accountCreated}
           </p>
           <p className="text-sm text-muted-foreground mt-1">
-            {t.auth.redirectingLogin}
+            Taking you to the markets…
           </p>
         </div>
-        {/* Virtual balance badge */}
         <div
           className="flex items-center gap-2 px-4 py-2.5 rounded-full border text-sm font-semibold"
           style={{
