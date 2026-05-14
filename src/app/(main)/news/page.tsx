@@ -234,14 +234,23 @@ export default function NewsPage() {
             ))
           ) : posts.length === 0 ? (
             <div
-              className="rounded-xl px-6 py-12 text-center text-sm text-muted-foreground"
+              className="rounded-xl px-6 py-16 flex flex-col items-center gap-4"
               style={{
                 border: "1px solid hsl(var(--border))",
-                background: "hsl(var(--card))",
+                background: "#0c1324",
               }}
             >
-              {t.news.noNews}
-              {currency ? ` for ${currency}` : ""}. {t.news.tryDifferent}
+              <Newspaper className="h-10 w-10" style={{ color: "#909097" }} />
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-sm font-semibold" style={{ color: "#dce1fb" }}>
+                  No news available right now
+                </span>
+                <span className="text-xs" style={{ color: "#909097" }}>
+                  {currency
+                    ? `No articles found for ${currency}. Try a different filter or coin.`
+                    : "Check back later or try a different filter."}
+                </span>
+              </div>
             </div>
           ) : (
             posts.map((post) => (

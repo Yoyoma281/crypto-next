@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import Link from "next/link";
 
 const loginSchema = z.object({
   username: z.string("Invalid email address"),
@@ -145,12 +146,19 @@ export function LoginForm({
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">{t.auth.password}</Label>
-            <a
-              href="#"
-              className="text-xs text-muted-foreground underline-offset-4 hover:underline hover:text-foreground transition-colors"
+            <Link
+              href="/forgot-password"
+              className="text-xs transition-colors"
+              style={{ color: "#909097" }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.color = "#dce1fb")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "#909097")
+              }
             >
               {t.auth.forgotPassword}
-            </a>
+            </Link>
           </div>
           <Input
             id="password"

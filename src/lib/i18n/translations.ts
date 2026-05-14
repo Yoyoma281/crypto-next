@@ -16,6 +16,7 @@ export interface T {
     more: string;
     login: string;
     signup: string;
+    alerts: string;
   };
   stats: {
     coins: string;
@@ -326,6 +327,7 @@ const en: T = {
     more: "More",
     login: "Login",
     signup: "Sign Up",
+    alerts: "Alerts",
   },
   stats: {
     coins: "Coins",
@@ -643,6 +645,7 @@ const he: T = {
     more: "עוד",
     login: "התחבר",
     signup: "הרשמה",
+    alerts: "התראות",
   },
   stats: {
     coins: "מטבעות",
@@ -957,6 +960,7 @@ const ar: T = {
     more: "المزيد",
     login: "تسجيل الدخول",
     signup: "إنشاء حساب",
+    alerts: "التنبيهات",
   },
   stats: {
     coins: "العملات",
@@ -1273,6 +1277,7 @@ const ru: T = {
     more: "Ещё",
     login: "Войти",
     signup: "Регистрация",
+    alerts: "Уведомления",
   },
   stats: {
     coins: "Монеты",
@@ -1594,6 +1599,7 @@ const es: T = {
     more: "Más",
     login: "Iniciar sesión",
     signup: "Registrarse",
+    alerts: "Alertas",
   },
   stats: {
     coins: "Monedas",
@@ -1918,6 +1924,7 @@ const fr: T = {
     more: "Plus",
     login: "Connexion",
     signup: "S'inscrire",
+    alerts: "Alertes",
   },
   stats: {
     coins: "Cryptos",
@@ -2245,6 +2252,7 @@ const zh: T = {
     more: "更多",
     login: "登录",
     signup: "注册",
+    alerts: "价格提醒",
   },
   stats: {
     coins: "币种",

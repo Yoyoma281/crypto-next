@@ -18,6 +18,9 @@ import {
   Copy,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { useXp } from "@/hooks/useXp";
+import LevelBadge from "@/components/LevelBadge";
+import StreakBadge from "@/components/StreakBadge";
 
 interface UserInfo {
   username: string;
@@ -36,6 +39,7 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
+  const xp = useXp();
 
   const NAV_SECTIONS = [
     {
@@ -152,13 +156,24 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
                   {initials}
                 </div>
               )}
-              <div className="flex flex-col min-w-0">
+              <div className="flex flex-col min-w-0 gap-1.5">
                 <span className="font-semibold text-sm truncate">
                   {user.username}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {t.sidebar.paperTrader}
                 </span>
+                {xp && (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <LevelBadge
+                      level={xp.level}
+                      xp={xp.xp}
+                      xpToNext={xp.xpToNext}
+                      size="sm"
+                    />
+                    <StreakBadge streak={xp.loginStreak} />
+                  </div>
+                )}
               </div>
             </div>
           ) : (

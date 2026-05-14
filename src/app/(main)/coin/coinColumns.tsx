@@ -9,7 +9,7 @@ import { formatPrice, fmtCoinPrice } from "@/lib/utils";
 import { CoinTableRow } from "@/app/types/coin";
 import type { T } from "@/lib/i18n";
 import Sparkline from "@/app/components/sparkline";
-import { Star } from "lucide-react";
+import { Star, Bell, BellRing } from "lucide-react";
 
 // Deterministic color from ticker name
 function tickerColor(ticker: string) {
@@ -87,6 +87,8 @@ export function makeColumns(
   offset: number,
   favorites: Set<string> = new Set(),
   toggleFavorite: (symbol: string) => void = () => {},
+  subscriptions: Set<string> = new Set(),
+  toggleSubscription: (symbol: string) => void = () => {},
 ): ColumnDef<CoinTableRow>[] {
   return [
     {
@@ -95,6 +97,42 @@ export function makeColumns(
       cell: (props) => {
         const sym = props.row.original.symbol;
         const isFav = favorites.has(sym);
+        const isSub = subscriptions.has(sym);
+
+        if (isFav) {
+          return (
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFavorite(sym);
+                }}
+                className="flex items-center justify-center w-7 h-7 rounded-md hover:bg-muted/60 transition-colors"
+                aria-label="Remove from favorites"
+              >
+                <Star
+                  className="h-4 w-4 transition-colors"
+                  style={{ fill: "#4edea3", color: "#4edea3" }}
+                />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleSubscription(sym);
+                }}
+                className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-muted/60 transition-colors"
+                aria-label={isSub ? "Disable alerts" : "Enable alerts"}
+              >
+                {isSub ? (
+                  <BellRing className="h-3.5 w-3.5" style={{ fill: "#f59e0b", color: "#f59e0b" }} />
+                ) : (
+                  <Bell className="h-3.5 w-3.5 text-muted-foreground" />
+                )}
+              </button>
+            </div>
+          );
+        }
+
         return (
           <button
             onClick={(e) => {
@@ -102,18 +140,11 @@ export function makeColumns(
               toggleFavorite(sym);
             }}
             className="flex items-center justify-center w-7 h-7 rounded-md hover:bg-muted/60 transition-colors"
-            aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
+            aria-label="Add to favorites"
           >
             <Star
               className="h-4 w-4 transition-colors"
-              style={
-                isFav
-                  ? { fill: "#4edea3", color: "#4edea3" }
-                  : {
-                      fill: "transparent",
-                      color: "hsl(var(--muted-foreground))",
-                    }
-              }
+              style={{ fill: "transparent", color: "hsl(var(--muted-foreground))" }}
             />
           </button>
         );

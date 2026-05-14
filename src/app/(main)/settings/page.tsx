@@ -1,15 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Shield,
   RotateCcw,
   Lock,
   User as UserIcon,
+  Upload,
+  ShieldCheck,
+  Monitor,
+  Flame,
 } from "lucide-react";
 import AuthRequired from "@/components/auth-required";
 import { useI18n } from "@/lib/i18n";
+import { useXp } from "@/hooks/useXp";
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
 
 const GITHUB_AVATARS = [
   "https://api.dicebear.com/7.x/avataaars/svg?seed=1",
@@ -25,6 +31,13 @@ const GITHUB_AVATARS = [
   "https://api.dicebear.com/7.x/avataaars/svg?seed=11",
   "https://api.dicebear.com/7.x/avataaars/svg?seed=12",
 ];
+
+/** Return a display-ready src for any stored avatar value. */
+function resolveAvatarSrc(avatar: string): string {
+  // Uploaded file paths start with /uploads — prefix with backend origin
+  if (avatar.startsWith("/uploads")) return `${BACKEND_URL}${avatar}`;
+  return avatar;
+}
 
 function Section({
   icon: Icon,
@@ -57,6 +70,571 @@ function Section({
   );
 }
 
+// ---------------------------------------------------------------------------
+// Shared small primitives
+// ---------------------------------------------------------------------------
+
+function StatusMessage({ ok, msg }: { ok: boolean; msg: string }) {
+  return (
+    <p
+      className="text-xs px-3 py-2 rounded-md"
+      style={{
+        color: ok ? "#4edea3" : "#ffb3ad",
+        background: ok ? "rgba(78,222,163,0.1)" : "rgba(255,179,173,0.1)",
+      }}
+    >
+      {msg}
+    </p>
+  );
+}
+
+function TotpInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      maxLength={6}
+      value={value}
+      onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 6))}
+      placeholder={placeholder ?? "6-digit code"}
+      className="bg-[#1a2235] border border-[#2e3447] text-[#dce1fb] px-3 py-2 text-sm outline-none focus:border-[#4edea3] rounded-md w-full tracking-widest"
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Two-Factor Authentication card
+// ---------------------------------------------------------------------------
+
+type TwoFaState = "disabled" | "setup" | "enabled";
+
+function TwoFactorCard({ initialEnabled }: { initialEnabled: boolean }) {
+  const [state, setState] = useState<TwoFaState>(
+    initialEnabled ? "enabled" : "disabled"
+  );
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [secret, setSecret] = useState("");
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<{ ok: boolean; msg: string } | null>(
+    null
+  );
+
+  async function handleSetup() {
+    setLoading(true);
+    setStatus(null);
+    try {
+      const res = await fetch("/api/auth/2fa/setup", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setQrCodeUrl(data.qrCodeUrl);
+        setSecret(data.secret);
+        setState("setup");
+      } else {
+        setStatus({ ok: false, msg: data.error ?? "Failed to start setup" });
+      }
+    } catch {
+      setStatus({ ok: false, msg: "Network error" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleVerify(e: React.FormEvent) {
+    e.preventDefault();
+    if (code.length !== 6) {
+      setStatus({ ok: false, msg: "Please enter a 6-digit code" });
+      return;
+    }
+    setLoading(true);
+    setStatus(null);
+    try {
+      const res = await fetch("/api/auth/2fa/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: code }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setStatus({ ok: true, msg: "2FA enabled successfully" });
+        setState("enabled");
+        setCode("");
+        setQrCodeUrl("");
+        setSecret("");
+      } else {
+        setStatus({ ok: false, msg: data.error ?? "Verification failed" });
+      }
+    } catch {
+      setStatus({ ok: false, msg: "Network error" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDisable(e: React.FormEvent) {
+    e.preventDefault();
+    if (code.length !== 6) {
+      setStatus({
+        ok: false,
+        msg: "Please enter your 6-digit authenticator code",
+      });
+      return;
+    }
+    setLoading(true);
+    setStatus(null);
+    try {
+      const res = await fetch("/api/auth/2fa/disable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: code }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setStatus({ ok: true, msg: "2FA disabled" });
+        setState("disabled");
+        setCode("");
+      } else {
+        setStatus({ ok: false, msg: data.error ?? "Failed to disable 2FA" });
+      }
+    } catch {
+      setStatus({ ok: false, msg: "Network error" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Enabled */}
+      {state === "enabled" && (
+        <>
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+              style={{
+                background: "rgba(78,222,163,0.12)",
+                color: "#4edea3",
+                border: "1px solid rgba(78,222,163,0.3)",
+              }}
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              2FA is active
+            </span>
+          </div>
+          <p className="text-xs text-[#909097]">
+            Your account is protected by a time-based one-time password. Enter
+            your authenticator code below to disable it.
+          </p>
+          <form onSubmit={handleDisable} className="flex flex-col gap-3">
+            <TotpInput
+              value={code}
+              onChange={setCode}
+              placeholder="Authenticator code"
+            />
+            {status && <StatusMessage ok={status.ok} msg={status.msg} />}
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 rounded-md text-sm font-semibold transition disabled:opacity-50 self-start"
+              style={{
+                background: "rgba(255,179,173,0.1)",
+                color: "#ffb3ad",
+              }}
+            >
+              {loading ? "Disabling..." : "Disable 2FA"}
+            </button>
+          </form>
+        </>
+      )}
+
+      {/* Disabled */}
+      {state === "disabled" && (
+        <>
+          <p className="text-xs text-[#909097]">
+            Add an extra layer of security to your account. Use an authenticator
+            app such as Google Authenticator or Authy.
+          </p>
+          {status && <StatusMessage ok={status.ok} msg={status.msg} />}
+          <button
+            onClick={handleSetup}
+            disabled={loading}
+            className="px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 self-start"
+          >
+            {loading ? "Loading..." : "Enable 2FA"}
+          </button>
+        </>
+      )}
+
+      {/* Setup — pending verification */}
+      {state === "setup" && (
+        <>
+          <p className="text-xs text-[#909097]">
+            Scan the QR code with your authenticator app, then enter the 6-digit
+            code it shows to confirm.
+          </p>
+
+          {qrCodeUrl && (
+            <div className="flex flex-col items-start gap-3">
+              <div
+                className="p-2 rounded-md"
+                style={{ background: "#fff", display: "inline-block" }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={qrCodeUrl}
+                  alt="2FA QR code"
+                  width={160}
+                  height={160}
+                  style={{ display: "block" }}
+                />
+              </div>
+              {secret && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs text-[#909097]">
+                    Or enter this key manually:
+                  </span>
+                  <code
+                    className="text-xs px-2 py-1 rounded font-mono select-all"
+                    style={{
+                      background: "#1a2235",
+                      color: "#4edea3",
+                      border: "1px solid #2e3447",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    {secret}
+                  </code>
+                </div>
+              )}
+            </div>
+          )}
+
+          <form onSubmit={handleVerify} className="flex flex-col gap-3">
+            <TotpInput value={code} onChange={setCode} />
+            {status && <StatusMessage ok={status.ok} msg={status.msg} />}
+            <div className="flex items-center gap-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50"
+              >
+                {loading ? "Verifying..." : "Verify & Enable"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setState("disabled");
+                  setStatus(null);
+                  setCode("");
+                }}
+                className="text-xs text-[#909097] hover:underline"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Active Sessions card
+// ---------------------------------------------------------------------------
+
+interface SessionEntry {
+  id: string;
+  createdAt: string;
+  expiresAt: string;
+  isCurrent: boolean;
+}
+
+function SessionsCard() {
+  const [sessions, setSessions] = useState<SessionEntry[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
+  const [terminatingId, setTerminatingId] = useState<string | null>(null);
+  const [logoutAllLoading, setLogoutAllLoading] = useState(false);
+  const [sessionsError, setSessionsError] = useState<string | null>(null);
+  const [actionStatus, setActionStatus] = useState<{
+    ok: boolean;
+    msg: string;
+  } | null>(null);
+
+  const fetchSessions = useCallback(async () => {
+    setLoadingSessions(true);
+    setSessionsError(null);
+    try {
+      const res = await fetch("/api/auth/sessions");
+      if (res.ok) {
+        const data = await res.json();
+        setSessions(Array.isArray(data) ? data : []);
+      } else {
+        setSessionsError("Failed to load sessions");
+      }
+    } catch {
+      setSessionsError("Network error");
+    } finally {
+      setLoadingSessions(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
+
+  async function handleTerminate(id: string) {
+    setTerminatingId(id);
+    setActionStatus(null);
+    try {
+      const res = await fetch(`/api/auth/sessions/${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setActionStatus({ ok: true, msg: "Session terminated" });
+        await fetchSessions();
+      } else {
+        setActionStatus({
+          ok: false,
+          msg: data.error ?? "Failed to terminate session",
+        });
+      }
+    } catch {
+      setActionStatus({ ok: false, msg: "Network error" });
+    } finally {
+      setTerminatingId(null);
+    }
+  }
+
+  async function handleLogoutAll() {
+    setLogoutAllLoading(true);
+    setActionStatus(null);
+    try {
+      const res = await fetch("/api/auth/sessions", { method: "DELETE" });
+      const data = await res.json();
+      if (res.ok) {
+        setActionStatus({ ok: true, msg: "All other sessions terminated" });
+        await fetchSessions();
+      } else {
+        setActionStatus({
+          ok: false,
+          msg: data.error ?? "Failed to terminate sessions",
+        });
+      }
+    } catch {
+      setActionStatus({ ok: false, msg: "Network error" });
+    } finally {
+      setLogoutAllLoading(false);
+    }
+  }
+
+  function formatDate(iso: string) {
+    try {
+      return new Date(iso).toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return iso;
+    }
+  }
+
+  const otherSessions = sessions.filter((s) => !s.isCurrent);
+
+  return (
+    <div className="flex flex-col gap-4">
+      {loadingSessions && (
+        <p className="text-xs text-[#909097]">Loading sessions...</p>
+      )}
+
+      {sessionsError && <StatusMessage ok={false} msg={sessionsError} />}
+
+      {!loadingSessions && !sessionsError && sessions.length === 0 && (
+        <p className="text-xs text-[#909097]">No active sessions found.</p>
+      )}
+
+      {!loadingSessions && sessions.length > 0 && (
+        <ul className="flex flex-col gap-2">
+          {sessions.map((session, idx) => (
+            <li
+              key={session.id}
+              className="flex items-start justify-between gap-3 px-3 py-2.5 rounded-md"
+              style={{
+                background: "#0b1222",
+                border: "1px solid #2e3447",
+              }}
+            >
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-medium text-[#dce1fb]">
+                    Session {idx + 1}
+                  </span>
+                  {session.isCurrent && (
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                      style={{
+                        background: "rgba(78,222,163,0.12)",
+                        color: "#4edea3",
+                        border: "1px solid rgba(78,222,163,0.3)",
+                      }}
+                    >
+                      Current session
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs text-[#909097]">
+                  Started {formatDate(session.createdAt)}
+                </span>
+                <span className="text-xs text-[#909097]">
+                  Expires {formatDate(session.expiresAt)}
+                </span>
+              </div>
+
+              {!session.isCurrent && (
+                <button
+                  onClick={() => handleTerminate(session.id)}
+                  disabled={terminatingId === session.id}
+                  className="shrink-0 px-3 py-1.5 rounded text-xs font-semibold transition disabled:opacity-50"
+                  style={{
+                    background: "rgba(255,179,173,0.08)",
+                    color: "#ffb3ad",
+                    border: "1px solid rgba(255,179,173,0.2)",
+                  }}
+                >
+                  {terminatingId === session.id ? "Terminating..." : "Terminate"}
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {actionStatus && (
+        <StatusMessage ok={actionStatus.ok} msg={actionStatus.msg} />
+      )}
+
+      {!loadingSessions && otherSessions.length > 0 && (
+        <button
+          onClick={handleLogoutAll}
+          disabled={logoutAllLoading}
+          className="px-4 py-2 rounded-md text-sm font-semibold transition disabled:opacity-50 self-start"
+          style={{
+            background: "rgba(255,179,173,0.08)",
+            color: "#ffb3ad",
+            border: "1px solid rgba(255,179,173,0.2)",
+          }}
+        >
+          {logoutAllLoading ? "Logging out..." : "Log out all other devices"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Streak Bonus card
+// ---------------------------------------------------------------------------
+
+function StreakBonusCard() {
+  const xp = useXp();
+  const [claimStatus, setClaimStatus] = useState<{
+    ok: boolean;
+    msg: string;
+  } | null>(null);
+  const [claimLoading, setClaimLoading] = useState(false);
+
+  async function handleClaim() {
+    setClaimLoading(true);
+    setClaimStatus(null);
+    try {
+      const res = await fetch("/api/user/claim-streak-bonus", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setClaimStatus({
+          ok: true,
+          msg: "Claimed! +50 VUSDT added to your balance.",
+        });
+      } else {
+        setClaimStatus({
+          ok: false,
+          msg: data.error ?? "Failed to claim bonus",
+        });
+      }
+    } catch {
+      setClaimStatus({ ok: false, msg: "Network error" });
+    } finally {
+      setClaimLoading(false);
+    }
+  }
+
+  const streak = xp?.loginStreak ?? 0;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <span
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+          style={{
+            background: "rgba(255,179,173,0.12)",
+            color: "#ffb3ad",
+            border: "1px solid rgba(255,179,173,0.25)",
+          }}
+        >
+          <Flame className="h-3.5 w-3.5" />
+          {streak}d streak
+        </span>
+      </div>
+
+      <p className="text-xs text-[#909097]">
+        Log in every day to build your streak. Reach 7 consecutive days to
+        claim a bonus of +50 VUSDT.
+      </p>
+
+      {claimStatus && <StatusMessage ok={claimStatus.ok} msg={claimStatus.msg} />}
+
+      {streak >= 7 && !claimStatus?.ok && (
+        <button
+          onClick={handleClaim}
+          disabled={claimLoading}
+          className="px-4 py-2 rounded-md text-sm font-semibold transition disabled:opacity-50 self-start"
+          style={{
+            background: "rgba(78,222,163,0.15)",
+            color: "#4edea3",
+            border: "1px solid rgba(78,222,163,0.30)",
+          }}
+        >
+          {claimLoading ? "Claiming..." : "Claim Bonus (+50 VUSDT)"}
+        </button>
+      )}
+
+      {streak < 7 && (
+        <p className="text-xs font-medium" style={{ color: "#4edea3" }}>
+          {7 - streak} more day{7 - streak !== 1 ? "s" : ""} until you can
+          claim.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
 export default function SettingsPage() {
   const { t } = useI18n();
 
@@ -64,6 +642,7 @@ export default function SettingsPage() {
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [currentAvatar, setCurrentAvatar] = useState<string>("");
   const [showAvatarOptions, setShowAvatarOptions] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
   // Password change state
   const [pwForm, setPwForm] = useState({
@@ -84,12 +663,22 @@ export default function SettingsPage() {
   const [resetLoading, setResetLoading] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
 
-  // Avatar state
+  // Avatar (DiceBear) state
   const [avatarStatus, setAvatarStatus] = useState<{
     ok: boolean;
     msg: string;
   } | null>(null);
   const [avatarLoading, setAvatarLoading] = useState(false);
+
+  // Upload avatar state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<{
+    ok: boolean;
+    msg: string;
+  } | null>(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/me")
@@ -105,6 +694,9 @@ export default function SettingsPage() {
       .then((data) => {
         if (data?.avatar) {
           setCurrentAvatar(data.avatar);
+        }
+        if (typeof data?.twoFactorEnabled === "boolean") {
+          setTwoFactorEnabled(data.twoFactorEnabled);
         }
       })
       .catch(() => setAuthed(false));
@@ -144,6 +736,65 @@ export default function SettingsPage() {
       setAvatarStatus({ ok: false, msg: "Network error" });
     } finally {
       setAvatarLoading(false);
+    }
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadStatus(null);
+
+    if (file.size > 2 * 1024 * 1024) {
+      setUploadStatus({ ok: false, msg: "File is too large. Maximum size is 2 MB." });
+      e.target.value = "";
+      return;
+    }
+
+    setUploadFile(file);
+    setUploadPreview(URL.createObjectURL(file));
+  }
+
+  function handleCancelUpload() {
+    setUploadFile(null);
+    setUploadPreview(null);
+    setUploadStatus(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function handleUploadSave() {
+    if (!uploadFile) return;
+
+    setUploadLoading(true);
+    setUploadStatus(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("avatar", uploadFile);
+
+      const res = await fetch("/api/user/avatar", {
+        method: "PUT",
+        body: formData,
+        // No Content-Type header — browser sets it with the correct boundary
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setCurrentAvatar(data.avatarUrl);
+        setUploadStatus({ ok: true, msg: "Avatar uploaded successfully!" });
+        setUploadFile(null);
+        setUploadPreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      } else {
+        setUploadStatus({
+          ok: false,
+          msg: data.error ?? "Upload failed",
+        });
+      }
+    } catch {
+      setUploadStatus({ ok: false, msg: "Network error" });
+    } finally {
+      setUploadLoading(false);
     }
   }
 
@@ -223,10 +874,11 @@ export default function SettingsPage() {
         description="Choose your profile avatar from our collection"
       >
         <div className="flex flex-col gap-4">
+          {/* Current avatar preview */}
           <div className="flex items-center gap-4">
             {currentAvatar ? (
               <img
-                src={currentAvatar}
+                src={resolveAvatarSrc(currentAvatar)}
                 alt="Current avatar"
                 className="w-16 h-16 rounded-full border-2 border-primary object-cover"
               />
@@ -235,12 +887,14 @@ export default function SettingsPage() {
                 <UserIcon className="h-8 w-8 text-muted-foreground" />
               </div>
             )}
-            <button
-              onClick={() => setShowAvatarOptions(!showAvatarOptions)}
-              className="px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition"
-            >
-              {showAvatarOptions ? "Hide Avatars" : "Change Avatar"}
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => setShowAvatarOptions(!showAvatarOptions)}
+                className="px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition"
+              >
+                {showAvatarOptions ? "Hide Avatars" : "Choose Avatar"}
+              </button>
+            </div>
           </div>
 
           {avatarStatus && (
@@ -277,6 +931,83 @@ export default function SettingsPage() {
                   />
                 </button>
               ))}
+            </div>
+          )}
+        </div>
+      </Section>
+
+      {/* Upload custom avatar */}
+      <Section
+        icon={Upload}
+        title="Upload Custom Avatar"
+        description="Upload your own photo (JPEG, PNG, WebP or GIF, max 2 MB)"
+      >
+        <div className="flex flex-col gap-4">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+
+          <div className="flex items-center gap-4">
+            {/* Preview or placeholder */}
+            {uploadPreview ? (
+              <img
+                src={uploadPreview}
+                alt="Upload preview"
+                className="w-16 h-16 rounded-full border-2 border-primary object-cover"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full border-2 border-border border-dashed flex items-center justify-center bg-muted">
+                <Upload className="h-6 w-6 text-muted-foreground" />
+              </div>
+            )}
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition"
+            >
+              Upload photo
+            </button>
+          </div>
+
+          {uploadStatus && (
+            <p
+              className="text-xs px-3 py-2 rounded-md"
+              style={{
+                color: uploadStatus.ok ? "#4edea3" : "#ffb3ad",
+                background: uploadStatus.ok
+                  ? "rgba(78,222,163,0.1)"
+                  : "rgba(255,179,173,0.1)",
+              }}
+            >
+              {uploadStatus.msg}
+            </p>
+          )}
+
+          {uploadFile && (
+            <div className="flex gap-2">
+              <button
+                onClick={handleUploadSave}
+                disabled={uploadLoading}
+                className="px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50"
+              >
+                {uploadLoading ? "Saving..." : "Save"}
+              </button>
+              <button
+                onClick={handleCancelUpload}
+                disabled={uploadLoading}
+                className="px-4 py-2 rounded-md text-sm font-semibold transition disabled:opacity-50"
+                style={{
+                  background: "rgba(255,179,173,0.1)",
+                  color: "#ffb3ad",
+                }}
+              >
+                Cancel
+              </button>
             </div>
           )}
         </div>
@@ -354,7 +1085,7 @@ export default function SettingsPage() {
               border: "1px solid rgba(255,179,173,0.2)",
             }}
           >
-            ⚠️ {t.settings.resetWarning}
+            {t.settings.resetWarning}
           </div>
 
           {resetStatus && (
@@ -422,6 +1153,46 @@ export default function SettingsPage() {
             </span>
           </p>
         </div>
+      </Section>
+
+      {/* Streak Bonus */}
+      <Section
+        icon={Flame}
+        title="Streak Bonus"
+        description="Earn rewards for logging in every day"
+      >
+        <StreakBonusCard />
+      </Section>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Security                                                            */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div>
+        <h2 className="text-[#dce1fb] font-bold text-sm uppercase tracking-wider mb-1">
+          Security
+        </h2>
+        <p className="text-xs text-[#909097]">
+          Manage two-factor authentication and active login sessions.
+        </p>
+      </div>
+
+      {/* Two-Factor Authentication */}
+      <Section
+        icon={ShieldCheck}
+        title="Two-Factor Authentication"
+        description="Protect your account with a time-based one-time password"
+      >
+        <TwoFactorCard initialEnabled={twoFactorEnabled} />
+      </Section>
+
+      {/* Active Sessions */}
+      <Section
+        icon={Monitor}
+        title="Active Sessions"
+        description="Manage devices that are currently signed in to your account"
+      >
+        <SessionsCard />
       </Section>
     </div>
   );

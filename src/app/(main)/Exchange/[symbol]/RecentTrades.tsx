@@ -8,8 +8,11 @@ interface Trade {
   price: string;
   qty: string;
   time: number;
-  isBuyerMaker: boolean;
+  isBuy: boolean;
 }
+
+const GATEIO_WS   = "wss://api.gateio.ws/ws/v4/";
+const GATEIO_REST = "https://api.gateio.ws/api/v4";
 
 export default function RecentTrades({ symbol }: { symbol: string }) {
   const { t } = useI18n();
@@ -18,68 +21,58 @@ export default function RecentTrades({ symbol }: { symbol: string }) {
 
   useEffect(() => {
     let alive = true;
+    const pair = symbol.replace("USDT", "_USDT");
 
-    // REST snapshot — Bybit recent trades
-    fetch(
-      `https://api.bybit.com/v5/market/recent-trade?category=spot&symbol=${symbol}&limit=30`,
-    )
+    // REST snapshot
+    fetch(`${GATEIO_REST}/spot/trades?currency_pair=${pair}&limit=30`)
       .then((r) => r.json())
-      .then((d) => {
+      .then((list: Array<{ id: string; create_time_ms: string; price: string; amount: string; side: string }>) => {
         if (!alive) return;
-        const list = (d.result?.list ?? []) as Array<{
-          execId: string;
-          price: string;
-          size: string;
-          side: string;
-          time: string;
-        }>;
         setTrades(
           list.map((item) => ({
-            id: item.execId,
+            id:    item.id,
             price: item.price,
-            qty: item.size,
-            time: parseInt(item.time),
-            // In Bybit: side="Buy" means taker bought → maker was seller → isBuyerMaker=false
-            isBuyerMaker: item.side === "Sell",
+            qty:   item.amount,
+            time:  parseInt(item.create_time_ms),
+            isBuy: item.side === "buy",
           })),
         );
       })
       .catch(() => {});
 
-    // WebSocket live stream
-    const ws = new WebSocket("wss://stream.bybit.com/v5/public/spot");
+    // WS live stream
+    const ws = new WebSocket(GATEIO_WS);
     wsRef.current = ws;
 
     ws.onopen = () => {
-      ws.send(
-        JSON.stringify({ op: "subscribe", args: [`publicTrade.${symbol}`] }),
-      );
+      ws.send(JSON.stringify({
+        time:    Math.floor(Date.now() / 1000),
+        channel: "spot.trades",
+        event:   "subscribe",
+        payload: [pair],
+      }));
     };
 
     ws.onmessage = (e) => {
       if (!alive) return;
-      const msg = JSON.parse(e.data);
-      if (!msg.topic || !msg.topic.startsWith("publicTrade")) return;
-
-      const items = msg.data as Array<{
-        i: string;
-        p: string;
-        v: string;
-        S: string;
-        T: number;
-      }>;
-      setTrades((prev) =>
-        [
-          ...items.map((d) => ({
-            id: d.i,
-            price: d.p,
-            qty: d.v,
-            time: d.T,
-            isBuyerMaker: d.S === "Sell",
-          })),
-          ...prev,
-        ].slice(0, 30),
-      );
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.channel !== "spot.trades" || msg.event !== "update") return;
+        const items: Array<{ id: string; create_time_ms: number; price: string; amount: string; side: string }> =
+          Array.isArray(msg.result) ? msg.result : [msg.result];
+        setTrades((prev) =>
+          [
+            ...items.map((d) => ({
+              id:    String(d.id),
+              price: d.price,
+              qty:   d.amount,
+              time:  d.create_time_ms,
+              isBuy: d.side === "buy",
+            })),
+            ...prev,
+          ].slice(0, 30),
+        );
+      } catch { /* ignore */ }
     };
 
     return () => {
@@ -94,7 +87,6 @@ export default function RecentTrades({ symbol }: { symbol: string }) {
         {t.trading.recentTrades}
       </p>
 
-      {/* Headers */}
       <div className="flex justify-between px-3 py-1 text-[11px]" style={{ color: "#bec8d2" }}>
         <span>{t.trading.priceUsdt}</span>
         <span>{t.trading.amount}</span>
@@ -102,24 +94,24 @@ export default function RecentTrades({ symbol }: { symbol: string }) {
       </div>
 
       <div className="flex flex-col overflow-y-auto" style={{ maxHeight: 260 }}>
-        {trades.map((t) => (
-          <div key={t.id} className="flex justify-between px-3 py-[3px]">
+        {trades.map((trade) => (
+          <div key={trade.id} className="flex justify-between px-3 py-[3px]">
             <span
               className="font-mono tabular-nums"
-              style={{ color: t.isBuyerMaker ? "#ffb4ab" : "#42e09a" }}
+              style={{ color: trade.isBuy ? "#42e09a" : "#ffb4ab" }}
             >
-              {parseFloat(t.price).toLocaleString("en-US", {
+              {parseFloat(trade.price).toLocaleString("en-US", {
                 minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
+                maximumFractionDigits: 6,
               })}
             </span>
             <span className="tabular-nums" style={{ color: "#bec8d2" }}>
-              {parseFloat(t.qty).toFixed(4)}
+              {parseFloat(trade.qty).toFixed(4)}
             </span>
             <span style={{ color: "#bec8d2" }}>
-              {new Date(t.time).toLocaleTimeString("en-US", {
+              {new Date(trade.time).toLocaleTimeString("en-US", {
                 hour12: false,
-                hour: "2-digit",
+                hour:   "2-digit",
                 minute: "2-digit",
                 second: "2-digit",
               })}

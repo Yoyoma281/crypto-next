@@ -12,6 +12,7 @@ import UserSidebar from "@/components/user-sidebar";
 import CoinSearch from "@/components/coin-search";
 import ThemeToggle from "@/components/theme-toggle";
 import LanguageSelector from "@/components/language-selector";
+import NotificationBell from "@/components/NotificationBell";
 import { useI18n } from "@/lib/i18n";
 
 interface UserInfo {
@@ -31,6 +32,7 @@ const PRIMARY_NAV_KEYS = [
 const MORE_NAV_KEYS = [
   { key: "history" as const, href: "/history" },
   { key: "leaderboard" as const, href: "/leaderboard" },
+  { key: "alerts" as const, href: "/alerts" },
   { key: "news" as const, href: "/news" },
   { key: "settings" as const, href: "/settings" },
   { key: "learn" as const, href: "/learn/how-to-trade" },
@@ -170,6 +172,7 @@ export default function TopBarStats() {
 
           {/* ── Right: auth + avatar ── */}
           <div className="flex items-center gap-1 md:gap-2 order-2 md:order-3 flex-shrink-0">
+            <NotificationBell />
             <LanguageSelector />
             <ThemeToggle />
 

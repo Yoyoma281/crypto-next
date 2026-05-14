@@ -8,6 +8,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import FavoritesTable from "./FavoritesTable";
 import { Star } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { useFavoritesCtx } from "@/components/favorites-context";
 
 const LIMIT = 10;
 
@@ -73,6 +74,7 @@ export default function CoinListClient() {
   );
   const [tab, setTab] = useState<Tab>("all");
   const { favorites, toggle } = useFavorites();
+  const { subscriptions, toggleSubscription } = useFavoritesCtx();
   const { t } = useI18n();
 
   // Reconnect SSE every time `page` changes
@@ -107,8 +109,8 @@ export default function CoinListClient() {
 
   // Columns with correct global offset so rank shows #11, #12 … on page 2
   const columns = useMemo(
-    () => makeColumns(t, (page - 1) * LIMIT, favorites, toggle),
-    [t, page, favorites, toggle],
+    () => makeColumns(t, (page - 1) * LIMIT, favorites, toggle, subscriptions, toggleSubscription),
+    [t, page, favorites, toggle, subscriptions, toggleSubscription],
   );
 
   return (

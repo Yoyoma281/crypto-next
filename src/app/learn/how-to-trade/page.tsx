@@ -139,12 +139,21 @@ export default function HowToTradePage() {
     <div className="max-w-3xl mx-auto py-10 flex flex-col gap-12">
       {/* Header */}
       <div>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-6"
-        >
-          <ArrowLeft className="h-3 w-3" /> Back to Markets
-        </Link>
+        <div className="flex items-center gap-4 mb-6">
+          <Link
+            href="/learn"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-3 w-3" /> Back to Learn
+          </Link>
+          <span className="text-muted-foreground/30 text-xs">|</span>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Back to Markets
+          </Link>
+        </div>
         <div className="flex items-center gap-3 mb-3">
           <div
             className="h-10 w-10 rounded-xl flex items-center justify-center"
@@ -589,6 +598,27 @@ export default function HowToTradePage() {
         </div>
       </Section>
 
+      {/* Up Next */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-xl border border-border bg-card">
+        <div>
+          <p className="text-[0.65rem] uppercase tracking-widest font-semibold text-muted-foreground mb-1">
+            Up Next
+          </p>
+          <p className="font-bold text-sm">Reading Charts</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Understand candlestick charts, support/resistance levels, and key
+            patterns.
+          </p>
+        </div>
+        <Link
+          href="/learn/reading-charts"
+          className="shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white"
+          style={{ background: "linear-gradient(135deg, #8ccdff, #004e7c)" }}
+        >
+          Next Guide <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+
       {/* CTA */}
       <div
         className="flex flex-col sm:flex-row items-center justify-between gap-6 px-8 py-8 rounded-2xl border"
@@ -609,7 +639,7 @@ export default function HowToTradePage() {
         <Link
           href="/coin/BTCUSDT"
           className="shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold text-white"
-          style={{ background: "#4edea3" }}
+          style={{ background: "linear-gradient(135deg, #8ccdff, #004e7c)" }}
         >
           Go to Exchange <ArrowRight className="h-4 w-4" />
         </Link>

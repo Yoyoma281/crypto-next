@@ -216,7 +216,7 @@ export default function TradingClient({
       <div className="md:hidden flex flex-col flex-1 overflow-hidden">
         {mobileTab === "chart" && (
           <div className="flex-1 bg-[#070d1f]">
-            <PriceChart symbol={symbol} />
+            <PriceChart symbol={symbol} livePrice={tickerData?.price ?? null} />
           </div>
         )}
         {mobileTab === "book" && (
@@ -263,7 +263,7 @@ export default function TradingClient({
 
             {/* Chart area */}
             <div className="flex-1 overflow-hidden">
-              <PriceChart symbol={symbol} />
+              <PriceChart symbol={symbol} livePrice={tickerData?.price ?? null} />
             </div>
 
             {/* Bottom panel */}

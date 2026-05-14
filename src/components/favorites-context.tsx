@@ -1,46 +1,95 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { CoinTableRow } from "@/app/types/coin";
 
-const FAV_API   = "/api/favorites";
+const FAV_API = "/api/favorites";
 const STORE_KEY = "cryser_favorites";
+const SUB_KEY = "cryser_subscriptions";
 
 function readLocal(): Set<string> {
-  try { const r = localStorage.getItem(STORE_KEY); if (r) return new Set(JSON.parse(r)); } catch {}
+  try {
+    const r = localStorage.getItem(STORE_KEY);
+    if (r) return new Set(JSON.parse(r));
+  } catch {}
   return new Set();
 }
 function writeLocal(s: Set<string>) {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify([...s])); } catch {}
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify([...s]));
+  } catch {}
 }
 function syncServer(s: Set<string>) {
-  fetch(FAV_API, { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ favorites: [...s] }), keepalive: true }).catch(() => {});
+  fetch(FAV_API, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ favorites: [...s] }),
+    keepalive: true,
+  }).catch(() => {});
+}
+function readSubs(): Set<string> {
+  try {
+    const r = localStorage.getItem(SUB_KEY);
+    if (r) return new Set(JSON.parse(r));
+  } catch {}
+  return new Set();
+}
+function writeSubs(s: Set<string>) {
+  try {
+    localStorage.setItem(SUB_KEY, JSON.stringify([...s]));
+  } catch {}
 }
 
 interface FavCtx {
   favorites: Set<string>;
-  tickers:   Record<string, CoinTableRow>;
-  synced:    boolean;
-  toggle:    (symbol: string) => void;
+  tickers: Record<string, CoinTableRow>;
+  synced: boolean;
+  toggle: (symbol: string) => void;
+  subscriptions: Set<string>;
+  toggleSubscription: (symbol: string) => void;
 }
 
-const Ctx = createContext<FavCtx>({ favorites: new Set(), tickers: {}, synced: false, toggle: () => {} });
+const Ctx = createContext<FavCtx>({
+  favorites: new Set(),
+  tickers: {},
+  synced: false,
+  toggle: () => {},
+  subscriptions: new Set(),
+  toggleSubscription: () => {},
+});
+
+const ALERT_THRESHOLD = 5; // percent
 
 export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const [favorites, setFavorites] = useState<Set<string>>(() =>
-    typeof window === "undefined" ? new Set() : readLocal()
+    typeof window === "undefined" ? new Set() : readLocal(),
   );
   const [tickers, setTickers] = useState<Record<string, CoinTableRow>>({});
-  const [synced, setSynced]   = useState(false);
+  const [synced, setSynced] = useState(false);
+  const [subscriptions, setSubscriptions] = useState<Set<string>>(() =>
+    typeof window === "undefined" ? new Set() : readSubs(),
+  );
 
   const dirtyRef = useRef(false);
-  const favRef   = useRef(favorites);
+  const favRef = useRef(favorites);
   favRef.current = favorites;
+  const alertedRef = useRef<Set<string>>(new Set());
 
   // ── Server sync on mount ──────────────────────────────────────────────────
   useEffect(() => {
     fetch(FAV_API, { credentials: "include" })
-      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
       .then((d: { favorites: string[] }) => {
         const s = new Set<string>(d.favorites);
         setFavorites(s);
@@ -52,25 +101,39 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
 
   // ── Flush on tab close / SPA navigation ──────────────────────────────────
   useEffect(() => {
-    const flush = () => { if (dirtyRef.current && synced) syncServer(favRef.current); };
+    const flush = () => {
+      if (dirtyRef.current && synced) syncServer(favRef.current);
+    };
     window.addEventListener("beforeunload", flush);
-    return () => { flush(); window.removeEventListener("beforeunload", flush); };
+    return () => {
+      flush();
+      window.removeEventListener("beforeunload", flush);
+    };
   }, [synced]);
 
   // ── Bybit WebSocket for live ticker data ─────────────────────────────────
   const rawRef = useRef<Record<string, Record<string, string>>>({});
-  const wsRef  = useRef<WebSocket | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     wsRef.current?.close();
     wsRef.current = null;
 
-    if (favorites.size === 0) { setTickers({}); return; }
+    if (favorites.size === 0) {
+      setTickers({});
+      return;
+    }
 
     const ws = new WebSocket("wss://stream.bybit.com/v5/public/spot");
     wsRef.current = ws;
 
-    ws.onopen = () => ws.send(JSON.stringify({ op: "subscribe", args: [...favorites].map(s => `tickers.${s}`) }));
+    ws.onopen = () =>
+      ws.send(
+        JSON.stringify({
+          op: "subscribe",
+          args: [...favorites].map((s) => `tickers.${s}`),
+        }),
+      );
 
     ws.onmessage = (e) => {
       try {
@@ -84,13 +147,15 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         if (!r.lastPrice) return;
         const last = parseFloat(r.lastPrice);
         const prev = parseFloat(r.prevPrice24h ?? r.lastPrice);
-        setTickers(t => ({
+        setTickers((t) => ({
           ...t,
           [sym]: {
             symbol: sym,
             lastPrice: r.lastPrice,
             priceChange: (last - prev).toFixed(8),
-            priceChangePercent: (parseFloat(r.price24hPcnt ?? "0") * 100).toFixed(2),
+            priceChangePercent: (
+              parseFloat(r.price24hPcnt ?? "0") * 100
+            ).toFixed(2),
             weightedAvgPrice: r.lastPrice,
             prevClosePrice: r.prevPrice24h ?? r.lastPrice,
             sparkData: t[sym]?.sparkData ?? [],
@@ -102,18 +167,79 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     return () => ws.close();
   }, [favorites]);
 
+  // ── Price alert notifications for subscribed coins ────────────────────────
+  useEffect(() => {
+    if (subscriptions.size === 0) return;
+    for (const sym of subscriptions) {
+      const ticker = tickers[sym];
+      if (!ticker) continue;
+      const pct = parseFloat(ticker.priceChangePercent);
+      if (isNaN(pct) || Math.abs(pct) < ALERT_THRESHOLD) continue;
+      if (alertedRef.current.has(sym)) continue;
+      alertedRef.current.add(sym);
+      if (
+        typeof Notification !== "undefined" &&
+        Notification.permission === "granted"
+      ) {
+        const coin = sym.replace("USDT", "");
+        const dir = pct > 0 ? "up 📈" : "down 📉";
+        new Notification(`${coin} Price Alert`, {
+          body: `${coin} is ${dir} ${Math.abs(pct).toFixed(2)}% in the last 24h`,
+          icon: `/Coin-icons/${coin.toLowerCase()}.svg`,
+        });
+      }
+    }
+  }, [tickers, subscriptions]);
+
   const toggle = useCallback((symbol: string) => {
     const up = symbol.toUpperCase();
-    setFavorites(prev => {
+    setFavorites((prev) => {
       const next = new Set(prev);
-      if (next.has(up)) next.delete(up); else next.add(up);
+      if (next.has(up)) next.delete(up);
+      else next.add(up);
       writeLocal(next);
       dirtyRef.current = true;
       return next;
     });
   }, []);
 
-  return <Ctx.Provider value={{ favorites, tickers, synced, toggle }}>{children}</Ctx.Provider>;
+  const toggleSubscription = useCallback(async (symbol: string) => {
+    const up = symbol.toUpperCase();
+    if (
+      typeof Notification !== "undefined" &&
+      Notification.permission === "default"
+    ) {
+      await Notification.requestPermission();
+    }
+    setSubscriptions((prev) => {
+      const next = new Set(prev);
+      if (next.has(up)) {
+        next.delete(up);
+        alertedRef.current.delete(up);
+      } else {
+        next.add(up);
+      }
+      writeSubs(next);
+      return next;
+    });
+  }, []);
+
+  return (
+    <Ctx.Provider
+      value={{
+        favorites,
+        tickers,
+        synced,
+        toggle,
+        subscriptions,
+        toggleSubscription,
+      }}
+    >
+      {children}
+    </Ctx.Provider>
+  );
 }
 
-export function useFavoritesCtx() { return useContext(Ctx); }
+export function useFavoritesCtx() {
+  return useContext(Ctx);
+}

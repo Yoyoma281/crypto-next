@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Star, X, ArrowRight, TrendingUp, TrendingDown } from "lucide-react";
+import { Star, X, ArrowRight, TrendingUp, TrendingDown, Bell, BellRing } from "lucide-react";
 import { useFavoritesCtx } from "./favorites-context";
 
 const GREEN = "#42e09a";
 const RED   = "#ffb4ab";
 
 export default function FloatingFavorites() {
-  const { favorites, tickers } = useFavoritesCtx();
+  const { favorites, tickers, subscriptions, toggleSubscription } = useFavoritesCtx();
   const [open, setOpen]       = useState(false);
   const panelRef              = useRef<HTMLDivElement>(null);
 
@@ -71,7 +71,7 @@ export default function FloatingFavorites() {
                 <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">
                   {sym.replace("USDT", "")}
                 </span>
-                <div className="flex items-center gap-2 text-right">
+                <div className="flex items-center gap-1">
                   {price ? (
                     <>
                       <span className="text-xs font-mono text-foreground">
@@ -90,6 +90,17 @@ export default function FloatingFavorites() {
                   ) : (
                     <span className="text-[10px] text-muted-foreground animate-pulse">…</span>
                   )}
+                  <button
+                    className="ml-1"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSubscription(sym); }}
+                    aria-label={subscriptions.has(sym) ? "Disable alerts" : "Enable alerts"}
+                  >
+                    {subscriptions.has(sym) ? (
+                      <BellRing className="h-3 w-3 fill-amber-400 text-amber-400" />
+                    ) : (
+                      <Bell className="h-3 w-3 text-muted-foreground" />
+                    )}
+                  </button>
                 </div>
               </Link>
             );

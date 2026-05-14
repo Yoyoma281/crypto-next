@@ -6,6 +6,7 @@ import Image from "next/image";
 import { portfolioCoin } from "@/app/types/coin";
 import { CostBasisEntry } from "@/app/data/services";
 import { useI18n } from "@/lib/i18n";
+import EquityCurve from "@/components/EquityCurve";
 
 interface Props {
   initialCoins: portfolioCoin[];
@@ -354,6 +355,9 @@ export default function PortfolioLiveClient({
           </button>
         </div>
       </div>
+
+      {/* ── EQUITY CURVE ────────────────────────────────────────── */}
+      <EquityCurve />
 
       {/* ── 12-COL GRID ──────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10">

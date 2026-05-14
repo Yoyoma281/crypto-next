@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Download } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 interface Trade {
@@ -66,9 +67,25 @@ export default function HistoryContent() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold mb-0.5">{t.history.title}</h1>
-        <p className="text-sm text-muted-foreground">{t.history.subtitle}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold mb-0.5">{t.history.title}</h1>
+          <p className="text-sm text-muted-foreground">{t.history.subtitle}</p>
+        </div>
+        <a
+          href="/api/export/trades?format=csv"
+          download
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors shrink-0"
+          style={{
+            borderColor: "#2e3447",
+            color: "#909097",
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#dce1fb"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#909097"; }}
+        >
+          <Download className="h-3.5 w-3.5" />
+          Export CSV
+        </a>
       </div>
 
       {/* Filters */}

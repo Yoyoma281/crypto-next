@@ -30,6 +30,7 @@ function normalise(article: Record<string, unknown>) {
   };
 }
 
+
 async function fetchFromCryptoCompare(currency: string, filter: string) {
   let url = "https://min-api.cryptocompare.com/data/v2/news/?lang=EN&sortOrder=latest";
   if (currency) url += `&categories=${currency.toUpperCase()}`;
@@ -69,6 +70,10 @@ export async function GET(req: NextRequest) {
 
     if (articles.length === 0 && currency) {
       articles = (await fetchFromCryptoCompare("", filter)) ?? [];
+    }
+
+    if (articles.length === 0) {
+      return NextResponse.json(cached?.data ?? { results: [] }, { status: 200 });
     }
 
     const results = articles.map(normalise);
