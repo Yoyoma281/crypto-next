@@ -68,6 +68,8 @@ export default function TradingClient({
   const [holding, setHolding] = useState<{ amount: string; worth: string } | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
   const lastRef = useRef<Partial<Ticker>>({});
+  const [priceFlash, setPriceFlash] = useState<"up" | "down" | null>(null);
+  const prevPriceRef = useRef<string | null>(null);
 
   // Gate.io WebSocket for ticker
   useEffect(() => {
@@ -96,6 +98,19 @@ export default function TradingClient({
         lastRef.current.change = parseFloat(d.change_utc0).toFixed(8);
       const cur = lastRef.current;
       if (cur.price) {
+        // Trigger price flash
+        if (prevPriceRef.current !== null) {
+          const prev = parseFloat(prevPriceRef.current);
+          const next = parseFloat(cur.price);
+          if (next > prev) {
+            setPriceFlash("up");
+            setTimeout(() => setPriceFlash(null), 520);
+          } else if (next < prev) {
+            setPriceFlash("down");
+            setTimeout(() => setPriceFlash(null), 520);
+          }
+        }
+        prevPriceRef.current = cur.price;
         setTickerData({
           price: cur.price,
           change: cur.change ?? "0",
@@ -159,7 +174,13 @@ export default function TradingClient({
         {/* Big price */}
         <div className="flex flex-col leading-none shrink-0">
           <span
-            className="text-base font-black tabular-nums font-[family-name:var(--font-manrope)]"
+            className={`text-base font-black tabular-nums font-[family-name:var(--font-manrope)] rounded px-1 -mx-1 ${
+              priceFlash === "up"
+                ? "animate-flash-price-green"
+                : priceFlash === "down"
+                  ? "animate-flash-price-red"
+                  : ""
+            }`}
             style={{ color: changeColor }}
           >
             {tickerData ? fmtPrice(tickerData.price) : "—"}

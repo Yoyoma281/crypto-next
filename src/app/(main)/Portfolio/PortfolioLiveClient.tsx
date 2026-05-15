@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
 import { portfolioCoin } from "@/app/types/coin";
 import { CostBasisEntry } from "@/app/data/services";
 import { useI18n } from "@/lib/i18n";
 import EquityCurve from "@/components/EquityCurve";
+import AnimatedNumber from "@/components/AnimatedNumber";
+
+const RiskAnalyticsCard = dynamic(
+  () => import("@/components/RiskAnalyticsCard"),
+  { ssr: false },
+);
 
 interface Props {
   initialCoins: portfolioCoin[];
@@ -301,12 +308,6 @@ export default function PortfolioLiveClient({
   // Whole-portfolio allocation including cash
   const cashPct = totalValue > 0 ? (cashBalance / totalValue) * 100 : 0;
 
-  // Dollar split for header display
-  const totalStr = fmtUSD(totalValue);
-  const dotIdx = totalStr.lastIndexOf(".");
-  const totalWhole = totalStr.slice(0, dotIdx);
-  const totalDecimals = totalStr.slice(dotIdx); // ".XX"
-
   return (
     <>
       {/* ── HEADER ────────────────────────────────────────────────── */}
@@ -316,12 +317,13 @@ export default function PortfolioLiveClient({
             Total Portfolio Value
           </p>
           <div className="flex items-end gap-1 leading-none">
-            <span className="text-5xl md:text-6xl font-extrabold tracking-tight">
-              {totalWhole}
-            </span>
-            <span className="text-2xl md:text-3xl font-bold text-muted-foreground mb-1">
-              {totalDecimals}
-            </span>
+            <AnimatedNumber
+              value={totalValue}
+              prefix="$"
+              decimals={2}
+              duration={700}
+              className="text-5xl md:text-6xl font-extrabold tracking-tight tabular-nums"
+            />
           </div>
           <div className="flex items-center gap-3 flex-wrap pt-1">
             <span
@@ -358,6 +360,9 @@ export default function PortfolioLiveClient({
 
       {/* ── EQUITY CURVE ────────────────────────────────────────── */}
       <EquityCurve />
+
+      {/* ── RISK ANALYTICS ───────────────────────────────────────── */}
+      <RiskAnalyticsCard />
 
       {/* ── 12-COL GRID ──────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10">
@@ -688,12 +693,14 @@ export default function PortfolioLiveClient({
               <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-1">
                 Total Gain / Loss
               </p>
-              <p
+              <AnimatedNumber
+                value={Math.abs(pnl)}
+                prefix={pnl >= 0 ? "+$" : "-$"}
+                decimals={2}
+                duration={700}
                 className="text-3xl font-extrabold tabular-nums"
                 style={{ color: pnlColor }}
-              >
-                {fmtPnl(pnl)}
-              </p>
+              />
             </div>
 
             {/* Return % */}

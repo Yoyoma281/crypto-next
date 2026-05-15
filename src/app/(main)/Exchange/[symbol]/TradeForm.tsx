@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 // price comes from TradingClient's WebSocket via prop — no REST polling needed
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
+import ConfettiEffect from "@/components/ConfettiEffect";
 
 interface Coin {
   symbol: string;
@@ -36,6 +37,9 @@ export default function TradeForm({
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text?: string; filledAmount?: string; filledTotal?: string; triggerPrice?: string } | null>(null);
   const [isAuth, setIsAuth] = useState<boolean | null>(null); // null = unknown
+  const [confettiTrigger, setConfettiTrigger] = useState(false);
+  // Track average buy price for confetti-on-profit detection
+  const avgBuyPriceRef = useRef<number | null>(null);
 
   // Limit order state
   const [orderMode, setOrderMode] = useState<OrderMode>("MARKET");
@@ -62,9 +66,10 @@ export default function TradeForm({
         if (!data) return;
         const coins: Coin[] = data?.portfolio?.Coins ?? [];
         const usdt = coins.find((c) => c.symbol === "USD/USDT");
-        const coin = coins.find((c) => c.symbol === symbol);
+        const coin = coins.find((c) => c.symbol === symbol) as (Coin & { avgBuyPrice?: number }) | undefined;
         setUsdtBal(parseFloat(usdt?.amount ?? "0"));
         setCoinBal(parseFloat(coin?.amount ?? "0"));
+        if (coin?.avgBuyPrice) avgBuyPriceRef.current = coin.avgBuyPrice;
       })
       .catch(() => setIsAuth(false));
   }, [symbol]);
@@ -114,6 +119,14 @@ export default function TradeForm({
         if (res.ok) {
           setMsg({ ok: true, filledAmount: coinAmount.toFixed(6), filledTotal: parseFloat(usdtAmount).toFixed(2) });
           setAmount("");
+          // Show confetti if SELL trade is profitable
+          if (side === "SELL" && price !== null) {
+            const avgBuy = avgBuyPriceRef.current;
+            if (avgBuy !== null && price > avgBuy) {
+              setConfettiTrigger(true);
+              setTimeout(() => setConfettiTrigger(false), 100);
+            }
+          }
           refreshBalance();
         } else {
           setMsg({ ok: false, text: data.error ?? "Trade failed" });
@@ -218,6 +231,7 @@ export default function TradeForm({
 
   return (
     <div className="p-2 flex flex-col gap-1.5">
+      <ConfettiEffect trigger={confettiTrigger} />
       {/* BUY / SELL tabs */}
       <div className="flex rounded-xl overflow-hidden p-1" style={{ background: "#0c1322", border: "1px solid rgba(62,72,80,0.4)" }}>
         {(["BUY", "SELL"] as const).map((s) => (

@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import ClientLayout from "./ClientLayout";
 import PwaInit from "@/components/PwaInit";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
+import NProgressProvider from "@/components/NProgressProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,6 +46,7 @@ export default function RootLayout({
           defaultTheme="dark"
           enableSystem={false}
         >
+          <NProgressProvider />
           <PwaInit />
           <ClientLayout>{children}</ClientLayout>
           <PwaInstallPrompt />
