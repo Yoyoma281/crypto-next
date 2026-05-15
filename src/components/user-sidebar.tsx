@@ -23,6 +23,7 @@ import {
   Gift,
   GraduationCap,
   Swords,
+  LayoutGrid,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useXp } from "@/hooks/useXp";
@@ -65,6 +66,7 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
           href: "/coin/BTCUSDT?tab=trade",
         },
         { icon: Star, label: t.nav.watchlist, href: "/watchlist" },
+        { icon: LayoutGrid, label: "Heatmap", href: "/heatmap" },
         { icon: Radio, label: "Feed", href: "/feed" },
         { icon: Newspaper, label: t.nav.news, href: "/news" },
         { icon: Trophy, label: t.nav.leaderboard, href: "/leaderboard" },
