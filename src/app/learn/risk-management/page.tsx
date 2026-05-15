@@ -11,6 +11,7 @@ import {
   PieChart,
   Target,
 } from "lucide-react";
+import LearnQuiz from "@/components/LearnQuiz";
 
 export const metadata = { title: "Risk Management — CrySer Learn" };
 
@@ -468,6 +469,53 @@ export default function RiskManagementPage() {
           your entry price.
         </Callout>
       </Section>
+
+      {/* Quiz */}
+      <LearnQuiz
+        quizId="risk-management"
+        questions={[
+          {
+            question:
+              "According to the 1-2% rule, how much of a $1,000 account should you risk per trade?",
+            options: ["$50–$100", "$10–$20", "$100–$200", "$200+"],
+            correct: 1,
+            explanation:
+              "The 1-2% rule means risking no more than $10–$20 on a $1,000 account per trade, so a losing streak can't wipe you out.",
+          },
+          {
+            question: "When should you set your stop-loss?",
+            options: [
+              "After the trade starts losing",
+              "Before entering the trade",
+              "After hitting your profit target",
+              "When the market closes",
+            ],
+            correct: 1,
+            explanation:
+              "Stop-losses must be set before entry, while you can think clearly — not during the emotional heat of a losing position.",
+          },
+          {
+            question: "What is the purpose of position sizing?",
+            options: [
+              "To maximise profit on every trade",
+              "To ensure consistent risk across all trades",
+              "To hold as many coins as possible",
+              "To avoid paying fees",
+            ],
+            correct: 1,
+            explanation:
+              "Position sizing ensures you risk a consistent dollar amount regardless of how you feel about a particular trade — removing emotion.",
+          },
+          {
+            question:
+              "If you suffer a 50% loss on your portfolio, what gain is needed to break even?",
+            options: ["50%", "75%", "100%", "25%"],
+            correct: 2,
+            explanation:
+              "A 50% loss cuts your account in half — you need a 100% gain just to return to the starting balance. This is why avoiding large losses is critical.",
+          },
+        ]}
+      />
 
       {/* Up Next + CTA */}
       <div className="flex flex-col gap-4">

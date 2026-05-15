@@ -8,6 +8,7 @@ import {
   CircleDot,
   Clock,
 } from "lucide-react";
+import LearnQuiz from "@/components/LearnQuiz";
 
 export const metadata = { title: "Reading Charts — CrySer Learn" };
 
@@ -491,6 +492,52 @@ export default function ReadingChartsPage() {
           you are trading against the bigger trend.
         </Callout>
       </Section>
+
+      {/* Quiz */}
+      <LearnQuiz
+        quizId="reading-charts"
+        questions={[
+          {
+            question: "What does a green candlestick indicate?",
+            options: ["Price fell", "Price rose", "No change", "High volume"],
+            correct: 1,
+            explanation:
+              "A green (bullish) candle means the closing price was higher than the opening price.",
+          },
+          {
+            question: "What is RSI primarily used for?",
+            options: [
+              "Measuring volume",
+              "Identifying overbought/oversold conditions",
+              "Predicting exact prices",
+              "Calculating fees",
+            ],
+            correct: 1,
+            explanation:
+              "RSI (Relative Strength Index) measures momentum and helps identify overbought (>70) or oversold (<30) conditions.",
+          },
+          {
+            question:
+              "A 'higher high, higher low' pattern suggests a...",
+            options: [
+              "Downtrend",
+              "Sideways market",
+              "Uptrend",
+              "Reversal",
+            ],
+            correct: 2,
+            explanation:
+              "Higher highs and higher lows are the definition of an uptrend in technical analysis.",
+          },
+          {
+            question: "Which timeframe shows the most detail?",
+            options: ["1W", "1D", "1H", "1M (monthly)"],
+            correct: 2,
+            explanation:
+              "Shorter timeframes like 1H show more granular price movements than daily or weekly charts.",
+          },
+        ]}
+      />
 
       {/* Up Next + CTA */}
       <div className="flex flex-col gap-4">

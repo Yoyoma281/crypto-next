@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Monitor,
   Flame,
+  Bell,
 } from "lucide-react";
 import AuthRequired from "@/components/auth-required";
 import { useI18n } from "@/lib/i18n";
@@ -632,6 +633,142 @@ function StreakBonusCard() {
 }
 
 // ---------------------------------------------------------------------------
+// Notification Preferences card
+// ---------------------------------------------------------------------------
+
+interface NotifPrefs {
+  orderFilled: boolean;
+  alertTriggered: boolean;
+  achievements: boolean;
+  streakReminder: boolean;
+  weeklyDigest: boolean;
+}
+
+const NOTIF_ROWS: { key: keyof NotifPrefs; label: string; description: string }[] = [
+  { key: "orderFilled", label: "Order Filled", description: "When a market or limit order executes" },
+  { key: "alertTriggered", label: "Price Alert", description: "When a price alert triggers" },
+  { key: "achievements", label: "Achievements", description: "When you unlock a new achievement" },
+  { key: "streakReminder", label: "Streak Reminder", description: "Daily reminder to maintain your streak" },
+  { key: "weeklyDigest", label: "Weekly Digest", description: "Weekly portfolio performance summary" },
+];
+
+const DEFAULT_PREFS: NotifPrefs = {
+  orderFilled: true,
+  alertTriggered: true,
+  achievements: true,
+  streakReminder: false,
+  weeklyDigest: false,
+};
+
+function ToggleSwitch({ on, onChange }: { on: boolean; onChange: () => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={onChange}
+      style={{
+        width: "44px",
+        height: "24px",
+        borderRadius: "99px",
+        background: on ? "#4edea3" : "#2e3447",
+        border: "none",
+        cursor: "pointer",
+        position: "relative",
+        transition: "background 0.2s",
+        flexShrink: 0,
+      }}
+    >
+      <span
+        style={{
+          position: "absolute",
+          top: "3px",
+          left: on ? "23px" : "3px",
+          width: "18px",
+          height: "18px",
+          borderRadius: "50%",
+          background: "#fff",
+          transition: "left 0.2s",
+          display: "block",
+        }}
+      />
+    </button>
+  );
+}
+
+function NotificationPrefsCard() {
+  const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS);
+  const [loading, setLoading] = useState(true);
+  const [saveStatus, setSaveStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/user/notification-prefs", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && typeof data === "object" && !data.error) {
+          setPrefs({ ...DEFAULT_PREFS, ...data });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleToggle(key: keyof NotifPrefs) {
+    const newValue = !prefs[key];
+    // Optimistic update
+    setPrefs((prev) => ({ ...prev, [key]: newValue }));
+    setSaveStatus(null);
+    try {
+      const res = await fetch("/api/user/notification-prefs", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ [key]: newValue }),
+      });
+      if (!res.ok) {
+        // Revert on error
+        setPrefs((prev) => ({ ...prev, [key]: !newValue }));
+        setSaveStatus({ ok: false, msg: "Failed to save preference" });
+      }
+    } catch {
+      setPrefs((prev) => ({ ...prev, [key]: !newValue }));
+      setSaveStatus({ ok: false, msg: "Network error" });
+    }
+  }
+
+  if (loading) {
+    return <p className="text-xs text-[#909097]">Loading preferences...</p>;
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      {NOTIF_ROWS.map((row, i) => (
+        <div
+          key={row.key}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
+            padding: "12px 0",
+            borderBottom: i < NOTIF_ROWS.length - 1 ? "1px solid #2e3447" : "none",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: "13px", fontWeight: "600", color: "#dce1fb" }}>{row.label}</div>
+            <div style={{ fontSize: "11px", color: "#909097", marginTop: "2px" }}>{row.description}</div>
+          </div>
+          <ToggleSwitch on={prefs[row.key]} onChange={() => handleToggle(row.key)} />
+        </div>
+      ))}
+      {saveStatus && (
+        <StatusMessage ok={saveStatus.ok} msg={saveStatus.msg} />
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -1193,6 +1330,27 @@ export default function SettingsPage() {
         description="Manage devices that are currently signed in to your account"
       >
         <SessionsCard />
+      </Section>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Notifications                                                       */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div>
+        <h2 className="text-[#dce1fb] font-bold text-sm uppercase tracking-wider mb-1">
+          Notifications
+        </h2>
+        <p className="text-xs text-[#909097]">
+          Choose which events send you a notification.
+        </p>
+      </div>
+
+      <Section
+        icon={Bell}
+        title="Notification Preferences"
+        description="Toggle individual notification types on or off"
+      >
+        <NotificationPrefsCard />
       </Section>
     </div>
   );

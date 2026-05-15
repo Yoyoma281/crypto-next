@@ -9,6 +9,7 @@ import {
   ArrowRight,
   GraduationCap,
   BookMarked,
+  Target,
 } from "lucide-react";
 
 export const metadata = { title: "Learn — CrySer Education Hub" };
@@ -101,6 +102,17 @@ const GUIDES = [
     iconBg: "rgba(140,205,255,0.1)",
     iconColor: PRIMARY,
   },
+  {
+    title: "Strategy Templates",
+    href: "/learn/strategies",
+    icon: Target,
+    description:
+      "Ready-made trading strategies — DCA, dip buying, momentum plays, and safe haven rotation. One-click to apply.",
+    difficulty: "Intermediate",
+    readTime: "Interactive",
+    iconBg: "rgba(245,200,66,0.1)",
+    iconColor: "#f5c842",
+  },
 ];
 
 export default function LearnPage() {
@@ -130,7 +142,7 @@ export default function LearnPage() {
         {/* Stats bar */}
         <div className="flex flex-wrap gap-6 mt-2">
           {[
-            { label: "Guides", value: "7" },
+            { label: "Guides", value: "8" },
             { label: "Topics covered", value: "30+" },
             { label: "Avg. read time", value: "9 min" },
           ].map((s) => (
