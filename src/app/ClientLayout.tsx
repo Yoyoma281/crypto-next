@@ -9,6 +9,7 @@ import { I18nProvider } from "@/lib/i18n";
 import { FavoritesProvider } from "@/components/favorites-context";
 import FloatingFavorites from "@/components/floating-favorites";
 import OnboardingModal from "@/components/onboarding-modal";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 function LayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -30,8 +31,8 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
         key={pathname}
         className={
           isTradePage
-            ? "w-full min-h-screen"
-            : "w-full max-w-screen-2xl mx-auto px-2 sm:px-4 md:px-6 py-3 md:py-4 min-h-screen animate-page-enter"
+            ? "w-full min-h-screen pb-16 md:pb-0"
+            : "w-full max-w-screen-2xl mx-auto px-2 sm:px-4 md:px-6 py-3 md:py-4 min-h-screen animate-page-enter pb-16 md:pb-0"
         }
       >
         {children}
@@ -41,6 +42,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
           <Footer />
           <FloatingFavorites />
           <OnboardingModal />
+          <MobileBottomNav />
         </>
       )}
     </>

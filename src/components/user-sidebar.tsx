@@ -24,6 +24,7 @@ import {
   GraduationCap,
   Swords,
   LayoutGrid,
+  Bot,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useXp } from "@/hooks/useXp";
@@ -78,6 +79,7 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
       label: t.sidebar.account,
       items: [
         { icon: Wallet, label: t.nav.portfolio, href: "/Portfolio" },
+        { icon: Bot, label: "Bots", href: "/bots" },
         { icon: Copy, label: "Copy Trading", href: "/copy-trading" },
         { icon: History, label: t.nav.history, href: "/history" },
         { icon: Trophy, label: "Achievements", href: "/achievements" },
