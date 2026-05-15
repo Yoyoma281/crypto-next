@@ -18,6 +18,7 @@ interface Profile {
   tradeCount: number;
   achievementsUnlocked: number;
   topCoins: Array<{ symbol: string; worth: string }>;
+  isFollowing?: boolean;
 }
 
 function getAvatarSrc(avatar: string | null): string | null {
@@ -42,6 +43,9 @@ export default function UserProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [following, setFollowing] = useState<boolean | null>(null);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [hoveringFollow, setHoveringFollow] = useState(false);
 
   useEffect(() => {
     if (!username) return;
@@ -59,10 +63,30 @@ export default function UserProfilePage() {
         if (!res.ok) return;
         const data = await res.json();
         setProfile(data);
+        setFollowing(typeof data.isFollowing === "boolean" ? data.isFollowing : null);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [username]);
+
+  async function handleFollowToggle() {
+    if (following === null || followLoading || !username) return;
+    setFollowLoading(true);
+    try {
+      const method = following ? "DELETE" : "POST";
+      const res = await fetch(`/api/users/${encodeURIComponent(username)}/follow`, {
+        method,
+        credentials: "include",
+      });
+      if (res.ok) {
+        setFollowing(!following);
+      }
+    } catch {
+      // silently ignore
+    } finally {
+      setFollowLoading(false);
+    }
+  }
 
   if (loading) {
     return <ProfileSkeleton />;
@@ -169,7 +193,7 @@ export default function UserProfilePage() {
           >
             {profile.username}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "10px" }}>
             <LevelBadge
               level={profile.level}
               xp={profile.xp}
@@ -178,6 +202,40 @@ export default function UserProfilePage() {
             />
             {profile.loginStreak >= 2 && <StreakBadge streak={profile.loginStreak} />}
           </div>
+          {following !== null && (
+            <button
+              onClick={handleFollowToggle}
+              disabled={followLoading}
+              onMouseEnter={() => setHoveringFollow(true)}
+              onMouseLeave={() => setHoveringFollow(false)}
+              style={{
+                border: following
+                  ? hoveringFollow ? "1px solid #ffb3ad" : "1px solid #2e3447"
+                  : "1px solid #4edea3",
+                color: following
+                  ? hoveringFollow ? "#ffb3ad" : "#909097"
+                  : "#4edea3",
+                background: following
+                  ? hoveringFollow ? "rgba(255,179,173,0.08)" : "transparent"
+                  : "rgba(78,222,163,0.08)",
+                padding: "6px 16px",
+                fontSize: "11px",
+                fontWeight: 900,
+                letterSpacing: "0.1em",
+                cursor: followLoading ? "default" : "pointer",
+                borderRadius: "6px",
+                opacity: followLoading ? 0.6 : 1,
+                transition: "all 0.15s ease",
+                textTransform: "uppercase",
+              }}
+            >
+              {followLoading
+                ? "..."
+                : following
+                ? hoveringFollow ? "Unfollow" : "Following"
+                : "Follow"}
+            </button>
+          )}
         </div>
       </div>
 

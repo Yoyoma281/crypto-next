@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Download } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
 
 interface Trade {
   _id: string;
@@ -45,6 +47,12 @@ export default function HistoryContent() {
   const [pages, setPages] = useState(1);
   const [total, setTotal] = useState(0);
 
+  // AI post-mortem state
+  const [postMortemId, setPostMortemId] = useState<string | null>(null);
+  const [postMortemText, setPostMortemText] = useState("");
+  const [pmLoading, setPmLoading] = useState(false);
+  const pmAbortRef = useRef<AbortController | null>(null);
+
   useEffect(() => { setPage(1); }, [sideFilter, symbolSearch]);
 
   useEffect(() => {
@@ -65,8 +73,67 @@ export default function HistoryContent() {
       .catch(() => setLoading(false));
   }, [sideFilter, symbolSearch, page]);
 
+  async function openPostMortem(trade: Trade) {
+    // Toggle off if same trade
+    if (postMortemId === trade._id) {
+      if (pmAbortRef.current) pmAbortRef.current.abort();
+      setPostMortemId(null);
+      setPostMortemText("");
+      return;
+    }
+
+    // Abort any in-flight stream
+    if (pmAbortRef.current) pmAbortRef.current.abort();
+    const controller = new AbortController();
+    pmAbortRef.current = controller;
+
+    setPostMortemId(trade._id);
+    setPostMortemText("");
+    setPmLoading(true);
+
+    try {
+      const response = await fetch(`${BASE_URL}/ai/assist`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "post_mortem",
+          context: {
+            symbol: trade.symbol,
+            tradeType: trade.type,
+            usdAmount: trade.usdAmount,
+            coinAmount: trade.coinAmount,
+            price: trade.price,
+            executedAt: trade.createdAt,
+            currentPrice: null,
+          },
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok || !response.body) throw new Error("Stream failed");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        accumulated += decoder.decode(value, { stream: true });
+        setPostMortemText(accumulated);
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") return;
+      setPostMortemText("Failed to load analysis. Please try again.");
+    } finally {
+      setPmLoading(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
+      <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold mb-0.5">{t.history.title}</h1>
@@ -145,36 +212,139 @@ export default function HistoryContent() {
                 <th className="text-right px-5 py-3">{t.history.price}</th>
                 <th className="text-right px-5 py-3">{t.history.amountUsdt}</th>
                 <th className="text-right px-5 py-3">{t.history.quantity}</th>
+                <th className="text-right px-5 py-3" style={{ width: "56px" }}></th>
               </tr>
             </thead>
             <tbody>
               {trades.map((trade, i) => (
-                <tr
-                  key={trade._id}
-                  className="transition-colors hover:bg-muted/40"
-                  style={i < trades.length - 1 ? { borderBottom: "1px solid hsl(var(--border))" } : {}}
-                >
-                  <td className="px-5 py-3.5 text-muted-foreground whitespace-nowrap">{fmtDate(trade.createdAt)}</td>
-                  <td className="px-5 py-3.5 font-mono font-semibold">
-                    <a href={`/coin/${trade.symbol}?tab=trade`} className="hover:underline">
-                      {trade.symbol.replace("USDT", "/USDT")}
-                    </a>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span
-                      className="px-2 py-0.5 rounded-full text-xs font-bold"
-                      style={{
-                        color: trade.type === "BUY" ? "#4edea3" : "#ffb3ad",
-                        background: trade.type === "BUY" ? "rgba(78,222,163,0.1)" : "rgba(255,179,173,0.1)",
-                      }}
+                <Fragment key={trade._id}>
+                  <tr
+                    className="transition-colors hover:bg-muted/40"
+                    style={i < trades.length - 1 && postMortemId !== trade._id ? { borderBottom: "1px solid hsl(var(--border))" } : {}}
+                  >
+                    <td className="px-5 py-3.5 text-muted-foreground whitespace-nowrap">{fmtDate(trade.createdAt)}</td>
+                    <td className="px-5 py-3.5 font-mono font-semibold">
+                      <a href={`/coin/${trade.symbol}?tab=trade`} className="hover:underline">
+                        {trade.symbol.replace("USDT", "/USDT")}
+                      </a>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span
+                        className="px-2 py-0.5 rounded-full text-xs font-bold"
+                        style={{
+                          color: trade.type === "BUY" ? "#4edea3" : "#ffb3ad",
+                          background: trade.type === "BUY" ? "rgba(78,222,163,0.1)" : "rgba(255,179,173,0.1)",
+                        }}
+                      >
+                        {trade.type}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-right font-mono">{fmtUSD(trade.price)}</td>
+                    <td className="px-5 py-3.5 text-right font-mono">{fmtUSD(trade.usdAmount)}</td>
+                    <td className="px-5 py-3.5 text-right font-mono text-muted-foreground">{fmtCoin(trade.coinAmount)}</td>
+                    <td className="px-5 py-3.5 text-right">
+                      <button
+                        onClick={() => openPostMortem(trade)}
+                        title="AI Post-Mortem"
+                        style={{
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          fontSize: "9px",
+                          fontWeight: 900,
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          color: "#4edea3",
+                          opacity: postMortemId === trade._id ? 1 : 0.6,
+                          padding: "3px 0",
+                          borderRadius: 0,
+                          lineHeight: 1,
+                          transition: "opacity 0.15s",
+                        }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
+                        onMouseLeave={(e) => {
+                          if (postMortemId !== trade._id) (e.currentTarget as HTMLButtonElement).style.opacity = "0.6";
+                        }}
+                      >
+                        ✦ AI
+                      </button>
+                    </td>
+                  </tr>
+                  {postMortemId === trade._id && (
+                    <tr
+                      style={{ borderBottom: i < trades.length - 1 ? "1px solid hsl(var(--border))" : "none" }}
                     >
-                      {trade.type}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 text-right font-mono">{fmtUSD(trade.price)}</td>
-                  <td className="px-5 py-3.5 text-right font-mono">{fmtUSD(trade.usdAmount)}</td>
-                  <td className="px-5 py-3.5 text-right font-mono text-muted-foreground">{fmtCoin(trade.coinAmount)}</td>
-                </tr>
+                      <td
+                        colSpan={7}
+                        style={{ padding: "0 20px 16px" }}
+                      >
+                        <div
+                          style={{
+                            background: "#0c1324",
+                            border: "1px solid #2e3447",
+                            borderRadius: "8px",
+                            padding: "14px 16px",
+                            marginTop: "2px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "9px",
+                              fontWeight: 900,
+                              letterSpacing: "0.12em",
+                              textTransform: "uppercase",
+                              color: "#4edea3",
+                              marginBottom: "10px",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                            }}
+                          >
+                            <span>✦</span>
+                            <span>AI Post-Mortem — {trade.symbol.replace("USDT", "/USDT")}</span>
+                          </div>
+                          {pmLoading && !postMortemText ? (
+                            <div
+                              style={{
+                                fontSize: "13px",
+                                color: "#909097",
+                                fontStyle: "italic",
+                              }}
+                            >
+                              Analyzing trade...
+                            </div>
+                          ) : (
+                            <div
+                              style={{
+                                fontSize: "13px",
+                                lineHeight: "1.7",
+                                color: "#dce1fb",
+                                whiteSpace: "pre-wrap",
+                                wordBreak: "break-word",
+                                fontFamily: "monospace",
+                              }}
+                            >
+                              {postMortemText}
+                              {pmLoading && (
+                                <span
+                                  style={{
+                                    display: "inline-block",
+                                    width: "8px",
+                                    height: "14px",
+                                    background: "#4edea3",
+                                    marginLeft: "2px",
+                                    verticalAlign: "text-bottom",
+                                    animation: "blink 1s step-end infinite",
+                                  }}
+                                />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
           </table>
