@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -22,6 +23,11 @@ import { useXp } from "@/hooks/useXp";
 import LevelBadge from "@/components/LevelBadge";
 import StreakBadge from "@/components/StreakBadge";
 
+const StreakCalendarModal = dynamic(
+  () => import("@/components/StreakCalendarModal"),
+  { ssr: false }
+);
+
 interface UserInfo {
   username: string;
   _id: string;
@@ -40,6 +46,7 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
   const xp = useXp();
+  const [streakOpen, setStreakOpen] = useState(false);
 
   const NAV_SECTIONS = [
     {
@@ -62,6 +69,7 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
         { icon: Wallet, label: t.nav.portfolio, href: "/Portfolio" },
         { icon: Copy, label: "Copy Trading", href: "/copy-trading" },
         { icon: History, label: t.nav.history, href: "/history" },
+        { icon: Trophy, label: "Achievements", href: "/achievements" },
         { icon: Settings, label: t.nav.settings, href: "/settings" },
       ],
     },
@@ -92,6 +100,14 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
     onClose();
     router.push("/login");
     router.refresh();
+  }
+
+  async function handleClaimStreak() {
+    await fetch("/api/user/claim-streak-bonus", {
+      method: "POST",
+      credentials: "include",
+    });
+    xp?.refresh();
   }
 
   const initials = user?.username?.slice(0, 2).toUpperCase() ?? "?";
@@ -171,7 +187,20 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
                       xpToNext={xp.xpToNext}
                       size="sm"
                     />
-                    <StreakBadge streak={xp.loginStreak} />
+                    <button
+                      onClick={() => setStreakOpen(true)}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                      }}
+                      title="View streak calendar"
+                    >
+                      <StreakBadge streak={xp.loginStreak} />
+                    </button>
                   </div>
                 )}
               </div>
@@ -273,6 +302,18 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
           </div>
         )}
       </div>
+
+      {/* Streak Calendar Modal */}
+      {xp && (
+        <StreakCalendarModal
+          isOpen={streakOpen}
+          onClose={() => setStreakOpen(false)}
+          streak={xp.streak ?? xp.loginStreak}
+          streakDayInCycle={xp.streakDayInCycle ?? 1}
+          claimedToday={xp.streakClaimedToday ?? false}
+          onClaim={handleClaimStreak}
+        />
+      )}
     </>
   );
 }
