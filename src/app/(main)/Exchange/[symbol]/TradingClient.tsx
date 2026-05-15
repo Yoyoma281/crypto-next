@@ -7,6 +7,8 @@ import RecentTrades from "./RecentTrades";
 import TradeForm from "./TradeForm";
 import Image from "next/image";
 
+const AiAssistantPanel = dynamic(() => import("./AiAssistantPanel"), { ssr: false });
+
 const ICON_SRCS = (ticker: string) => [
   `/Coin-icons/${ticker.toLowerCase()}.svg`,
   `https://assets.coincap.io/assets/icons/${ticker.toLowerCase()}@2x.png`,
@@ -64,6 +66,7 @@ export default function TradingClient({
   const [bottomTab, setBottomTab] = useState<"orders" | "history">("orders");
   const [mobileTab, setMobileTab] = useState<"chart" | "book" | "form">("chart");
   const [holding, setHolding] = useState<{ amount: string; worth: string } | null>(null);
+  const [aiOpen, setAiOpen] = useState(false);
   const lastRef = useRef<Partial<Ticker>>({});
 
   // Gate.io WebSocket for ticker
@@ -193,6 +196,19 @@ export default function TradingClient({
             </>
           )}
         </div>
+
+        {/* AI button — pushed to the far right */}
+        <button
+          onClick={() => setAiOpen(true)}
+          style={{
+            color: "#4edea3",
+            border: "1px solid rgba(78,222,163,0.3)",
+            background: "rgba(78,222,163,0.08)",
+          }}
+          className="ml-auto px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-none hidden md:flex items-center gap-1.5"
+        >
+          ✦ AI
+        </button>
       </header>
 
       {/* ── Mobile tab bar ─────────────────────────────────────────────────── */}
@@ -239,6 +255,17 @@ export default function TradingClient({
           </div>
         )}
       </div>
+
+      {/* ── AI Assistant drawer ────────────────────────────────────────────── */}
+      <AiAssistantPanel
+        symbol={symbol}
+        price={tickerData?.price ?? null}
+        change24h={tickerData?.changePct ?? null}
+        volume={tickerData?.volume ?? null}
+        tradeContext={null}
+        isOpen={aiOpen}
+        onClose={() => setAiOpen(false)}
+      />
 
       {/* ── B. Desktop body ────────────────────────────────────────────────── */}
       <div className="hidden md:flex flex-1 overflow-hidden">
