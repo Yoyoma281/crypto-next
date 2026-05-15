@@ -17,6 +17,8 @@ import {
   Star,
   Bitcoin,
   Copy,
+  Bell,
+  Zap,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useXp } from "@/hooks/useXp";
@@ -70,6 +72,8 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
         { icon: Copy, label: "Copy Trading", href: "/copy-trading" },
         { icon: History, label: t.nav.history, href: "/history" },
         { icon: Trophy, label: "Achievements", href: "/achievements" },
+        { icon: Zap, label: "Quests", href: "/quests" },
+        { icon: Bell, label: "Notifications", href: "/notifications" },
         { icon: Settings, label: t.nav.settings, href: "/settings" },
       ],
     },

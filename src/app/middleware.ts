@@ -23,6 +23,7 @@ const PUBLIC_PATHS = [
   '/watchlist',
   '/forgot-password',
   '/reset-password',
+  '/u/',
 ];
 
 export async function middleware(req: NextRequest) {
