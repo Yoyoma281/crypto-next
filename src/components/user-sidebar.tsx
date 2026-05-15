@@ -25,6 +25,9 @@ import {
   Swords,
   LayoutGrid,
   Bot,
+  Fish,
+  GitCompare,
+  ArrowLeftRight,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useXp } from "@/hooks/useXp";
@@ -68,6 +71,9 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
         },
         { icon: Star, label: t.nav.watchlist, href: "/watchlist" },
         { icon: LayoutGrid, label: "Heatmap", href: "/heatmap" },
+        { icon: Fish, label: "Whale Tracker", href: "/whales" },
+        { icon: GitCompare, label: "Compare", href: "/compare" },
+        { icon: ArrowLeftRight, label: "Convert", href: "/convert" },
         { icon: Radio, label: "Feed", href: "/feed" },
         { icon: Newspaper, label: t.nav.news, href: "/news" },
         { icon: Trophy, label: t.nav.leaderboard, href: "/leaderboard" },
