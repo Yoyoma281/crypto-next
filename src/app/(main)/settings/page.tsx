@@ -15,6 +15,7 @@ import {
 import AuthRequired from "@/components/auth-required";
 import { useI18n } from "@/lib/i18n";
 import { useXp } from "@/hooks/useXp";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
 
@@ -769,6 +770,46 @@ function NotificationPrefsCard() {
 }
 
 // ---------------------------------------------------------------------------
+// Browser Notifications card
+// ---------------------------------------------------------------------------
+
+function BrowserNotificationsCard() {
+  const { supported, permission, subscribed, loading, subscribe, unsubscribe } = usePushNotifications();
+
+  return (
+    <div className="rounded-2xl p-6 flex flex-col gap-4" style={{ background: '#12121a', border: '1px solid rgba(255,255,255,0.07)' }}>
+      <h3 className="text-base font-bold" style={{ color: '#dce1fb' }}>Browser Notifications</h3>
+      {!supported ? (
+        <p className="text-sm" style={{ color: '#45464d' }}>Not supported in this browser.</p>
+      ) : permission === 'denied' ? (
+        <p className="text-sm" style={{ color: '#ef4444' }}>Blocked — enable notifications in your browser settings.</p>
+      ) : subscribed ? (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full" style={{ background: '#4edea3' }} />
+            <span className="text-sm" style={{ color: '#4edea3' }}>Push notifications enabled</span>
+          </div>
+          <button onClick={unsubscribe} disabled={loading}
+            className="px-3 py-1.5 rounded-lg text-xs font-bold transition-opacity hover:opacity-80 disabled:opacity-40"
+            style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}>
+            {loading ? 'Disabling...' : 'Disable'}
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between">
+          <p className="text-sm" style={{ color: '#909097' }}>Get notified for order fills, alerts, and mentions.</p>
+          <button onClick={subscribe} disabled={loading}
+            className="px-3 py-1.5 rounded-lg text-xs font-bold transition-opacity hover:opacity-80 disabled:opacity-40"
+            style={{ background: '#4edea3', color: '#0a0a0f' }}>
+            {loading ? 'Enabling...' : 'Enable'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -1352,6 +1393,8 @@ export default function SettingsPage() {
       >
         <NotificationPrefsCard />
       </Section>
+
+      <BrowserNotificationsCard />
     </div>
   );
 }
