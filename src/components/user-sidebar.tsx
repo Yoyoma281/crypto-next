@@ -22,6 +22,7 @@ import {
   Radio,
   Gift,
   GraduationCap,
+  Swords,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useXp } from "@/hooks/useXp";
@@ -68,6 +69,7 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
         { icon: Newspaper, label: t.nav.news, href: "/news" },
         { icon: Trophy, label: t.nav.leaderboard, href: "/leaderboard" },
         { icon: GraduationCap, label: "Tutorial", href: "/tutorial" },
+        { icon: Swords, label: "Scenarios", href: "/scenarios" },
       ],
     },
     {
