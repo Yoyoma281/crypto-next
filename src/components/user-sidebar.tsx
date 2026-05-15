@@ -21,6 +21,7 @@ import {
   Zap,
   Radio,
   Gift,
+  GraduationCap,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useXp } from "@/hooks/useXp";
@@ -66,6 +67,7 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
         { icon: Radio, label: "Feed", href: "/feed" },
         { icon: Newspaper, label: t.nav.news, href: "/news" },
         { icon: Trophy, label: t.nav.leaderboard, href: "/leaderboard" },
+        { icon: GraduationCap, label: "Tutorial", href: "/tutorial" },
       ],
     },
     {

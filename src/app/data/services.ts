@@ -75,6 +75,7 @@ export type TradeRecord = {
 };
 
 export type LeaderboardEntry = {
+  userId: string;
   username: string;
   totalValue: number;
 };
