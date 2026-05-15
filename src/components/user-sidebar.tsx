@@ -28,6 +28,7 @@ import {
   Fish,
   GitCompare,
   ArrowLeftRight,
+  BookOpen,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useXp } from "@/hooks/useXp";
@@ -88,6 +89,7 @@ export default function UserSidebar({ isOpen, onClose, user }: Props) {
         { icon: Bot, label: "Bots", href: "/bots" },
         { icon: Copy, label: "Copy Trading", href: "/copy-trading" },
         { icon: History, label: t.nav.history, href: "/history" },
+        { icon: BookOpen, label: "Journal", href: "/journal" },
         { icon: Trophy, label: "Achievements", href: "/achievements" },
         { icon: Zap, label: "Quests", href: "/quests" },
         { icon: Gift, label: "Referral", href: "/referral" },
