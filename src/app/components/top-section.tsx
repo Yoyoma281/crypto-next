@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   ChevronDown,
   User,
+  Zap,
 } from "lucide-react";
 import UserSidebar from "@/components/user-sidebar";
 import CoinSearch from "@/components/coin-search";
@@ -14,6 +16,8 @@ import ThemeToggle from "@/components/theme-toggle";
 import LanguageSelector from "@/components/language-selector";
 import NotificationBell from "@/components/NotificationBell";
 import { useI18n } from "@/lib/i18n";
+
+const SpinModal = dynamic(() => import("@/components/SpinModal"), { ssr: false });
 
 interface UserInfo {
   username: string;
@@ -44,6 +48,8 @@ export default function TopBarStats() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
+  const [spinOpen, setSpinOpen] = useState(false);
+  const [spinAvailable, setSpinAvailable] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
 
   // Fetch current user session
@@ -52,6 +58,14 @@ export default function TopBarStats() {
       .then((r) => (r.ok ? r.json() : null))
       .then((user) => setCurrentUser(user))
       .catch(() => setCurrentUser(null));
+  }, []);
+
+  // Check spin availability
+  useEffect(() => {
+    fetch("/api/spin/status", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setSpinAvailable(!!data?.canSpin))
+      .catch(() => setSpinAvailable(false));
   }, []);
 
   // Close "More" dropdown on outside click
@@ -172,6 +186,52 @@ export default function TopBarStats() {
 
           {/* ── Right: auth + avatar ── */}
           <div className="flex items-center gap-1 md:gap-2 order-2 md:order-3 flex-shrink-0">
+            {/* Spin button */}
+            <button
+              onClick={() => setSpinOpen(true)}
+              title="Daily Spin"
+              style={{
+                position: "relative",
+                background: "transparent",
+                border: "1px solid rgba(245,200,66,0.3)",
+                borderRadius: 8,
+                cursor: "pointer",
+                padding: "5px 8px",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                color: "#f5c842",
+                fontSize: "0.7rem",
+                fontWeight: 700,
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(245,200,66,0.08)";
+                e.currentTarget.style.borderColor = "rgba(245,200,66,0.6)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.borderColor = "rgba(245,200,66,0.3)";
+              }}
+            >
+              <Zap style={{ width: 13, height: 13 }} />
+              <span className="hidden sm:inline">Spin</span>
+              {spinAvailable && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: -3,
+                    right: -3,
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: "#4edea3",
+                    boxShadow: "0 0 6px #4edea3",
+                    animation: "spinPulse 1.5s ease-in-out infinite",
+                  }}
+                />
+              )}
+            </button>
             <NotificationBell />
             <LanguageSelector />
             <ThemeToggle />
@@ -226,6 +286,21 @@ export default function TopBarStats() {
         onClose={() => setSidebarOpen(false)}
         user={currentUser}
       />
+
+      <SpinModal
+        isOpen={spinOpen}
+        onClose={() => {
+          setSpinOpen(false);
+          setSpinAvailable(false);
+        }}
+      />
+
+      <style>{`
+        @keyframes spinPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.3); }
+        }
+      `}</style>
     </>
   );
 }

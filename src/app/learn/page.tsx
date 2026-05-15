@@ -8,6 +8,7 @@ import {
   List,
   ArrowRight,
   GraduationCap,
+  BookMarked,
 } from "lucide-react";
 
 export const metadata = { title: "Learn — CrySer Education Hub" };
@@ -89,6 +90,17 @@ const GUIDES = [
     iconBg: "rgba(66,224,154,0.1)",
     iconColor: GREEN,
   },
+  {
+    title: "Crypto Glossary",
+    href: "/learn/glossary",
+    icon: BookMarked,
+    description:
+      "33 essential crypto terms explained in plain English — from HODL and FUD to DeFi, Slippage, and Yield Farming.",
+    difficulty: "Beginner",
+    readTime: "Reference",
+    iconBg: "rgba(140,205,255,0.1)",
+    iconColor: PRIMARY,
+  },
 ];
 
 export default function LearnPage() {
@@ -118,8 +130,8 @@ export default function LearnPage() {
         {/* Stats bar */}
         <div className="flex flex-wrap gap-6 mt-2">
           {[
-            { label: "Guides", value: "6" },
-            { label: "Topics covered", value: "24+" },
+            { label: "Guides", value: "7" },
+            { label: "Topics covered", value: "30+" },
             { label: "Avg. read time", value: "9 min" },
           ].map((s) => (
             <div key={s.label} className="flex items-baseline gap-1.5">
