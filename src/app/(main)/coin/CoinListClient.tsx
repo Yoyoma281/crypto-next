@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { DataTable } from "@/app/components/table";
 import { makeColumns } from "./coinColumns";
 import { CoinTableRow } from "@/app/types/coin";
@@ -9,6 +9,7 @@ import FavoritesTable from "./FavoritesTable";
 import { Star } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useFavoritesCtx } from "@/components/favorites-context";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 
 const LIMIT = 10;
 
@@ -73,11 +74,20 @@ export default function CoinListClient() {
     "connecting",
   );
   const [tab, setTab] = useState<Tab>("all");
+  // Bump this counter to force a full SSE reconnect (used by pull-to-refresh)
+  const [refreshKey, setRefreshKey] = useState(0);
   const { favorites, toggle } = useFavorites();
   const { subscriptions, toggleSubscription } = useFavoritesCtx();
   const { t } = useI18n();
 
-  // Reconnect SSE every time `page` changes
+  const handleRefresh = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
+
+  const { containerRef, pullDistance, isPulling } =
+    usePullToRefresh<HTMLDivElement>({ threshold: 70, onRefresh: handleRefresh });
+
+  // Reconnect SSE every time `page` or `refreshKey` changes
   useEffect(() => {
     setStatus("connecting");
     setLoading(true);
@@ -105,7 +115,8 @@ export default function CoinListClient() {
     es.onerror = () => setStatus("error");
 
     return () => es.close();
-  }, [page]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, refreshKey]);
 
   // Columns with correct global offset so rank shows #11, #12 … on page 2
   const columns = useMemo(
@@ -113,8 +124,51 @@ export default function CoinListClient() {
     [t, page, favorites, toggle, subscriptions, toggleSubscription],
   );
 
+  // Pull indicator height — clamp to threshold for visual feedback
+  const THRESHOLD = 70;
+  const pullProgress = Math.min(pullDistance / THRESHOLD, 1);
+
   return (
-    <>
+    <div ref={containerRef}>
+      {/* Pull-to-refresh indicator — mobile only, hidden on desktop */}
+      {pullDistance > 0 && (
+        <div
+          className="flex items-center justify-center overflow-hidden transition-all duration-150"
+          style={{ height: Math.min(pullDistance * 0.6, 48) }}
+          aria-hidden="true"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            style={{
+              opacity: pullProgress,
+              transform: `rotate(${isPulling ? 180 : pullProgress * 160}deg)`,
+              transition: "transform 0.15s",
+            }}
+          >
+            <circle
+              cx="10"
+              cy="10"
+              r="8"
+              fill="none"
+              stroke="#8ccdff"
+              strokeWidth="2"
+              strokeDasharray={`${pullProgress * 50} 50`}
+              strokeLinecap="round"
+            />
+            <path
+              d={isPulling ? "M10 6 L10 14 M7 11 L10 14 L13 11" : "M10 14 L10 6 M7 9 L10 6 L13 9"}
+              stroke="#8ccdff"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </svg>
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-4 border-b border-border">
         {(["all", "favorites"] as Tab[]).map((tabKey) => (
@@ -297,6 +351,6 @@ export default function CoinListClient() {
           </div>
         </>
       )}
-    </>
+    </div>
   );
 }
