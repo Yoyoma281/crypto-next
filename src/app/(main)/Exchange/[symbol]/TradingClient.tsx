@@ -70,6 +70,20 @@ export default function TradingClient({
   const lastRef = useRef<Partial<Ticker>>({});
   const [priceFlash, setPriceFlash] = useState<"up" | "down" | null>(null);
   const prevPriceRef = useRef<string | null>(null);
+  const [tradeSide, setTradeSide] = useState<"BUY" | "SELL" | null>(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      const tag = (document.activeElement as HTMLElement)?.tagName ?? "";
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(tag)) return;
+      if (e.key === "b" || e.key === "B") setTradeSide("BUY");
+      else if (e.key === "s" || e.key === "S") setTradeSide("SELL");
+      else if (e.key === "?") setShortcutsOpen((v) => !v);
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
 
   // Gate.io WebSocket for ticker
   useEffect(() => {
@@ -218,19 +232,70 @@ export default function TradingClient({
           )}
         </div>
 
-        {/* AI button — pushed to the far right */}
-        <button
-          onClick={() => setAiOpen(true)}
-          style={{
-            color: "#4edea3",
-            border: "1px solid rgba(78,222,163,0.3)",
-            background: "rgba(78,222,163,0.08)",
-          }}
-          className="ml-auto px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-none hidden md:flex items-center gap-1.5"
-        >
-          ✦ AI
-        </button>
+        {/* Right side buttons */}
+        <div className="ml-auto hidden md:flex items-center gap-2">
+          <button
+            onClick={() => setShortcutsOpen(true)}
+            title="Keyboard shortcuts (?)"
+            style={{
+              color: "#909097",
+              border: "1px solid #2e3447",
+              background: "transparent",
+            }}
+            className="px-2 py-1 text-[10px] font-black uppercase tracking-widest rounded-none flex items-center"
+          >
+            ?
+          </button>
+          <button
+            onClick={() => setAiOpen(true)}
+            style={{
+              color: "#4edea3",
+              border: "1px solid rgba(78,222,163,0.3)",
+              background: "rgba(78,222,163,0.08)",
+            }}
+            className="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-none flex items-center gap-1.5"
+          >
+            ✦ AI
+          </button>
+        </div>
       </header>
+
+      {/* Keyboard shortcuts modal */}
+      {shortcutsOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.7)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShortcutsOpen(false); }}
+        >
+          <div
+            className="w-full max-w-xs rounded-xl p-6 flex flex-col gap-4"
+            style={{ background: "#12121a", border: "1px solid #2e3447" }}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm text-[#dce1fb] uppercase tracking-widest">Keyboard Shortcuts</h3>
+              <button onClick={() => setShortcutsOpen(false)} className="text-[#909097] hover:text-[#dce1fb] text-lg leading-none">&times;</button>
+            </div>
+            <ul className="flex flex-col gap-3">
+              {[
+                { key: "B", description: "Switch to Buy" },
+                { key: "S", description: "Switch to Sell" },
+                { key: "?", description: "Toggle this help" },
+              ].map(({ key, description }) => (
+                <li key={key} className="flex items-center justify-between gap-4">
+                  <span className="text-xs text-[#909097]">{description}</span>
+                  <kbd
+                    className="px-2 py-1 rounded text-xs font-mono font-bold"
+                    style={{ background: "#1a2235", border: "1px solid #2e3447", color: "#4edea3" }}
+                  >
+                    {key}
+                  </kbd>
+                </li>
+              ))}
+            </ul>
+            <p className="text-[10px] text-[#45464d]">Shortcuts are disabled when an input is focused.</p>
+          </div>
+        </div>
+      )}
 
       {/* ── Mobile tab bar ─────────────────────────────────────────────────── */}
       <div className="md:hidden flex border-b border-[#2e3447] shrink-0 bg-[#0b1222]">
@@ -272,7 +337,7 @@ export default function TradingClient({
                 <span className="text-[#909097]"> ~ ${parseFloat(holding.worth).toFixed(2)}</span>
               </div>
             )}
-            <TradeForm symbol={symbol} livePrice={tickerData?.price ?? null} />
+            <TradeForm symbol={symbol} livePrice={tickerData?.price ?? null} forcedSide={tradeSide} />
           </div>
         )}
       </div>
@@ -380,7 +445,7 @@ export default function TradingClient({
                   </div>
                 </div>
               )}
-              <TradeForm symbol={symbol} livePrice={tickerData?.price ?? null} />
+              <TradeForm symbol={symbol} livePrice={tickerData?.price ?? null} forcedSide={tradeSide} />
             </div>
           </div>
 

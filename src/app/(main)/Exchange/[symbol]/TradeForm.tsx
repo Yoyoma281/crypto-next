@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import ConfettiEffect from "@/components/ConfettiEffect";
+import { playSound } from "@/lib/sounds";
 
 interface Coin {
   symbol: string;
@@ -23,13 +24,19 @@ const LIMIT_ORDER_LABELS: Record<LimitOrderType, string> = {
 export default function TradeForm({
   symbol,
   livePrice,
+  forcedSide,
 }: {
   symbol: string;
   livePrice?: string | null;
+  forcedSide?: "BUY" | "SELL" | null;
 }) {
   const { t } = useI18n();
   const ticker = symbol.replace("USDT", "");
   const [side, setSide] = useState<"BUY" | "SELL">("BUY");
+
+  useEffect(() => {
+    if (forcedSide) setSide(forcedSide);
+  }, [forcedSide]);
   const [amount, setAmount] = useState("");
   const price = livePrice ? parseFloat(livePrice) : null;
   const [usdtBal, setUsdtBal] = useState(0);
@@ -119,6 +126,7 @@ export default function TradeForm({
         if (res.ok) {
           setMsg({ ok: true, filledAmount: coinAmount.toFixed(6), filledTotal: parseFloat(usdtAmount).toFixed(2) });
           setAmount("");
+          playSound("fill");
           // Show confetti if SELL trade is profitable
           if (side === "SELL" && price !== null) {
             const avgBuy = avgBuyPriceRef.current;

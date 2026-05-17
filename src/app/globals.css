@@ -6,40 +6,40 @@
 
 @layer base {
   :root {
-    /* KINETIC Material Design 3 Color System */
-    --background: 220 37% 6%; /* #0c1324 */
-    --foreground: 220 14% 87%; /* #dce1fb */
+    /* KINETIC Material Design 3 — Light Mode */
+    --background: 210 40% 98%;
+    --foreground: 220 30% 10%;
 
-    --card: 220 30% 10%; /* #151b2d */
-    --card-foreground: 220 14% 87%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 10%;
 
-    --popover: 220 30% 10%;
-    --popover-foreground: 220 14% 87%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 10%;
 
     /* Primary: Stitch Blue */
-    --primary: 206 100% 77%; /* #8ccdff */
-    --primary-foreground: 205 100% 9%; /* #001e2f */
+    --primary: 206 100% 40%;
+    --primary-foreground: 0 0% 100%;
 
     /* Secondary: Stitch Green */
-    --secondary: 153 66% 57%; /* #42e09a */
-    --secondary-foreground: 153 100% 11%; /* dark green */
+    --secondary: 153 60% 38%;
+    --secondary-foreground: 0 0% 100%;
 
     /* Muted: Subtle Surfaces */
-    --muted: 220 25% 20%; /* #2a3447 */
-    --muted-foreground: 220 13% 78%; /* #c6c6cd */
+    --muted: 210 40% 92%;
+    --muted-foreground: 220 15% 46%;
 
     /* Accent: Emphasis (matches primary) */
-    --accent: 206 100% 77%; /* #8ccdff */
-    --accent-foreground: 205 100% 9%; /* #001e2f */
+    --accent: 206 100% 40%;
+    --accent-foreground: 0 0% 100%;
 
     /* Destructive: Error/Warning */
-    --destructive: 0 73% 70%; /* #ffb3ad */
-    --destructive-foreground: 220 37% 6%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
     /* Borders & Inputs */
-    --border: 220 25% 28%; /* #3e4850 */
-    --input: 220 30% 8%; /* #070d1f */
-    --ring: 206 100% 77%; /* #8ccdff */
+    --border: 214 32% 87%;
+    --input: 214 32% 95%;
+    --ring: 206 100% 40%;
 
     --radius: 0.125rem;
 
@@ -67,11 +67,31 @@
     --color-node-8: 220, 89%, 50%;
     --color-node-9: 217, 30%, 95%;
 
-    --color-site-bg: 0 0% 100%;
+    --color-site-bg: 210 40% 98%;
     --font-primary: "Manrope", sans-serif;
+
+    /* Surface system — Light Mode */
+    --surface: 210 40% 98%;
+    --surface-dim: 210 30% 90%;
+    --surface-bright: 0 0% 100%;
+    --surface-container-lowest: 0 0% 100%;
+    --surface-container-low: 210 40% 96%;
+    --surface-container: 210 40% 94%;
+    --surface-container-high: 210 40% 91%;
+    --surface-container-highest: 210 40% 88%;
+    --surface-variant: 210 35% 88%;
+    --on-surface: 220 30% 10%;
+    --on-surface-variant: 220 15% 46%;
+    --on-background: 220 30% 10%;
+    --outline: 214 20% 62%;
+    --outline-variant: 214 22% 78%;
+    --inverse-surface: 220 30% 10%;
+    --inverse-on-surface: 210 40% 96%;
+    --surface-tint: 206 100% 40%;
   }
 
   .dark {
+    /* KINETIC Material Design 3 — Dark Mode */
     --background: 220 37% 6%;
     --foreground: 220 14% 87%;
     --card: 220 30% 10%;
@@ -91,6 +111,27 @@
     --border: 220 25% 28%;
     --input: 220 30% 8%;
     --ring: 206 100% 77%;
+
+    --color-site-bg: 220 37% 6%;
+
+    /* Surface system — Dark Mode */
+    --surface: 220 40% 9%;
+    --surface-dim: 220 40% 9%;
+    --surface-bright: 225 20% 25%;
+    --surface-container-lowest: 221 55% 8%;
+    --surface-container-low: 225 35% 13%;
+    --surface-container: 224 32% 15%;
+    --surface-container-high: 227 26% 19%;
+    --surface-container-highest: 224 22% 23%;
+    --surface-variant: 224 22% 23%;
+    --on-surface: 220 14% 87%;
+    --on-surface-variant: 220 13% 78%;
+    --on-background: 220 14% 87%;
+    --outline: 220 7% 56%;
+    --outline-variant: 220 8% 28%;
+    --inverse-surface: 220 14% 87%;
+    --inverse-on-surface: 224 20% 22%;
+    --surface-tint: 153 66% 57%;
   }
 
   * {

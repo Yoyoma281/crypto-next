@@ -10,6 +10,8 @@ import { FavoritesProvider } from "@/components/favorites-context";
 import FloatingFavorites from "@/components/floating-favorites";
 import OnboardingModal from "@/components/onboarding-modal";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import CommandPalette, { CommandPaletteProvider, useCommandPaletteContext } from "@/components/CommandPalette";
+import { useEffect } from "react";
 
 function LayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,6 +20,14 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
   const isSignupPage   = pathname === "/signup";
   const isTradePage    = pathname.startsWith("/coin/") && searchParams.get("tab") === "trade";
   const hideChrome = isLoginPage || isSignupPage;
+
+  // Listen for the global open event dispatched by the Ctrl+K handler
+  const { open } = useCommandPaletteContext();
+  useEffect(() => {
+    const handler = () => open();
+    window.addEventListener("crySer:openCommandPalette", handler);
+    return () => window.removeEventListener("crySer:openCommandPalette", handler);
+  }, [open]);
 
   return (
     <>
@@ -45,6 +55,8 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
           <MobileBottomNav />
         </>
       )}
+      {/* Command palette renders outside hideChrome so it works on all pages */}
+      <CommandPalette />
     </>
   );
 }
@@ -53,9 +65,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   return (
     <I18nProvider>
       <FavoritesProvider>
-        <Suspense>
-          <LayoutInner>{children}</LayoutInner>
-        </Suspense>
+        <CommandPaletteProvider>
+          <Suspense>
+            <LayoutInner>{children}</LayoutInner>
+          </Suspense>
+        </CommandPaletteProvider>
       </FavoritesProvider>
     </I18nProvider>
   );
