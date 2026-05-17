@@ -4,11 +4,15 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
+import { BarChart3 } from "lucide-react";
 import { portfolioCoin } from "@/app/types/coin";
 import { CostBasisEntry } from "@/app/data/services";
 import { useI18n } from "@/lib/i18n";
 import EquityCurve from "@/components/EquityCurve";
 import AnimatedNumber from "@/components/AnimatedNumber";
+import CurrencyToggle, { usePersistedCurrency } from "@/components/CurrencyToggle";
+import { useCurrencyRates, CurrencyKey } from "@/hooks/useCurrencyRates";
+import RebalanceSuggestions from "./RebalanceSuggestions";
 
 const RiskAnalyticsCard = dynamic(
   () => import("@/components/RiskAnalyticsCard"),
@@ -49,6 +53,46 @@ function fmtPnl(n: number) {
       maximumFractionDigits: 2,
     });
   return (n >= 0 ? "+" : "-") + abs;
+}
+
+/** Convert a USDT amount into the selected display currency. */
+function convertFromUsdt(usdtAmount: number, currency: CurrencyKey, rates: { BTC: number; ETH: number; EUR: number }): number {
+  switch (currency) {
+    case "BTC": return usdtAmount / rates.BTC;
+    case "ETH": return usdtAmount / rates.ETH;
+    case "EUR": return usdtAmount / rates.EUR;
+    default: return usdtAmount;
+  }
+}
+
+/** Format a value already converted to the display currency. */
+function fmtCurrency(value: number, currency: CurrencyKey): string {
+  switch (currency) {
+    case "BTC":
+      return "₿" + value.toLocaleString("en-US", { minimumFractionDigits: 5, maximumFractionDigits: 8 });
+    case "ETH":
+      return "Ξ" + value.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 6 });
+    case "EUR":
+      return "€" + value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    default:
+      return "$" + value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+}
+
+/** Format absolute PnL (signed) in the display currency. */
+function fmtPnlCurrency(n: number, currency: CurrencyKey): string {
+  const sign = n >= 0 ? "+" : "-";
+  const abs = Math.abs(n);
+  switch (currency) {
+    case "BTC":
+      return sign + "₿" + abs.toLocaleString("en-US", { minimumFractionDigits: 5, maximumFractionDigits: 8 });
+    case "ETH":
+      return sign + "Ξ" + abs.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 6 });
+    case "EUR":
+      return sign + "€" + abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    default:
+      return fmtPnl(n);
+  }
 }
 
 const DONUT_COLORS = [
@@ -183,11 +227,14 @@ export default function PortfolioLiveClient({
   costBasis,
 }: Props) {
   useI18n();
+  const [displayCurrency, setDisplayCurrency] = usePersistedCurrency();
+  const rates = useCurrencyRates();
   const [coins, setCoins] = useState<portfolioCoin[]>(initialCoins);
   const [streamStatus, setStreamStatus] = useState<
     "connecting" | "live" | "error"
   >("connecting");
   const [trades, setTrades] = useState<TradeRecord[]>([]);
+  const [tradesLoading, setTradesLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [hoveredSlice, setHoveredSlice] = useState<DonutSlice | null>(null);
   const [allocationChartData, setAllocationChartData] = useState<{
@@ -220,6 +267,7 @@ export default function PortfolioLiveClient({
 
   // Fetch recent trade history
   useEffect(() => {
+    setTradesLoading(true);
     fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/trades`, {
       credentials: "include",
     })
@@ -229,8 +277,9 @@ export default function PortfolioLiveClient({
           ? data
           : (data.trades ?? []);
         setTrades(list.slice(0, 10));
+        setTradesLoading(false);
       })
-      .catch(() => setTrades([]));
+      .catch(() => { setTrades([]); setTradesLoading(false); });
   }, []);
 
   // Fetch open copy positions
@@ -313,17 +362,26 @@ export default function PortfolioLiveClient({
       {/* ── HEADER ────────────────────────────────────────────────── */}
       <div className="mb-12 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-8">
         <div className="space-y-3">
-          <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
-            Total Portfolio Value
-          </p>
+          <div className="flex items-center gap-4 flex-wrap">
+            <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+              Total Portfolio Value
+            </p>
+            <CurrencyToggle value={displayCurrency} onChange={setDisplayCurrency} />
+          </div>
           <div className="flex items-end gap-1 leading-none">
-            <AnimatedNumber
-              value={totalValue}
-              prefix="$"
-              decimals={2}
-              duration={700}
-              className="text-5xl md:text-6xl font-extrabold tracking-tight tabular-nums"
-            />
+            {displayCurrency === "USDT" ? (
+              <AnimatedNumber
+                value={totalValue}
+                prefix="$"
+                decimals={2}
+                duration={700}
+                className="text-5xl md:text-6xl font-extrabold tracking-tight tabular-nums"
+              />
+            ) : (
+              <span className="text-5xl md:text-6xl font-extrabold tracking-tight tabular-nums">
+                {fmtCurrency(convertFromUsdt(totalValue, displayCurrency, rates), displayCurrency)}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-3 flex-wrap pt-1">
             <span
@@ -333,7 +391,7 @@ export default function PortfolioLiveClient({
               <span className="text-base">{pnlPct >= 0 ? "↑" : "↓"}</span>
               <span>{Math.abs(pnlPct).toFixed(2)}%</span>
               <span className="font-normal opacity-75 text-xs">
-                ({fmtPnl(pnl)})
+                ({fmtPnlCurrency(convertFromUsdt(pnl, displayCurrency, rates), displayCurrency)})
               </span>
             </span>
             <span className="text-[10px] text-muted-foreground">
@@ -357,6 +415,9 @@ export default function PortfolioLiveClient({
           </button>
         </div>
       </div>
+
+      {/* ── REBALANCE SUGGESTIONS ────────────────────────────────── */}
+      <RebalanceSuggestions />
 
       {/* ── EQUITY CURVE ────────────────────────────────────────── */}
       <EquityCurve />
@@ -394,7 +455,7 @@ export default function PortfolioLiveClient({
                       Balance
                     </th>
                     <th className="text-right px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
-                      Value (USD)
+                      Value ({displayCurrency})
                     </th>
                     <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
                       Allocation
@@ -446,7 +507,7 @@ export default function PortfolioLiveClient({
                       {/* Value */}
                       <td className="px-6 py-5 text-right">
                         <span className="text-sm font-semibold tabular-nums">
-                          {fmtUSD(cashBalance)}
+                          {fmtCurrency(convertFromUsdt(cashBalance, displayCurrency, rates), displayCurrency)}
                         </span>
                         <p className="text-[10px] text-muted-foreground tabular-nums">
                           Stable
@@ -528,10 +589,10 @@ export default function PortfolioLiveClient({
                             </span>
                           </td>
 
-                          {/* Value / USD */}
+                          {/* Value / Currency */}
                           <td className="px-6 py-5 text-right">
                             <p className="text-sm font-semibold tabular-nums">
-                              {fmtUSD(worth)}
+                              {fmtCurrency(convertFromUsdt(worth, displayCurrency, rates), displayCurrency)}
                             </p>
                             {uPnl !== undefined && uPnlPct !== undefined && (
                               <p
@@ -541,7 +602,10 @@ export default function PortfolioLiveClient({
                                 }}
                               >
                                 {uPnl >= 0 ? "+" : ""}
-                                {uPnlPct.toFixed(2)}%
+                                {uPnlPct.toFixed(2)}%{" "}
+                                <span className="opacity-75">
+                                  ({fmtPnlCurrency(convertFromUsdt(uPnl, displayCurrency, rates), displayCurrency)})
+                                </span>
                               </p>
                             )}
                           </td>
@@ -598,12 +662,38 @@ export default function PortfolioLiveClient({
                     (c) => parseFloat(c.amount || "0") > 0,
                   ).length === 0 && (
                     <tr>
-                      <td
-                        colSpan={5}
-                        className="px-6 py-10 text-center text-sm text-muted-foreground"
-                      >
-                        No coin holdings yet. Start trading to build your
-                        portfolio.
+                      <td colSpan={5}>
+                        <div className="min-h-[300px] flex items-center justify-center">
+                          <div className="flex flex-col items-center gap-4 py-12 px-6 text-center">
+                            <div
+                              className="w-12 h-12 rounded-xl flex items-center justify-center"
+                              style={{ background: "rgba(140,205,255,0.1)" }}
+                            >
+                              <BarChart3
+                                className="w-6 h-6"
+                                style={{ color: "#8ccdff" }}
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <p className="text-base font-semibold text-foreground">
+                                No positions yet
+                              </p>
+                              <p className="text-sm text-muted-foreground max-w-xs">
+                                Start trading to build your portfolio
+                              </p>
+                            </div>
+                            <Link
+                              href="/coin/BTCUSDT?tab=trade"
+                              className="px-5 py-2.5 rounded-lg text-sm font-bold text-white hover:opacity-90 active:scale-95 transition-all"
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, #8ccdff, #004e7c)",
+                              }}
+                            >
+                              Trade Now →
+                            </Link>
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -693,14 +783,23 @@ export default function PortfolioLiveClient({
               <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-1">
                 Total Gain / Loss
               </p>
-              <AnimatedNumber
-                value={Math.abs(pnl)}
-                prefix={pnl >= 0 ? "+$" : "-$"}
-                decimals={2}
-                duration={700}
-                className="text-3xl font-extrabold tabular-nums"
-                style={{ color: pnlColor }}
-              />
+              {displayCurrency === "USDT" ? (
+                <AnimatedNumber
+                  value={Math.abs(pnl)}
+                  prefix={pnl >= 0 ? "+$" : "-$"}
+                  decimals={2}
+                  duration={700}
+                  className="text-3xl font-extrabold tabular-nums"
+                  style={{ color: pnlColor }}
+                />
+              ) : (
+                <span
+                  className="text-3xl font-extrabold tabular-nums"
+                  style={{ color: pnlColor }}
+                >
+                  {fmtPnlCurrency(convertFromUsdt(pnl, displayCurrency, rates), displayCurrency)}
+                </span>
+              )}
             </div>
 
             {/* Return % */}
@@ -723,7 +822,9 @@ export default function PortfolioLiveClient({
                 <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-0.5">
                   Starting Balance
                 </p>
-                <p className="text-sm font-semibold">$1,000.00</p>
+                <p className="text-sm font-semibold">
+                  {fmtCurrency(convertFromUsdt(STARTING_BALANCE, displayCurrency, rates), displayCurrency)}
+                </p>
               </div>
               <div>
                 <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-0.5">
@@ -741,7 +842,24 @@ export default function PortfolioLiveClient({
 
             <h3 className="font-bold text-base relative z-10">Allocation</h3>
 
-            {donutSlices.length > 0 ? (
+            {allocationChartData === null ? (
+              <div className="flex flex-row items-center gap-6 relative z-10">
+                {/* Donut skeleton */}
+                <div className="w-44 h-44 rounded-full skeleton flex-shrink-0" />
+                {/* Legend skeleton */}
+                <div className="space-y-3 flex-1">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-sm skeleton flex-shrink-0" />
+                      <div className="flex flex-col gap-1">
+                        <div className="h-3 rounded skeleton" style={{ width: 60 + i * 10 }} />
+                        <div className="h-2 rounded skeleton" style={{ width: 40 }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : donutSlices.length > 0 ? (
               <>
                 <div className="flex flex-row items-center gap-6 relative z-10">
                   <DonutChart slices={donutSlices} hovered={hoveredSlice} />
@@ -801,6 +919,36 @@ export default function PortfolioLiveClient({
         </div>
 
         <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] overflow-hidden">
+          {tradesLoading ? (
+            <div className="divide-y divide-[hsl(var(--border))]">
+              <div className="flex items-center gap-8 px-8 py-4 bg-[hsl(var(--muted)/0.3)]">
+                {[110, 60, 120, 100, 80].map((w, i) => (
+                  <div key={i} className="h-2.5 rounded skeleton" style={{ width: w }} />
+                ))}
+              </div>
+              {Array.from({ length: 5 }).map((_, r) => (
+                <div key={r} className="flex items-center gap-8 px-8" style={{ height: 80 }}>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full skeleton" />
+                    <div className="flex flex-col gap-1.5">
+                      <div className="h-3 w-10 rounded skeleton" />
+                      <div className="h-2 w-14 rounded skeleton" />
+                    </div>
+                  </div>
+                  <div className="h-3 w-16 rounded skeleton" />
+                  <div className="h-3 w-28 rounded skeleton" />
+                  <div className="flex flex-col gap-1.5">
+                    <div className="h-3 w-24 rounded skeleton" />
+                    <div className="h-2 w-16 rounded skeleton" />
+                  </div>
+                  <div className="ml-auto flex flex-col items-end gap-1.5">
+                    <div className="h-3 w-24 rounded skeleton" />
+                    <div className="h-2 w-16 rounded skeleton" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-[hsl(var(--muted)/0.3)]">
@@ -967,6 +1115,7 @@ export default function PortfolioLiveClient({
               </tbody>
             </table>
           </div>
+          )}
         </div>
       </section>
 
@@ -1010,12 +1159,18 @@ export default function PortfolioLiveClient({
                       style={i < copyPositions.length - 1 ? { borderBottom: "1px solid hsl(var(--border))" } : {}}
                     >
                       <td className="px-5 py-3.5 font-semibold">{ticker} <span className="text-xs text-muted-foreground font-normal">/ USDT</span></td>
-                      <td className="px-5 py-3.5 text-right font-mono text-xs">{fmtUSD(Number(pos.entryUsdAmount))}</td>
-                      <td className="px-5 py-3.5 text-right font-mono text-xs">{pos.currentWorth ? fmtUSD(Number(pos.currentWorth)) : "—"}</td>
+                      <td className="px-5 py-3.5 text-right font-mono text-xs">
+                        {fmtCurrency(convertFromUsdt(Number(pos.entryUsdAmount), displayCurrency, rates), displayCurrency)}
+                      </td>
+                      <td className="px-5 py-3.5 text-right font-mono text-xs">
+                        {pos.currentWorth
+                          ? fmtCurrency(convertFromUsdt(Number(pos.currentWorth), displayCurrency, rates), displayCurrency)
+                          : "—"}
+                      </td>
                       <td className="px-5 py-3.5 text-right font-mono text-xs">
                         {pnl !== null ? (
                           <span style={{ color: isUp ? "#4edea3" : "#ffb3ad" }}>
-                            {isUp ? "+" : ""}{fmtPnl(pnl)}
+                            {fmtPnlCurrency(convertFromUsdt(pnl, displayCurrency, rates), displayCurrency)}
                           </span>
                         ) : "—"}
                       </td>
