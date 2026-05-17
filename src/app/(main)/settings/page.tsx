@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Shield,
   RotateCcw,
@@ -11,7 +12,19 @@ import {
   Monitor,
   Flame,
   Bell,
+  Volume2,
+  BarChart2,
+  Download,
+  Eye,
+  Trash2,
+  LogIn,
+  KeyRound,
+  ShieldOff,
+  UserCog,
+  FileDown,
+  AlertTriangle,
 } from "lucide-react";
+import { isSoundEnabled, setSoundEnabled } from "@/lib/sounds";
 import AuthRequired from "@/components/auth-required";
 import { useI18n } from "@/lib/i18n";
 import { useXp } from "@/hooks/useXp";
@@ -810,6 +823,310 @@ function BrowserNotificationsCard() {
 }
 
 // ---------------------------------------------------------------------------
+// Sound Effects card
+// ---------------------------------------------------------------------------
+
+function SoundEffectsCard() {
+  const [enabled, setEnabled] = useState(false);
+
+  // Read from localStorage on mount (client only)
+  useEffect(() => {
+    setEnabled(isSoundEnabled());
+  }, []);
+
+  function handleToggle() {
+    const next = !enabled;
+    setEnabled(next);
+    setSoundEnabled(next);
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "16px",
+        padding: "4px 0",
+      }}
+    >
+      <div>
+        <div style={{ fontSize: "13px", fontWeight: "600", color: "#dce1fb" }}>
+          Sound Effects
+        </div>
+        <div style={{ fontSize: "11px", color: "#909097", marginTop: "2px" }}>
+          Play a sound on order fill and price alert trigger
+        </div>
+      </div>
+      <ToggleSwitch on={enabled} onChange={handleToggle} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Data Export card
+// ---------------------------------------------------------------------------
+
+function DataExportCard() {
+  const [downloading, setDownloading] = useState(false);
+  const [status, setStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  async function handleExport() {
+    setDownloading(true);
+    setStatus(null);
+    try {
+      const res = await fetch("/api/auth/export");
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "my-data.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setStatus({ ok: true, msg: "Your data has been downloaded." });
+    } catch {
+      setStatus({ ok: false, msg: "Export failed. Please try again." });
+    } finally {
+      setDownloading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-xs text-[#909097]">
+        Download a full copy of your account data, including trade history,
+        portfolio, and settings, as a JSON file.
+      </p>
+      {status && <StatusMessage ok={status.ok} msg={status.msg} />}
+      <button
+        onClick={handleExport}
+        disabled={downloading}
+        className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition disabled:opacity-50 self-start"
+        style={{
+          background: "rgba(78,222,163,0.1)",
+          color: "#4edea3",
+          border: "1px solid rgba(78,222,163,0.25)",
+        }}
+      >
+        <FileDown className="h-4 w-4" />
+        {downloading ? "Exporting..." : "Export My Data"}
+      </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Audit Log card
+// ---------------------------------------------------------------------------
+
+const AUDIT_ACTION_MAP: Record<string, { label: string; Icon: React.ElementType }> = {
+  login_success:    { label: "Signed in",          Icon: LogIn        },
+  login_fail:       { label: "Failed sign-in",      Icon: AlertTriangle },
+  password_change:  { label: "Password changed",    Icon: KeyRound     },
+  "2fa_enabled":    { label: "2FA enabled",         Icon: ShieldCheck  },
+  "2fa_disabled":   { label: "2FA disabled",        Icon: ShieldOff    },
+  avatar_changed:   { label: "Avatar updated",      Icon: UserCog      },
+  data_export:      { label: "Data exported",       Icon: Download     },
+  account_deleted:  { label: "Account deleted",     Icon: Trash2       },
+};
+
+interface AuditEntry {
+  action: string;
+  createdAt: string;
+}
+
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
+function AuditLogCard() {
+  const [events, setEvents] = useState<AuditEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/audit-log")
+      .then((r) => (r.ok ? r.json() : { events: [] }))
+      .then((d) => setEvents(Array.isArray(d) ? d : (d.events ?? [])))
+      .catch(() => setEvents([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p className="text-xs text-[#909097]">Loading activity...</p>;
+  if (events.length === 0) return <p className="text-xs text-[#909097]">No recent activity found.</p>;
+
+  const visible = showAll ? events : events.slice(0, 10);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-1">
+        {visible.map((ev, i) => {
+          const map = AUDIT_ACTION_MAP[ev.action] ?? { label: ev.action, Icon: Eye };
+          const { label, Icon } = map;
+          const isWarning = ev.action === "login_fail" || ev.action === "account_deleted";
+          return (
+            <li
+              key={i}
+              className="flex items-center gap-3 px-3 py-2 rounded-md"
+              style={{ background: "#0b1222", border: "1px solid #2e3447" }}
+            >
+              <Icon
+                className="h-3.5 w-3.5 shrink-0"
+                style={{ color: isWarning ? "#ffb3ad" : "#4edea3" }}
+              />
+              <span className="text-sm text-[#dce1fb] flex-1">{label}</span>
+              <span className="text-xs text-[#909097] shrink-0">{relativeTime(ev.createdAt)}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {events.length > 10 && (
+        <button
+          onClick={() => setShowAll((v) => !v)}
+          className="text-xs text-[#4edea3] hover:underline self-start"
+        >
+          {showAll ? "Show less" : `Show all ${events.length} events`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Account Deletion card
+// ---------------------------------------------------------------------------
+
+function DeleteAccountCard() {
+  const router = useRouter();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleDelete(e: React.FormEvent) {
+    e.preventDefault();
+    if (!password) {
+      setError("Please enter your password to confirm.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/account", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        router.push("/login");
+      } else {
+        setError(data.error ?? "Failed to delete account.");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <>
+      <p className="text-xs text-[#909097]">
+        Permanently delete your account and all associated data. This action
+        cannot be undone.
+      </p>
+      <button
+        onClick={() => setModalOpen(true)}
+        className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition self-start"
+        style={{
+          background: "rgba(255,179,173,0.1)",
+          color: "#ffb3ad",
+          border: "1px solid rgba(255,179,173,0.25)",
+        }}
+      >
+        <Trash2 className="h-4 w-4" />
+        Delete Account
+      </button>
+
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.7)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setModalOpen(false); setError(null); setPassword(""); } }}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl p-6 flex flex-col gap-5"
+            style={{ background: "#12121a", border: "1px solid #2e3447" }}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                style={{ background: "rgba(255,179,173,0.1)" }}
+              >
+                <AlertTriangle className="h-5 w-5" style={{ color: "#ffb3ad" }} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm text-[#dce1fb]">Delete Account</h3>
+                <p className="text-xs text-[#909097]">This is permanent and irreversible</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#909097] leading-relaxed">
+              All your trades, portfolio, and settings will be permanently removed.
+              Enter your password to confirm.
+            </p>
+
+            <form onSubmit={handleDelete} className="flex flex-col gap-3">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+                className="bg-[#1a2235] border border-[#2e3447] text-[#dce1fb] px-3 py-2 text-sm outline-none focus:border-[#ffb3ad] rounded-md w-full"
+              />
+              {error && (
+                <p className="text-xs px-3 py-2 rounded-md" style={{ color: "#ffb3ad", background: "rgba(255,179,173,0.1)" }}>
+                  {error}
+                </p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 px-4 py-2 rounded-md text-sm font-semibold transition disabled:opacity-50"
+                  style={{ background: "#ffb3ad", color: "#1a0000" }}
+                >
+                  {loading ? "Deleting..." : "Yes, delete my account"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setModalOpen(false); setError(null); setPassword(""); }}
+                  className="px-4 py-2 rounded-md text-sm font-semibold transition"
+                  style={{ background: "rgba(255,255,255,0.06)", color: "#909097", border: "1px solid #2e3447" }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -821,6 +1138,11 @@ export default function SettingsPage() {
   const [currentAvatar, setCurrentAvatar] = useState<string>("");
   const [showAvatarOptions, setShowAvatarOptions] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+
+  // Cost basis method
+  const [costBasisMethod, setCostBasisMethod] = useState<"fifo" | "lifo" | "avg">("avg");
+  const [costBasisStatus, setCostBasisStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [costBasisLoading, setCostBasisLoading] = useState(false);
 
   // Password change state
   const [pwForm, setPwForm] = useState({
@@ -875,6 +1197,9 @@ export default function SettingsPage() {
         }
         if (typeof data?.twoFactorEnabled === "boolean") {
           setTwoFactorEnabled(data.twoFactorEnabled);
+        }
+        if (data?.costBasisMethod) {
+          setCostBasisMethod(data.costBasisMethod as "fifo" | "lifo" | "avg");
         }
       })
       .catch(() => setAuthed(false));
@@ -1035,6 +1360,29 @@ export default function SettingsPage() {
     } finally {
       setResetLoading(false);
       setConfirmReset(false);
+    }
+  }
+
+  async function handleCostBasisChange(method: "fifo" | "lifo" | "avg") {
+    setCostBasisLoading(true);
+    setCostBasisStatus(null);
+    try {
+      const res = await fetch("/api/user/settings/cost-basis", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ method }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCostBasisMethod(method);
+        setCostBasisStatus({ ok: true, msg: "Cost basis method updated." });
+      } else {
+        setCostBasisStatus({ ok: false, msg: data.error ?? "Failed to update" });
+      }
+    } catch {
+      setCostBasisStatus({ ok: false, msg: "Network error" });
+    } finally {
+      setCostBasisLoading(false);
     }
   }
 
@@ -1343,6 +1691,71 @@ export default function SettingsPage() {
       </Section>
 
       {/* ------------------------------------------------------------------ */}
+      {/* Trading / Portfolio                                                 */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div>
+        <h2 className="text-[#dce1fb] font-bold text-sm uppercase tracking-wider mb-1">
+          Trading
+        </h2>
+        <p className="text-xs text-[#909097]">
+          Configure how your portfolio performance is calculated.
+        </p>
+      </div>
+
+      {/* Cost Basis Method */}
+      <Section
+        icon={BarChart2}
+        title="Cost Basis Method"
+        description="Choose how realized P&amp;L is calculated when you sell"
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-2 flex-wrap">
+            {(["avg", "fifo", "lifo"] as const).map((m) => {
+              const labels: Record<string, string> = {
+                avg: "Avg Cost",
+                fifo: "FIFO",
+                lifo: "LIFO",
+              };
+              const isActive = costBasisMethod === m;
+              return (
+                <button
+                  key={m}
+                  onClick={() => handleCostBasisChange(m)}
+                  disabled={costBasisLoading}
+                  className="px-4 py-2 rounded-md text-sm font-semibold transition disabled:opacity-50"
+                  style={{
+                    background: isActive
+                      ? "rgba(78,222,163,0.18)"
+                      : "rgba(255,255,255,0.04)",
+                    color: isActive ? "#4edea3" : "#909097",
+                    border: isActive
+                      ? "1px solid rgba(78,222,163,0.4)"
+                      : "1px solid #2e3447",
+                  }}
+                >
+                  {labels[m]}
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="text-xs text-[#909097]">
+            {costBasisMethod === "avg" &&
+              "Average Cost: all buy prices are averaged together for the cost basis."}
+            {costBasisMethod === "fifo" &&
+              "FIFO: sells are matched against your earliest purchases first."}
+            {costBasisMethod === "lifo" &&
+              "LIFO: sells are matched against your most recent purchases first."}
+          </p>
+
+          {costBasisStatus && (
+            <StatusMessage ok={costBasisStatus.ok} msg={costBasisStatus.msg} />
+          )}
+        </div>
+      </Section>
+
+      {/* ------------------------------------------------------------------ */}
       {/* Security                                                            */}
       {/* ------------------------------------------------------------------ */}
 
@@ -1394,7 +1807,73 @@ export default function SettingsPage() {
         <NotificationPrefsCard />
       </Section>
 
+      <Section
+        icon={Volume2}
+        title="Sound Effects"
+        description="Opt-in audio feedback for trading events"
+      >
+        <SoundEffectsCard />
+      </Section>
+
       <BrowserNotificationsCard />
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Account                                                             */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div>
+        <h2 className="text-[#dce1fb] font-bold text-sm uppercase tracking-wider mb-1">
+          Account
+        </h2>
+        <p className="text-xs text-[#909097]">
+          Manage your account data and activity.
+        </p>
+      </div>
+
+      {/* Data Export */}
+      <Section
+        icon={Download}
+        title="Export My Data"
+        description="Download a full copy of your account data as JSON"
+      >
+        <DataExportCard />
+      </Section>
+
+      {/* Audit Log */}
+      <Section
+        icon={Eye}
+        title="Account Activity"
+        description="Recent sensitive actions on your account"
+      >
+        <AuditLogCard />
+      </Section>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Danger Zone                                                         */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div>
+        <h2 className="font-bold text-sm uppercase tracking-wider mb-1" style={{ color: "#ffb3ad" }}>
+          Danger Zone
+        </h2>
+        <p className="text-xs text-[#909097]">
+          Irreversible actions. Proceed with caution.
+        </p>
+      </div>
+
+      <div
+        className="rounded-xl px-6 py-6 flex flex-col gap-5"
+        style={{ border: "1px solid rgba(255,179,173,0.3)", background: "rgba(255,179,173,0.04)" }}
+      >
+        <div className="flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5" style={{ color: "#ffb3ad" }} />
+          <div>
+            <h2 className="font-semibold text-sm" style={{ color: "#ffb3ad" }}>Delete Account</h2>
+            <p className="text-xs text-muted-foreground">Permanently remove your account and all data</p>
+          </div>
+        </div>
+        <DeleteAccountCard />
+      </div>
     </div>
   );
 }
