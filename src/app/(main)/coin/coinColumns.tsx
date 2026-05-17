@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { formatPrice, fmtCoinPrice } from "@/lib/utils";
 import { CoinTableRow } from "@/app/types/coin";
@@ -77,6 +77,29 @@ function PctBadge({ value }: { value: string }) {
       }}
     >
       {isUp ? "▲" : "▼"} {Math.abs(num).toFixed(2)}%
+    </span>
+  );
+}
+
+/** Displays a price value and flashes green/red when it changes */
+function FlashingPrice({ value }: { value: string }) {
+  const prevRef = useRef<string>(value);
+  const [flashClass, setFlashClass] = useState("");
+
+  useEffect(() => {
+    const prev = prevRef.current;
+    if (prev === value) return;
+    const wasUp = parseFloat(value) > parseFloat(prev);
+    prevRef.current = value;
+    const cls = wasUp ? "animate-flash-price-green" : "animate-flash-price-red";
+    setFlashClass(cls);
+    const id = setTimeout(() => setFlashClass(""), 520);
+    return () => clearTimeout(id);
+  }, [value]);
+
+  return (
+    <span className={`font-semibold text-[14px] rounded px-1 -mx-1 transition-none ${flashClass}`}>
+      {formatPrice(value)}
     </span>
   );
 }
@@ -179,11 +202,7 @@ export function makeColumns(
     {
       accessorKey: "lastPrice",
       header: t.markets.colPrice,
-      cell: (props) => (
-        <span className="font-semibold text-[14px]">
-          {formatPrice(props.getValue() as string)}
-        </span>
-      ),
+      cell: (props) => <FlashingPrice value={props.getValue() as string} />,
     },
     {
       accessorKey: "priceChange",
