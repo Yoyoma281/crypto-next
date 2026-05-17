@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Download } from "lucide-react";
+import { Download, History, FileText } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
@@ -36,6 +36,94 @@ function fmtCoin(n: string) {
 }
 
 const LIMIT = 20;
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = [
+  { value: String(CURRENT_YEAR), label: String(CURRENT_YEAR) },
+  { value: String(CURRENT_YEAR - 1), label: String(CURRENT_YEAR - 1) },
+  { value: "", label: "All time" },
+];
+
+function TaxReportCard() {
+  const [year, setYear] = useState(String(CURRENT_YEAR));
+  const [downloading, setDownloading] = useState(false);
+
+  async function handleDownload() {
+    setDownloading(true);
+    try {
+      const params = new URLSearchParams({ format: "csv" });
+      if (year) params.set("year", year);
+      const url = `/api/export/tax-report?${params}`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Download failed");
+
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `tax-report${year ? `-${year}` : ""}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      // silent — user can retry
+    } finally {
+      setDownloading(false);
+    }
+  }
+
+  return (
+    <div
+      className="rounded-xl p-5 flex flex-col sm:flex-row sm:items-center gap-4"
+      style={{ border: "1px solid #2e3447", background: "hsl(var(--card))" }}
+    >
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div
+          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: "rgba(78,222,163,0.1)" }}
+        >
+          <FileText className="w-4 h-4" style={{ color: "#4edea3" }} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-foreground leading-tight">Tax Report</p>
+          <p className="text-xs text-muted-foreground">
+            Download a CSV of all your taxable trade events
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 shrink-0">
+        <select
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+          className="px-3 py-1.5 text-xs rounded-lg border border-border bg-card text-foreground outline-none focus:ring-1 focus:ring-primary"
+        >
+          {YEAR_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+
+        <button
+          onClick={handleDownload}
+          disabled={downloading}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+          style={{
+            background: "rgba(78,222,163,0.12)",
+            color: "#4edea3",
+            border: "1px solid rgba(78,222,163,0.3)",
+          }}
+        >
+          <Download className="h-3.5 w-3.5" />
+          {downloading ? "Downloading..." : "Download Tax Report"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function HistoryContent() {
   const { t } = useI18n();
@@ -155,6 +243,9 @@ export default function HistoryContent() {
         </a>
       </div>
 
+      {/* Tax Report */}
+      <TaxReportCard />
+
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Side filter */}
@@ -190,16 +281,53 @@ export default function HistoryContent() {
 
       {/* Table */}
       {loading ? (
-        <div className="rounded-xl border border-border bg-card px-6 py-16 text-center text-sm text-muted-foreground animate-pulse">
-          Loading…
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          {/* Header skeleton */}
+          <div className="flex items-center gap-4 px-5 py-3 border-b border-border bg-muted/20">
+            {[90, 80, 60, 90, 90, 80, 40].map((w, i) => (
+              <div key={i} className="h-2.5 rounded skeleton" style={{ width: w, flexShrink: 0 }} />
+            ))}
+          </div>
+          {/* Row skeletons */}
+          {Array.from({ length: 8 }).map((_, r) => (
+            <div
+              key={r}
+              className="flex items-center gap-4 px-5 border-b border-border/50"
+              style={{ height: 56 }}
+            >
+              <div className="h-3 rounded skeleton" style={{ width: 90, flexShrink: 0 }} />
+              <div className="h-3 rounded skeleton" style={{ width: 80, flexShrink: 0 }} />
+              <div className="h-5 w-14 rounded-full skeleton flex-shrink-0" />
+              <div className="h-3 rounded skeleton ml-auto" style={{ width: 80 }} />
+              <div className="h-3 rounded skeleton" style={{ width: 80 }} />
+              <div className="h-3 rounded skeleton" style={{ width: 70 }} />
+              <div className="h-3 w-8 rounded skeleton flex-shrink-0" />
+            </div>
+          ))}
         </div>
       ) : trades.length === 0 ? (
-        <div className="rounded-xl px-6 py-16 text-center text-muted-foreground text-sm border border-border bg-card">
-          {t.history.noTrades}{" "}
-          <Link href="/coin/BTCUSDT?tab=trade" className="underline hover:text-foreground">
-            {t.history.goToExchange}
-          </Link>{" "}
-          {t.history.firstTrade}
+        <div className="rounded-xl border border-border bg-card min-h-[300px] flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 py-12 px-6 text-center">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ background: "rgba(140,205,255,0.1)" }}
+            >
+              <History className="w-6 h-6" style={{ color: "#8ccdff" }} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <p className="text-base font-semibold text-foreground">No trades yet</p>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                Your completed trades will appear here
+              </p>
+            </div>
+            <Link
+              href="/coin/BTCUSDT?tab=trade"
+              className="px-5 py-2.5 rounded-lg text-sm font-bold text-white hover:opacity-90 active:scale-95 transition-all"
+              style={{ background: "linear-gradient(135deg, #8ccdff, #004e7c)" }}
+            >
+              Make your first trade →
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="rounded-xl overflow-hidden border border-border bg-card">
