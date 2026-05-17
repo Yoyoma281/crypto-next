@@ -367,27 +367,30 @@ export default function AlertsPage() {
 
       {/* ── Empty state ── */}
       {!loading && alerts.length === 0 && (
-        <div className="rounded-xl border border-border bg-card flex flex-col items-center justify-center py-16 px-6 text-center gap-4">
-          <div
-            className="h-16 w-16 rounded-full flex items-center justify-center"
-            style={{ background: PRIMARY + "18" }}
-          >
-            <Bell className="h-8 w-8" style={{ color: PRIMARY }} />
+        <div className="rounded-xl border border-border bg-card min-h-[300px] flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 py-12 px-6 text-center">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ background: "rgba(140,205,255,0.1)" }}
+            >
+              <Bell className="w-6 h-6" style={{ color: PRIMARY }} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <p className="text-base font-semibold text-foreground">
+                No price alerts set
+              </p>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                Get notified when prices move
+              </p>
+            </div>
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-5 py-2.5 rounded-lg text-sm font-bold text-white hover:opacity-90 active:scale-95 transition-all"
+              style={{ background: "linear-gradient(135deg, #8ccdff, #004e7c)" }}
+            >
+              Set an Alert →
+            </button>
           </div>
-          <div>
-            <p className="font-bold text-base">No price alerts</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Set a target price on any coin and get notified when it hits.
-            </p>
-          </div>
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white hover:opacity-90 active:scale-95 transition-all"
-            style={{ background: "linear-gradient(135deg, #8ccdff, #004e7c)" }}
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Set your first alert
-          </button>
         </div>
       )}
 

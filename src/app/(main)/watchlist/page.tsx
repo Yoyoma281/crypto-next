@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Star, ArrowRight } from "lucide-react";
+import { Star, ArrowRight, Eye } from "lucide-react";
 import Link from "next/link";
 import FavoritesTable from "@/app/(main)/coin/FavoritesTable";
 import { useFavoritesCtx } from "@/components/favorites-context";
@@ -97,20 +97,33 @@ export default function WatchlistPage() {
       </div>
 
       {favorites.size === 0 && (
-        <p className="text-xs text-center text-muted-foreground">
-          {t.watchlist.starCoins}{" "}
-          <Link href="/coin" className="underline hover:text-foreground">
-            {t.watchlist.markets}
-          </Link>{" "}
-          {t.watchlist.or}{" "}
-          <Link
-            href="/coin/BTCUSDT?tab=trade"
-            className="underline hover:text-foreground"
-          >
-            {t.watchlist.exchange}
-          </Link>{" "}
-          {t.watchlist.addThem}
-        </p>
+        <div
+          className="rounded-xl border border-border bg-card min-h-[300px] flex items-center justify-center"
+        >
+          <div className="flex flex-col items-center gap-4 py-12 px-6 text-center">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ background: "rgba(140,205,255,0.1)" }}
+            >
+              <Eye className="w-6 h-6" style={{ color: "#8ccdff" }} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <p className="text-base font-semibold text-foreground">
+                Your watchlist is empty
+              </p>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                Add coins you want to track
+              </p>
+            </div>
+            <Link
+              href="/"
+              className="px-5 py-2.5 rounded-lg text-sm font-bold text-white hover:opacity-90 active:scale-95 transition-all"
+              style={{ background: "linear-gradient(135deg, #8ccdff, #004e7c)" }}
+            >
+              Browse Markets →
+            </Link>
+          </div>
+        </div>
       )}
     </div>
   );
