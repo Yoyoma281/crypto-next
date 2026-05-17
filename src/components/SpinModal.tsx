@@ -17,12 +17,12 @@ interface Prize {
 }
 
 const PRIZES: Prize[] = [
-  { label: "$2 VUSDT", subLabel: "+ 5 XP", color: "#4edea3", bg: "rgba(78,222,163,0.12)", glow: "rgba(78,222,163,0.4)" },
-  { label: "$5 VUSDT", subLabel: "+ 10 XP", color: "#4edea3", bg: "rgba(78,222,163,0.15)", glow: "rgba(78,222,163,0.5)" },
-  { label: "$10 VUSDT", subLabel: "+ 20 XP", color: "#f5c842", bg: "rgba(245,200,66,0.12)", glow: "rgba(245,200,66,0.45)" },
-  { label: "50 XP", subLabel: "XP Boost", color: "#8ccdff", bg: "rgba(140,205,255,0.12)", glow: "rgba(140,205,255,0.4)" },
-  { label: "$1 VUSDT", subLabel: "+ 2 XP", color: "#4edea3", bg: "rgba(78,222,163,0.08)", glow: "rgba(78,222,163,0.3)" },
-  { label: "25 XP", subLabel: "XP Only", color: "#8ccdff", bg: "rgba(140,205,255,0.08)", glow: "rgba(140,205,255,0.3)" },
+  { label: "$2 VUSDT",  subLabel: "+ 5 XP",   color: "#4edea3", bg: "rgba(78,222,163,0.12)",  glow: "rgba(78,222,163,0.4)"  },
+  { label: "$5 VUSDT",  subLabel: "+ 10 XP",  color: "#4edea3", bg: "rgba(78,222,163,0.15)",  glow: "rgba(78,222,163,0.5)"  },
+  { label: "$10 VUSDT", subLabel: "+ 20 XP",  color: "#f5c842", bg: "rgba(245,200,66,0.12)",  glow: "rgba(245,200,66,0.45)" },
+  { label: "$20 VUSDT", subLabel: "+ 35 XP",  color: "#f5c842", bg: "rgba(245,200,66,0.15)",  glow: "rgba(245,200,66,0.55)" },
+  { label: "$50 VUSDT", subLabel: "+ 75 XP",  color: "#ff9f43", bg: "rgba(255,159,67,0.15)",  glow: "rgba(255,159,67,0.55)" },
+  { label: "+100 XP",   subLabel: "XP Boost", color: "#8ccdff", bg: "rgba(140,205,255,0.12)", glow: "rgba(140,205,255,0.4)" },
 ];
 
 const BG = "#0b1222";
@@ -155,11 +155,20 @@ export default function SpinModal({ isOpen, onClose }: SpinModalProps) {
     if (apiRes.ok) {
       try {
         const data = await apiRes.json();
-        resultLabel = data.prize ?? data.reward ?? data.label ?? resultLabel;
-        resultXp = data.xp;
-        // Try to match prize to index
-        const match = PRIZES.findIndex((p) => p.label === resultLabel);
-        if (match !== -1) resultIdx = match;
+        const prize = data.prize;
+        if (prize && typeof prize === "object") {
+          resultLabel = prize.label ?? resultLabel;
+          resultXp = prize.xp;
+        } else {
+          resultLabel = prize ?? data.reward ?? data.label ?? resultLabel;
+          resultXp = data.xp;
+        }
+        if (typeof data.slotIndex === "number") {
+          resultIdx = data.slotIndex % PRIZES.length;
+        } else {
+          const match = PRIZES.findIndex((p) => p.label === resultLabel);
+          if (match !== -1) resultIdx = match;
+        }
       } catch {
         // use random
       }
