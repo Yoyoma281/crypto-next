@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { TrendingUp, BarChart2, Briefcase, Users, Settings } from 'lucide-react';
+import { TrendingUp, BarChart2, Briefcase, Users, Settings, Shield } from 'lucide-react';
 
 const TABS = [
   { href: '/', label: 'Market', icon: TrendingUp, matchPrefix: false },
   { href: '/Exchange/BTC_USDT', label: 'Trade', icon: BarChart2, matchPrefix: true, prefixMatch: '/Exchange/' },
   { href: '/Portfolio', label: 'Portfolio', icon: Briefcase, matchPrefix: true },
+  { href: '/squads', label: 'Squads', icon: Shield, matchPrefix: true },
   { href: '/feed', label: 'Social', icon: Users, matchPrefix: true },
   { href: '/settings', label: 'Profile', icon: Settings, matchPrefix: true },
 ];

@@ -42,6 +42,8 @@ const MORE_NAV_KEYS = [
   { key: "learn" as const, href: "/learn/how-to-trade" },
 ];
 
+const SQUADS_NAV = { label: "Squads", href: "/squads" };
+
 export default function TopBarStats() {
   const pathname = usePathname();
   const { t } = useI18n();
@@ -139,6 +141,9 @@ export default function TopBarStats() {
                   {t.nav[link.key]}
                 </Link>
               ))}
+              <Link href={SQUADS_NAV.href} className={navClass(SQUADS_NAV.href)}>
+                {SQUADS_NAV.label}
+              </Link>
 
               <div className="relative" ref={moreRef}>
                 <button
