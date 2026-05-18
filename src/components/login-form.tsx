@@ -11,6 +11,7 @@ import { useState, useEffect, useRef } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import Link from "next/link";
+import { OAuthButtons } from "@/components/OAuthButtons";
 
 const loginSchema = z.object({
   username: z.string("Invalid email address"),
@@ -201,6 +202,8 @@ export function LoginForm({
           )}
         </Button>
       </div>
+
+      <OAuthButtons />
 
       <div className="text-center text-sm text-muted-foreground">
         {t.auth.noAccount}{" "}

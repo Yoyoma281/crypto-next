@@ -12,6 +12,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Loader2, CheckCircle2, Wallet } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { OAuthButtons } from "@/components/OAuthButtons";
 
 const schema = z
   .object({
@@ -227,6 +228,8 @@ export function SignupForm({
           )}
         </Button>
       </div>
+
+      <OAuthButtons />
 
       <p className="text-center text-sm text-muted-foreground">
         {t.auth.hasAccount}{" "}
