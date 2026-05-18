@@ -8,7 +8,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import Link from "next/link";
 import { OAuthButtons } from "@/components/OAuthButtons";
@@ -43,10 +43,12 @@ export function LoginForm({
 }) {
   const router = useRouter();
   const { t } = useI18n();
-  const [state, setState] = useState<"idle" | "loading" | "success" | "error">(
+  const [state, setState] = useState<"idle" | "loading" | "success" | "error" | "2fa">(
     "idle",
   );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [twoFaUsername, setTwoFaUsername] = useState<string>("");
+  const [twoFaCode, setTwoFaCode] = useState<string>("");
   const firstFieldRef = useRef<HTMLInputElement | null>(null);
 
   const {
@@ -69,7 +71,11 @@ export function LoginForm({
     setErrorMsg(null);
     try {
       const response = await login(data.username, data.password);
-      if (response && response.token) {
+      if (response?.requiresTwoFactor) {
+        setTwoFaUsername(data.username);
+        setTwoFaCode("");
+        setState("2fa");
+      } else if (response?.token) {
         setState("success");
         setTimeout(() => router.push("/"), 1600);
       } else {
@@ -81,6 +87,100 @@ export function LoginForm({
       setState("error");
     }
   };
+
+  const onSubmit2FA = async () => {
+    setState("loading");
+    setErrorMsg(null);
+    try {
+      const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
+      const res = await fetch(`${BASE}/auth/2fa/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username: twoFaUsername, token: twoFaCode }),
+      });
+      const data = await res.json();
+      if (res.ok && data.token) {
+        setState("success");
+        setTimeout(() => router.push("/"), 1600);
+      } else {
+        setErrorMsg(data.error ?? "Invalid code");
+        setState("2fa");
+      }
+    } catch {
+      setErrorMsg("Verification failed");
+      setState("2fa");
+    }
+  };
+
+  if (state === "2fa" || (state === "loading" && twoFaUsername)) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <div
+            className="h-14 w-14 rounded-full flex items-center justify-center mb-1"
+            style={{ background: "rgba(78,222,163,0.1)" }}
+          >
+            <ShieldCheck className="h-7 w-7" style={{ color: "#4edea3" }} />
+          </div>
+          <h1 className="text-2xl font-bold">Two-Factor Auth</h1>
+          <p className="text-sm text-muted-foreground">
+            Enter the 6-digit code from your authenticator app
+          </p>
+        </div>
+
+        <div className="grid gap-4">
+          <Input
+            type="text"
+            inputMode="numeric"
+            placeholder="000000"
+            maxLength={6}
+            value={twoFaCode}
+            onChange={(e) => setTwoFaCode(e.target.value.replace(/\D/g, ""))}
+            onKeyDown={(e) => e.key === "Enter" && twoFaCode.length === 6 && onSubmit2FA()}
+            className="text-center text-2xl tracking-[0.5em] font-mono"
+            autoFocus
+          />
+
+          {errorMsg && (
+            <div
+              className="text-xs text-center px-3 py-2.5 rounded-lg border"
+              style={{
+                color: "#ffb3ad",
+                background: "rgba(255,179,173,0.07)",
+                borderColor: "rgba(255,179,173,0.25)",
+              }}
+            >
+              {errorMsg}
+            </div>
+          )}
+
+          <Button
+            onClick={onSubmit2FA}
+            disabled={twoFaCode.length !== 6 || state === "loading"}
+            className="w-full font-semibold"
+          >
+            {state === "loading" ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Verifying…
+              </span>
+            ) : (
+              "Verify"
+            )}
+          </Button>
+
+          <button
+            type="button"
+            onClick={() => { setState("idle"); setTwoFaUsername(""); setErrorMsg(null); }}
+            className="text-xs text-muted-foreground underline underline-offset-4 hover:opacity-80"
+          >
+            Back to login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (state === "success") {
     return (
