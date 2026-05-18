@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -9,6 +9,9 @@ import {
   Clock,
   Loader2,
   UserMinus,
+  Search,
+  X,
+  UserPlus,
 } from "lucide-react";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
@@ -45,6 +48,15 @@ interface SentRequest {
 }
 
 type Tab = "friends" | "requests" | "sent";
+
+interface SearchUser {
+  _id: string;
+  username: string;
+  avatar: string | null;
+  level: number;
+  xp: number;
+  online: boolean;
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -260,6 +272,13 @@ function ActionBtn({
 export default function FriendsClient() {
   const [activeTab, setActiveTab] = useState<Tab>("friends");
 
+  // ── Search ──
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [sentTo, setSentTo] = useState<Set<string>>(new Set());
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [friends, setFriends] = useState<FriendUser[]>([]);
   const [requests, setRequests] = useState<IncomingRequest[]>([]);
   const [sent, setSent] = useState<SentRequest[]>([]);
@@ -385,6 +404,52 @@ export default function FriendsClient() {
     }
   }
 
+  // ── Search ──
+
+  function handleSearchChange(value: string) {
+    setSearchQuery(value);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    if (value.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    setSearchLoading(true);
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `${BASE_URL}/users/search?q=${encodeURIComponent(value.trim())}`,
+          { credentials: "include" }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data.users ?? []);
+        }
+      } catch {
+        // ignore
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+  }
+
+  async function sendRequest(username: string) {
+    setMutatingId(username);
+    try {
+      const res = await fetch(
+        `${BASE_URL}/friends/request/${encodeURIComponent(username)}`,
+        { method: "POST", credentials: "include" }
+      );
+      if (res.ok) {
+        setSentTo((prev) => new Set(prev).add(username));
+        fetchSent();
+      }
+    } catch {
+      // ignore
+    } finally {
+      setMutatingId(null);
+    }
+  }
+
   // ── Tab counts ──
 
   const pendingCount = requests.length;
@@ -447,6 +512,136 @@ export default function FriendsClient() {
             Connect with other traders and track their progress
           </p>
         </div>
+      </div>
+
+      {/* Search bar */}
+      <div style={{ position: "relative", marginBottom: "20px" }}>
+        <Search
+          size={15}
+          style={{
+            position: "absolute",
+            left: "14px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            color: "#909097",
+            pointerEvents: "none",
+          }}
+        />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="Search traders by username…"
+          style={{
+            width: "100%",
+            background: "#191f31",
+            border: "1px solid #2e3447",
+            borderRadius: "10px",
+            padding: "10px 40px",
+            fontSize: "13px",
+            color: "#dce1fb",
+            outline: "none",
+            boxSizing: "border-box",
+            transition: "border-color 0.15s",
+          }}
+          onFocus={(e) => (e.currentTarget.style.borderColor = "#4edea366")}
+          onBlur={(e) => (e.currentTarget.style.borderColor = "#2e3447")}
+        />
+        {searchQuery && (
+          <button
+            onClick={() => { setSearchQuery(""); setSearchResults([]); }}
+            style={{
+              position: "absolute",
+              right: "12px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#909097",
+              padding: "2px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <X size={14} />
+          </button>
+        )}
+
+        {/* Search results dropdown */}
+        {searchQuery.trim().length >= 2 && (
+          <div
+            style={{
+              position: "absolute",
+              top: "calc(100% + 6px)",
+              left: 0,
+              right: 0,
+              background: "#191f31",
+              border: "1px solid #2e3447",
+              borderRadius: "10px",
+              zIndex: 50,
+              overflow: "hidden",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+            }}
+          >
+            {searchLoading ? (
+              <div style={{ padding: "20px", textAlign: "center", color: "#909097", fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} />
+                Searching…
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div style={{ padding: "20px", textAlign: "center", color: "#909097", fontSize: "12px" }}>
+                No users found for &ldquo;{searchQuery}&rdquo;
+              </div>
+            ) : (
+              searchResults.map((user, i) => {
+                const isFriend = friends.some((f) => f._id === user._id);
+                const alreadySent = sentTo.has(user.username) || sent.some((s) => s.receiver.username === user.username);
+                const isMutating = mutatingId === user.username;
+                return (
+                  <div
+                    key={user._id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "12px 16px",
+                      gap: "12px",
+                      borderBottom: i < searchResults.length - 1 ? "1px solid #2e3447" : "none",
+                    }}
+                  >
+                    <Avatar username={user.username} avatar={user.avatar} size={38} online={user.online} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "7px", flexWrap: "wrap" }}>
+                        <Link
+                          href={`/u/${encodeURIComponent(user.username)}`}
+                          style={{ fontSize: "13px", fontWeight: 800, color: "#dce1fb", textDecoration: "none" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.color = "#4edea3")}
+                          onMouseLeave={(e) => (e.currentTarget.style.color = "#dce1fb")}
+                        >
+                          {user.username}
+                        </Link>
+                        <LevelChip level={user.level} />
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#909097", fontFamily: "monospace" }}>
+                        {user.xp.toLocaleString()} XP
+                      </div>
+                    </div>
+                    {isFriend ? (
+                      <span style={{ fontSize: "11px", color: "#4edea3", fontWeight: 700 }}>Friends</span>
+                    ) : alreadySent ? (
+                      <span style={{ fontSize: "11px", color: "#909097", fontWeight: 600 }}>Request sent</span>
+                    ) : (
+                      <ActionBtn onClick={() => sendRequest(user.username)} loading={isMutating} variant="primary">
+                        {!isMutating && <UserPlus size={11} />}
+                        Add
+                      </ActionBtn>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
