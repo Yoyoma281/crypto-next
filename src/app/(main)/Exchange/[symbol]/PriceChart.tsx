@@ -8,7 +8,9 @@ import {
   type IChartApi,
   type ISeriesApi,
   type UTCTimestamp,
+  type Time,
 } from "lightweight-charts";
+import { Minus, TrendingUp, Triangle, X, Trash2 } from "lucide-react";
 
 // ── Timeframe config ────────────────────────────────────────────────────────────
 
@@ -37,6 +39,37 @@ interface Candle {
 
 type IndicatorKey = "MA" | "EMA" | "BB" | "RSI" | "MACD";
 
+// ── Drawing types ───────────────────────────────────────────────────────────────
+
+type DrawingTool = "none" | "horizontal" | "trendline" | "fib";
+
+interface DrawingPoint {
+  price: number;
+  time: number;
+  x: number;
+  y: number;
+}
+
+interface Drawing {
+  id: string;
+  type: DrawingTool;
+  points: DrawingPoint[];
+  color: string;
+}
+
+// Fibonacci retracement levels
+const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 1.0] as const;
+const FIB_COLORS: Record<number, string> = {
+  0:     "#4edea3",
+  0.236: "#a78bfa",
+  0.382: "#f59e0b",
+  0.5:   "#60a5fa",
+  0.618: "#f87171",
+  1.0:   "#4edea3",
+};
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
+
 // ── Pure indicator computation functions ────────────────────────────────────────
 
 function computeSMA(closes: number[], period: number): (number | null)[] {
@@ -55,7 +88,6 @@ function computeEMA(closes: number[], period: number): (number | null)[] {
   for (let i = 0; i < closes.length; i++) {
     if (ema === null) {
       if (i < period - 1) continue;
-      // Seed with SMA of first `period` values
       let sum = 0;
       for (let j = i - period + 1; j <= i; j++) sum += closes[j];
       ema = sum / period;
@@ -93,7 +125,6 @@ function computeRSI(closes: number[], period: number): (number | null)[] {
   const result: (number | null)[] = new Array(closes.length).fill(null);
   if (closes.length < period + 1) return result;
 
-  // Initial avg gain/loss from first `period` changes
   let avgGain = 0;
   let avgLoss = 0;
   for (let i = 1; i <= period; i++) {
@@ -133,7 +164,6 @@ function computeMACD(
     return (fastEma[i] as number) - (slowEma[i] as number);
   });
 
-  // Compute EMA of MACD line for the signal
   const macdValues = macdLine.filter((v): v is number => v !== null);
   const macdStartIdx = macdLine.findIndex((v) => v !== null);
   const signalEmaValues = computeEMA(macdValues, signalPeriod);
@@ -222,6 +252,265 @@ function IndicatorPill({
   );
 }
 
+// ── Drawing tool icon button ─────────────────────────────────────────────────────
+
+function DrawingToolButton({
+  active,
+  onClick,
+  title,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      style={
+        active
+          ? {
+              background: "rgba(78,222,163,0.18)",
+              color: "#4edea3",
+              border: "1px solid rgba(78,222,163,0.35)",
+            }
+          : {
+              background: "rgba(255,255,255,0.06)",
+              color: "#909097",
+              border: "1px solid transparent",
+            }
+      }
+      className="flex items-center justify-center w-6 h-6 transition-all hover:text-[#dce1fb]"
+    >
+      {children}
+    </button>
+  );
+}
+
+// ── SVG drawing renderers ────────────────────────────────────────────────────────
+
+interface SvgDrawingProps {
+  drawing: Drawing;
+  svgWidth: number;
+  svgHeight: number;
+  priceToY: (price: number) => number | null;
+  timeToX: (time: number) => number | null;
+  onDelete: (id: string) => void;
+  hoveredId: string | null;
+  onMouseEnter: (id: string) => void;
+  onMouseLeave: () => void;
+}
+
+function SvgDrawing({
+  drawing,
+  svgWidth,
+  priceToY,
+  timeToX,
+  onDelete,
+  hoveredId,
+  onMouseEnter,
+  onMouseLeave,
+}: SvgDrawingProps) {
+  const isHovered = hoveredId === drawing.id;
+
+  if (drawing.type === "horizontal") {
+    const pt = drawing.points[0];
+    const y = priceToY(pt.price);
+    if (y === null || y < 0) return null;
+
+    return (
+      <g
+        onMouseEnter={() => onMouseEnter(drawing.id)}
+        onMouseLeave={onMouseLeave}
+      >
+        <line
+          x1={0}
+          y1={y}
+          x2={svgWidth}
+          y2={y}
+          stroke={drawing.color}
+          strokeWidth={isHovered ? 2 : 1}
+          strokeDasharray="4 3"
+          opacity={0.85}
+        />
+        <text
+          x={6}
+          y={y - 4}
+          fill={drawing.color}
+          fontSize={9}
+          fontFamily="monospace"
+          opacity={0.9}
+        >
+          {pt.price.toPrecision(6)}
+        </text>
+        {isHovered && (
+          <g
+            onClick={() => onDelete(drawing.id)}
+            style={{ cursor: "pointer" }}
+          >
+            <rect
+              x={svgWidth - 20}
+              y={y - 9}
+              width={16}
+              height={14}
+              rx={2}
+              fill="rgba(255,90,80,0.8)"
+            />
+            <text
+              x={svgWidth - 17}
+              y={y + 2}
+              fill="white"
+              fontSize={10}
+              fontFamily="monospace"
+            >
+              ×
+            </text>
+          </g>
+        )}
+      </g>
+    );
+  }
+
+  if (drawing.type === "trendline") {
+    if (drawing.points.length < 2) return null;
+    const p1 = drawing.points[0];
+    const p2 = drawing.points[1];
+    const x1 = timeToX(p1.time);
+    const y1 = priceToY(p1.price);
+    const x2 = timeToX(p2.time);
+    const y2 = priceToY(p2.price);
+    if (x1 === null || y1 === null || x2 === null || y2 === null) return null;
+
+    return (
+      <g
+        onMouseEnter={() => onMouseEnter(drawing.id)}
+        onMouseLeave={onMouseLeave}
+      >
+        <line
+          x1={x1}
+          y1={y1}
+          x2={x2}
+          y2={y2}
+          stroke={drawing.color}
+          strokeWidth={isHovered ? 2 : 1.5}
+          opacity={0.9}
+        />
+        <circle cx={x1} cy={y1} r={3} fill={drawing.color} opacity={0.8} />
+        <circle cx={x2} cy={y2} r={3} fill={drawing.color} opacity={0.8} />
+        {isHovered && (
+          <g
+            onClick={() => onDelete(drawing.id)}
+            style={{ cursor: "pointer" }}
+          >
+            <rect
+              x={(x1 + x2) / 2 - 8}
+              y={(y1 + y2) / 2 - 9}
+              width={16}
+              height={14}
+              rx={2}
+              fill="rgba(255,90,80,0.8)"
+            />
+            <text
+              x={(x1 + x2) / 2 - 5}
+              y={(y1 + y2) / 2 + 2}
+              fill="white"
+              fontSize={10}
+              fontFamily="monospace"
+            >
+              ×
+            </text>
+          </g>
+        )}
+      </g>
+    );
+  }
+
+  if (drawing.type === "fib") {
+    if (drawing.points.length < 2) return null;
+    const p1 = drawing.points[0];
+    const p2 = drawing.points[1];
+    const highPrice = Math.max(p1.price, p2.price);
+    const lowPrice  = Math.min(p1.price, p2.price);
+    const range = highPrice - lowPrice;
+
+    const levels = FIB_LEVELS.map((ratio) => ({
+      ratio,
+      price: highPrice - ratio * range,
+    }));
+
+    return (
+      <g
+        onMouseEnter={() => onMouseEnter(drawing.id)}
+        onMouseLeave={onMouseLeave}
+      >
+        {levels.map(({ ratio, price }) => {
+          const y = priceToY(price);
+          if (y === null || y < 0) return null;
+          const color = FIB_COLORS[ratio] ?? drawing.color;
+          return (
+            <g key={ratio}>
+              <line
+                x1={0}
+                y1={y}
+                x2={svgWidth}
+                y2={y}
+                stroke={color}
+                strokeWidth={isHovered ? 1.5 : 1}
+                strokeDasharray="6 4"
+                opacity={0.75}
+              />
+              <text
+                x={6}
+                y={y - 3}
+                fill={color}
+                fontSize={8}
+                fontFamily="monospace"
+                opacity={0.9}
+              >
+                {(ratio * 100).toFixed(1)}% — {price.toPrecision(6)}
+              </text>
+            </g>
+          );
+        })}
+        {isHovered && (() => {
+          const midRatio = 0.5;
+          const midPrice = highPrice - midRatio * range;
+          const midY = priceToY(midPrice);
+          if (midY === null) return null;
+          return (
+            <g
+              onClick={() => onDelete(drawing.id)}
+              style={{ cursor: "pointer" }}
+            >
+              <rect
+                x={svgWidth - 20}
+                y={midY - 9}
+                width={16}
+                height={14}
+                rx={2}
+                fill="rgba(255,90,80,0.8)"
+              />
+              <text
+                x={svgWidth - 17}
+                y={midY + 2}
+                fill="white"
+                fontSize={10}
+                fontFamily="monospace"
+              >
+                ×
+              </text>
+            </g>
+          );
+        })()}
+      </g>
+    );
+  }
+
+  return null;
+}
+
 // ── Main component ───────────────────────────────────────────────────────────────
 
 export default function PriceChart({
@@ -257,6 +546,9 @@ export default function PriceChart({
   const macdSignalRef     = useRef<ISeriesApi<"Line"> | null>(null);
   const macdHistRef       = useRef<ISeriesApi<"Histogram"> | null>(null);
 
+  // SVG drawing overlay
+  const svgRef = useRef<SVGSVGElement>(null);
+
   // Cached candle data for re-computing indicators on toggle
   const candleDataRef = useRef<Candle[]>([]);
 
@@ -268,6 +560,15 @@ export default function PriceChart({
     new Set(),
   );
 
+  // Drawing state
+  const [activeTool, setActiveTool]       = useState<DrawingTool>("none");
+  const [drawings, setDrawings]           = useState<Drawing[]>([]);
+  const [pendingPoints, setPendingPoints] = useState<DrawingPoint[]>([]);
+  const [svgSize, setSvgSize]             = useState({ width: 0, height: 0 });
+  const [hoveredDrawingId, setHoveredDrawingId] = useState<string | null>(null);
+  // Tick counter to trigger SVG re-render when price/layout updates
+  const [renderTick, setRenderTick] = useState(0);
+
   const toggleIndicator = (key: IndicatorKey) => {
     setActiveIndicators((prev) => {
       const next = new Set(prev);
@@ -278,6 +579,40 @@ export default function PriceChart({
   };
 
   const isActive = (key: IndicatorKey) => activeIndicators.has(key);
+
+  // ── Coordinate conversion helpers ──────────────────────────────────────────
+
+  const priceToY = useCallback((price: number): number | null => {
+    // priceToCoordinate lives on ISeriesApi, not IPriceScaleApi
+    const y = candleRef.current?.priceToCoordinate(price);
+    return y !== undefined && y !== null ? y : null;
+  }, []);
+
+  const timeToX = useCallback((time: number): number | null => {
+    const x = chartRef.current?.timeScale().timeToCoordinate(time as Time);
+    return x !== undefined && x !== null ? x : null;
+  }, []);
+
+  // ── Load drawings from backend ─────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!symbol) return;
+    fetch(`${BASE_URL}/drawings/${symbol}`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data: { drawings: { _id: string; type: string; points: { price: number; time: number }[]; color: string }[] }) => {
+        const loaded: Drawing[] = data.drawings.map((d) => ({
+          id: d._id,
+          type: d.type as DrawingTool,
+          color: d.color,
+          // Persist price+time from backend; x/y will be computed from chart at render time
+          points: d.points.map((p) => ({ price: p.price, time: p.time, x: 0, y: 0 })),
+        }));
+        setDrawings(loaded);
+      })
+      .catch(() => {
+        // Not authenticated or network error — drawings just stay empty
+      });
+  }, [symbol]);
 
   // ── Create / destroy main chart ────────────────────────────────────────────
 
@@ -332,10 +667,23 @@ export default function PriceChart({
     candleRef.current = candles;
     volRef.current    = vol;
 
+    // Update SVG size and re-render drawings on every crosshair/scroll move
+    chart.subscribeCrosshairMove(() => {
+      setRenderTick((t) => t + 1);
+    });
+    chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
+      setRenderTick((t) => t + 1);
+    });
+
     const ro = new ResizeObserver(() => {
       chart.applyOptions({ width: el.clientWidth, height: el.clientHeight });
+      setSvgSize({ width: el.clientWidth, height: el.clientHeight });
+      setRenderTick((t) => t + 1);
     });
     ro.observe(el);
+
+    // Set initial SVG size
+    setSvgSize({ width: el.clientWidth, height: el.clientHeight });
 
     return () => {
       ro.disconnect();
@@ -361,7 +709,6 @@ export default function PriceChart({
       const closes = rows.map((c) => c.close);
       const times  = rows.map((c) => c.time as UTCTimestamp);
 
-      // Helper: map a nullable array to lw-charts data points
       const toPoints = (vals: (number | null)[]) =>
         vals
           .map((v, i) => (v === null ? null : { time: times[i], value: v }))
@@ -480,7 +827,6 @@ export default function PriceChart({
 
     rsiSeriesRef.current.setData(points);
 
-    // Overbought / oversold reference lines via price lines
     rsiSeriesRef.current.createPriceLine({ price: 70, color: "#f87171", lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: "70" });
     rsiSeriesRef.current.createPriceLine({ price: 30, color: "#4ade80", lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: "30" });
   }, []);
@@ -602,10 +948,12 @@ export default function PriceChart({
           })),
         );
 
-        // Re-apply overlay indicators with fresh data
         applyIndicators(rows, activeIndicators);
         if (activeIndicators.has("RSI"))  applyRSI(rows);
         if (activeIndicators.has("MACD")) applyMACD(rows);
+
+        // Trigger SVG re-render now that chart has data
+        setRenderTick((t) => t + 1);
       } catch {
         setError(true);
       } finally {
@@ -614,9 +962,6 @@ export default function PriceChart({
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [applyIndicators, applyRSI, applyMACD],
-    // NOTE: activeIndicators intentionally excluded — we re-apply via the
-    // toggle effect below to avoid stale closures; fetchCandles reads the
-    // current set via its own callback ref pattern
   );
 
   useEffect(() => {
@@ -631,15 +976,12 @@ export default function PriceChart({
 
     applyIndicators(rows, activeIndicators);
 
-    // RSI sub-chart
     if (activeIndicators.has("RSI")) {
-      // Defer so the div is visible and has layout
       setTimeout(() => applyRSI(rows), 0);
     } else {
       destroyRSI();
     }
 
-    // MACD sub-chart
     if (activeIndicators.has("MACD")) {
       setTimeout(() => applyMACD(rows), 0);
     } else {
@@ -677,7 +1019,116 @@ export default function PriceChart({
       low:   updated.low,
       close: updated.close,
     });
+    // Bump render tick so SVG drawings reposition with updated price scale
+    setRenderTick((t) => t + 1);
   }, [livePrice]);
+
+  // ── Drawing tool: cancel on Escape ───────────────────────────────────────────
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setActiveTool("none");
+        setPendingPoints([]);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
+
+  // ── SVG click handler ────────────────────────────────────────────────────────
+
+  function handleSvgClick(e: React.MouseEvent<SVGSVGElement>) {
+    if (activeTool === "none") return;
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // coordinateToPrice lives on ISeriesApi in lightweight-charts v4
+    const price = candleRef.current?.coordinateToPrice(y) ?? null;
+    const time  = chart.timeScale().coordinateToTime(x);
+
+    if (price === null || time === null) return;
+
+    const newPoint: DrawingPoint = {
+      price: price as number,
+      time:  time as number,
+      x,
+      y,
+    };
+
+    const pointsNeeded = activeTool === "horizontal" ? 1 : 2;
+    const next = [...pendingPoints, newPoint];
+
+    if (next.length >= pointsNeeded) {
+      const drawing: Drawing = {
+        id:     `local-${Date.now()}`,
+        type:   activeTool,
+        points: next,
+        color:  "#4edea3",
+      };
+
+      setDrawings((prev) => [...prev, drawing]);
+      setPendingPoints([]);
+      setActiveTool("none");
+
+      // Persist to backend
+      fetch(`${BASE_URL}/drawings/${symbol}`, {
+        method:      "POST",
+        credentials: "include",
+        headers:     { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type:   drawing.type,
+          color:  drawing.color,
+          points: drawing.points.map(({ price: p, time: t }) => ({ price: p, time: t })),
+        }),
+      })
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((data: { drawing: { _id: string } }) => {
+          // Replace local ID with server-assigned ID
+          setDrawings((prev) =>
+            prev.map((d) =>
+              d.id === drawing.id ? { ...d, id: data.drawing._id } : d,
+            ),
+          );
+        })
+        .catch(() => {
+          // Remove drawing if save failed (e.g. unauthenticated)
+          setDrawings((prev) => prev.filter((d) => d.id !== drawing.id));
+        });
+    } else {
+      setPendingPoints(next);
+    }
+  }
+
+  // ── Delete a drawing ─────────────────────────────────────────────────────────
+
+  function handleDeleteDrawing(id: string) {
+    setDrawings((prev) => prev.filter((d) => d.id !== id));
+    if (!id.startsWith("local-")) {
+      fetch(`${BASE_URL}/drawings/drawing/${id}`, {
+        method:      "DELETE",
+        credentials: "include",
+      }).catch(() => {});
+    }
+  }
+
+  // ── Clear all drawings for this symbol ───────────────────────────────────────
+
+  function handleClearAllDrawings() {
+    setDrawings([]);
+    setPendingPoints([]);
+    setActiveTool("none");
+    fetch(`${BASE_URL}/drawings/${symbol}/all`, {
+      method:      "DELETE",
+      credentials: "include",
+    }).catch(() => {});
+  }
 
   // ── Render ────────────────────────────────────────────────────────────────────
 
@@ -689,10 +1140,21 @@ export default function PriceChart({
     { key: "MACD", label: "MACD" },
   ];
 
+  // Instruction text shown when a tool is active
+  const toolHint: Record<DrawingTool, string> = {
+    none:       "",
+    horizontal: "Click to place horizontal line",
+    trendline:  pendingPoints.length === 0 ? "Click start point" : "Click end point",
+    fib:        pendingPoints.length === 0 ? "Click high point"  : "Click low point",
+  };
+
+  // unused variable suppression (renderTick is read to trigger re-renders)
+  void renderTick;
+
   return (
     <div className="relative flex flex-col w-full h-full bg-[#070d1f]">
 
-      {/* ── Toolbar: timeframes + indicator pills ──────────────────────── */}
+      {/* ── Toolbar: timeframes + indicator pills + drawing tools ──────── */}
       <div className="flex flex-wrap items-center gap-0.5 px-3 min-h-[36px] border-b border-[#2e3447] shrink-0 bg-[#0b1222]">
         {/* Timeframe buttons */}
         {TIMEFRAMES.map((tf) => (
@@ -724,6 +1186,77 @@ export default function PriceChart({
           ))}
         </div>
 
+        {/* Divider */}
+        <div className="h-4 w-px bg-[#2e3447] mx-1.5" />
+
+        {/* Drawing tools */}
+        <div className="flex items-center gap-1">
+          <DrawingToolButton
+            active={activeTool === "horizontal"}
+            onClick={() => {
+              setActiveTool((t) => (t === "horizontal" ? "none" : "horizontal"));
+              setPendingPoints([]);
+            }}
+            title="Horizontal line"
+          >
+            <Minus size={12} />
+          </DrawingToolButton>
+
+          <DrawingToolButton
+            active={activeTool === "trendline"}
+            onClick={() => {
+              setActiveTool((t) => (t === "trendline" ? "none" : "trendline"));
+              setPendingPoints([]);
+            }}
+            title="Trendline"
+          >
+            <TrendingUp size={12} />
+          </DrawingToolButton>
+
+          <DrawingToolButton
+            active={activeTool === "fib"}
+            onClick={() => {
+              setActiveTool((t) => (t === "fib" ? "none" : "fib"));
+              setPendingPoints([]);
+            }}
+            title="Fibonacci retracement"
+          >
+            <Triangle size={12} />
+          </DrawingToolButton>
+
+          {/* Cancel active tool */}
+          {activeTool !== "none" && (
+            <DrawingToolButton
+              active={false}
+              onClick={() => {
+                setActiveTool("none");
+                setPendingPoints([]);
+              }}
+              title="Cancel drawing"
+            >
+              <X size={12} />
+            </DrawingToolButton>
+          )}
+
+          {/* Clear all drawings */}
+          {drawings.length > 0 && activeTool === "none" && (
+            <DrawingToolButton
+              active={false}
+              onClick={handleClearAllDrawings}
+              title="Clear all drawings"
+            >
+              <Trash2 size={12} />
+            </DrawingToolButton>
+          )}
+        </div>
+
+        {/* Active tool hint */}
+        {activeTool !== "none" && (
+          <span className="ml-2 text-[9px] text-[#4edea3] font-mono animate-pulse">
+            {toolHint[activeTool]}
+          </span>
+        )}
+
         {/* Status */}
         {loading && (
           <span className="ml-2 text-[9px] text-[#909097] animate-pulse font-mono">
@@ -737,8 +1270,52 @@ export default function PriceChart({
         )}
       </div>
 
-      {/* ── Main price chart ───────────────────────────────────────────── */}
-      <div ref={containerRef} className="flex-1 w-full min-h-0" />
+      {/* ── Main price chart + SVG overlay ────────────────────────────── */}
+      <div className="relative flex-1 w-full min-h-0">
+        <div ref={containerRef} className="w-full h-full" />
+
+        {/* SVG drawing overlay */}
+        <svg
+          ref={svgRef}
+          width={svgSize.width}
+          height={svgSize.height}
+          className="absolute inset-0 z-10"
+          style={{
+            pointerEvents: activeTool !== "none" ? "auto" : "none",
+            cursor:        activeTool !== "none" ? "crosshair" : "default",
+          }}
+          onClick={handleSvgClick}
+        >
+          {/* Render persisted drawings */}
+          {drawings.map((d) => (
+            <SvgDrawing
+              key={d.id}
+              drawing={d}
+              svgWidth={svgSize.width}
+              svgHeight={svgSize.height}
+              priceToY={priceToY}
+              timeToX={timeToX}
+              onDelete={handleDeleteDrawing}
+              hoveredId={hoveredDrawingId}
+              onMouseEnter={(id) => {
+                if (activeTool === "none") setHoveredDrawingId(id);
+              }}
+              onMouseLeave={() => setHoveredDrawingId(null)}
+            />
+          ))}
+
+          {/* Pending first point indicator (trendline / fib) */}
+          {pendingPoints.length === 1 && (
+            <circle
+              cx={pendingPoints[0].x}
+              cy={pendingPoints[0].y}
+              r={4}
+              fill="#4edea3"
+              opacity={0.8}
+            />
+          )}
+        </svg>
+      </div>
 
       {/* ── RSI sub-chart ──────────────────────────────────────────────── */}
       {isActive("RSI") && (
