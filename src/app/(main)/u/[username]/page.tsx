@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Flame, TrendingUp, Trophy, Zap, Coins } from "lucide-react";
+import { Flame, TrendingUp, Trophy, Zap, Coins, Gem } from "lucide-react";
 import LevelBadge from "@/components/LevelBadge";
 import StreakBadge from "@/components/StreakBadge";
 import FriendButton from "@/components/FriendButton";
@@ -20,6 +20,14 @@ interface Profile {
   achievementsUnlocked: number;
   topCoins: Array<{ symbol: string; worth: string }>;
   isFollowing?: boolean;
+}
+
+interface CollectionStats {
+  total: number;
+  common: number;
+  rare: number;
+  epic: number;
+  completionPct: number;
 }
 
 function getAvatarSrc(avatar: string | null): string | null {
@@ -47,6 +55,7 @@ export default function UserProfilePage() {
   const [following, setFollowing] = useState<boolean | null>(null);
   const [followLoading, setFollowLoading] = useState(false);
   const [hoveringFollow, setHoveringFollow] = useState(false);
+  const [collectionStats, setCollectionStats] = useState<CollectionStats | null>(null);
 
   useEffect(() => {
     if (!username) return;
@@ -68,6 +77,19 @@ export default function UserProfilePage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, [username]);
+
+  useEffect(() => {
+    if (!username) return;
+    const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
+    fetch(`${BASE}/collection/stats?username=${encodeURIComponent(username)}`, {
+      credentials: "include",
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d && typeof d.total === "number") setCollectionStats(d as CollectionStats);
+      })
+      .catch(() => {});
   }, [username]);
 
   async function handleFollowToggle() {
@@ -338,6 +360,105 @@ export default function UserProfilePage() {
           {Math.round(xpPct)}% to Lv.{profile.level + 1}
         </div>
       </div>
+
+      {/* Collection stats */}
+      {collectionStats && (
+        <div
+          style={{
+            background: "#191f31",
+            border: "1px solid #2e3447",
+            borderRadius: "12px",
+            padding: "16px 20px",
+            marginBottom: "20px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              marginBottom: "14px",
+            }}
+          >
+            <Gem size={16} style={{ color: "#a78bfa" }} />
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "#909097",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+              }}
+            >
+              Coin Collection
+            </span>
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: "10px",
+            }}
+          >
+            {[
+              { label: "Total", value: collectionStats.total, color: "#4edea3" },
+              { label: "Common", value: collectionStats.common, color: "#909097" },
+              { label: "Rare", value: collectionStats.rare, color: "#8ccdff" },
+              { label: "Epic", value: collectionStats.epic, color: "#a78bfa" },
+            ].map(({ label, value, color }) => (
+              <div key={label} style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: 900,
+                    color,
+                    fontFamily: "monospace",
+                    marginBottom: "3px",
+                  }}
+                >
+                  {value}
+                </div>
+                <div style={{ fontSize: "10px", color: "#909097", fontWeight: 600 }}>
+                  {label}
+                </div>
+              </div>
+            ))}
+          </div>
+          {collectionStats.total > 0 && (
+            <div style={{ marginTop: "12px" }}>
+              <div
+                style={{
+                  height: "4px",
+                  background: "#2e3447",
+                  borderRadius: "2px",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${Math.min(100, collectionStats.completionPct)}%`,
+                    background: "linear-gradient(90deg, #a78bfa, #8ccdff)",
+                    borderRadius: "2px",
+                    transition: "width 0.4s ease",
+                  }}
+                />
+              </div>
+              <div
+                style={{
+                  marginTop: "4px",
+                  fontSize: "10px",
+                  color: "#909097",
+                  textAlign: "right",
+                  fontFamily: "monospace",
+                }}
+              >
+                {Math.round(collectionStats.completionPct)}% complete
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Top holdings */}
       <div
