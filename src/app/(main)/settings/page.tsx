@@ -471,7 +471,22 @@ function SessionsCard() {
   return (
     <div className="flex flex-col gap-4">
       {loadingSessions && (
-        <p className="text-xs text-[#909097]">Loading sessions...</p>
+        <ul className="flex flex-col gap-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <li
+              key={i}
+              className="flex items-start justify-between gap-3 px-3 py-2.5 rounded-md"
+              style={{ background: "#0b1222", border: "1px solid #2e3447" }}
+            >
+              <div className="flex flex-col gap-1.5 flex-1">
+                <div className="h-3.5 w-24 rounded skeleton" />
+                <div className="h-2.5 w-40 rounded skeleton" />
+                <div className="h-2.5 w-36 rounded skeleton" />
+              </div>
+              {i > 0 && <div className="h-7 w-20 rounded skeleton flex-shrink-0" />}
+            </li>
+          ))}
+        </ul>
       )}
 
       {sessionsError && <StatusMessage ok={false} msg={sessionsError} />}
@@ -751,7 +766,29 @@ function NotificationPrefsCard() {
   }
 
   if (loading) {
-    return <p className="text-xs text-[#909097]">Loading preferences...</p>;
+    return (
+      <div className="flex flex-col gap-1">
+        {NOTIF_ROWS.map((_, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "16px",
+              padding: "12px 0",
+              borderBottom: i < NOTIF_ROWS.length - 1 ? "1px solid #2e3447" : "none",
+            }}
+          >
+            <div className="flex flex-col gap-1.5">
+              <div className="h-3 w-28 rounded skeleton" />
+              <div className="h-2 w-44 rounded skeleton" />
+            </div>
+            <div className="h-6 w-11 rounded-full skeleton flex-shrink-0" />
+          </div>
+        ))}
+      </div>
+    );
   }
 
   return (
@@ -962,7 +999,23 @@ function AuditLogCard() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-xs text-[#909097]">Loading activity...</p>;
+  if (loading) {
+    return (
+      <ul className="flex flex-col gap-1">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <li
+            key={i}
+            className="flex items-center gap-3 px-3 py-2 rounded-md"
+            style={{ background: "#0b1222", border: "1px solid #2e3447" }}
+          >
+            <div className="h-3.5 w-3.5 rounded skeleton flex-shrink-0" />
+            <div className="h-3 rounded skeleton flex-1" style={{ maxWidth: 100 + (i % 3) * 30 }} />
+            <div className="h-2.5 w-14 rounded skeleton flex-shrink-0" />
+          </li>
+        ))}
+      </ul>
+    );
+  }
   if (events.length === 0) return <p className="text-xs text-[#909097]">No recent activity found.</p>;
 
   const visible = showAll ? events : events.slice(0, 10);
@@ -1205,7 +1258,43 @@ export default function SettingsPage() {
       .catch(() => setAuthed(false));
   }, []);
 
-  if (authed === null) return null; // still checking
+  if (authed === null) {
+    return (
+      <div className="flex flex-col gap-6 max-w-lg">
+        {/* Page title */}
+        <div>
+          <div className="h-7 w-32 rounded skeleton mb-2" />
+          <div className="h-3 w-56 rounded skeleton" />
+        </div>
+        {/* Section card skeletons */}
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className="rounded-xl px-6 py-6 flex flex-col gap-5"
+            style={{
+              border: "1px solid hsl(var(--border))",
+              background: "hsl(var(--card))",
+            }}
+          >
+            {/* Section header */}
+            <div className="flex items-center gap-3">
+              <div className="h-5 w-5 rounded skeleton flex-shrink-0" />
+              <div className="flex flex-col gap-1.5">
+                <div className="h-3.5 w-32 rounded skeleton" />
+                <div className="h-2.5 w-48 rounded skeleton" />
+              </div>
+            </div>
+            {/* Section body — two field rows */}
+            <div className="flex flex-col gap-3">
+              <div className="h-9 w-full rounded-md skeleton" />
+              {i < 3 && <div className="h-9 w-full rounded-md skeleton" />}
+              {i === 0 && <div className="h-9 w-28 rounded-md skeleton" />}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
   if (authed === false) {
     return (
       <AuthRequired

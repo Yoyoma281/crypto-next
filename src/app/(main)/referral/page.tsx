@@ -446,8 +446,66 @@ export default function ReferralPage() {
           </div>
 
           {loading ? (
-            <div style={{ color: MUTED, fontSize: "0.85rem", padding: "1rem 0" }}>
-              Loading leaderboard...
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="skeleton"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.875rem",
+                    padding: "0.75rem 1rem",
+                    borderRadius: 12,
+                    background: "rgba(255,255,255,0.025)",
+                  }}
+                >
+                  {/* Rank placeholder */}
+                  <div
+                    className="skeleton"
+                    style={{
+                      width: 28,
+                      height: 14,
+                      borderRadius: 4,
+                      flexShrink: 0,
+                      background: "rgba(255,255,255,0.07)",
+                    }}
+                  />
+                  {/* Avatar circle */}
+                  <div
+                    className="skeleton"
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: "50%",
+                      flexShrink: 0,
+                      background: "rgba(255,255,255,0.07)",
+                    }}
+                  />
+                  {/* Username bar */}
+                  <div
+                    className="skeleton"
+                    style={{
+                      flex: 1,
+                      height: 14,
+                      borderRadius: 4,
+                      maxWidth: 120 + (i % 3) * 20,
+                      background: "rgba(255,255,255,0.07)",
+                    }}
+                  />
+                  {/* Count bar */}
+                  <div
+                    className="skeleton"
+                    style={{
+                      width: 36,
+                      height: 14,
+                      borderRadius: 4,
+                      flexShrink: 0,
+                      background: "rgba(255,255,255,0.07)",
+                    }}
+                  />
+                </div>
+              ))}
             </div>
           ) : leaderboard.length === 0 ? (
             <div style={{ color: MUTED, fontSize: "0.85rem", padding: "1rem 0" }}>

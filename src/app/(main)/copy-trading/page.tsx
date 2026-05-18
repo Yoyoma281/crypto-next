@@ -91,6 +91,89 @@ export default function CopyTradingPage() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-6 max-w-3xl mx-auto">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded skeleton flex-shrink-0" />
+            <div>
+              <div className="h-6 w-36 rounded skeleton mb-1.5" />
+              <div className="h-3 w-52 rounded skeleton" />
+            </div>
+          </div>
+          <div className="h-8 w-8 rounded-lg skeleton" />
+        </div>
+
+        {/* Traders I'm Copying skeleton */}
+        <section>
+          <div className="h-3 w-40 rounded skeleton mb-3" />
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-xl px-5 py-4 flex items-center justify-between gap-4"
+                style={{
+                  border: "1px solid hsl(var(--border))",
+                  background: "hsl(var(--card))",
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full skeleton flex-shrink-0" />
+                  <div className="flex flex-col gap-1.5">
+                    <div className="h-3 w-24 rounded skeleton" />
+                    <div className="h-2.5 w-48 rounded skeleton" />
+                  </div>
+                </div>
+                <div className="h-7 w-28 rounded-lg skeleton" />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Open Copy Positions skeleton */}
+        <section>
+          <div className="h-3 w-44 rounded skeleton mb-3" />
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{
+              border: "1px solid hsl(var(--border))",
+              background: "hsl(var(--card))",
+            }}
+          >
+            {/* Table header */}
+            <div
+              className="flex items-center gap-4 px-5 py-3 border-b"
+              style={{ borderColor: "hsl(var(--border))" }}
+            >
+              {[80, 70, 70, 60, 90].map((w, i) => (
+                <div key={i} className="h-2.5 rounded skeleton" style={{ width: w, flexShrink: 0 }} />
+              ))}
+            </div>
+            {/* Row skeletons */}
+            {Array.from({ length: 5 }).map((_, r) => (
+              <div
+                key={r}
+                className="flex items-center gap-4 px-5 border-b border-border/50"
+                style={{ height: 56 }}
+              >
+                <div className="flex flex-col gap-1.5" style={{ width: 80, flexShrink: 0 }}>
+                  <div className="h-3 w-16 rounded skeleton" />
+                  <div className="h-2 w-20 rounded skeleton" />
+                </div>
+                <div className="h-3 w-16 rounded skeleton ml-auto" />
+                <div className="h-3 w-16 rounded skeleton" />
+                <div className="h-3 w-14 rounded skeleton" />
+                <div className="h-3 w-20 rounded skeleton" />
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6 max-w-3xl mx-auto">
       {/* Header */}
