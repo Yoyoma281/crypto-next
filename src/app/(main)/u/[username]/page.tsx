@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Flame, TrendingUp, Trophy, Zap, Coins } from "lucide-react";
 import LevelBadge from "@/components/LevelBadge";
 import StreakBadge from "@/components/StreakBadge";
+import FriendButton from "@/components/FriendButton";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
 
@@ -202,40 +203,43 @@ export default function UserProfilePage() {
             />
             {profile.loginStreak >= 2 && <StreakBadge streak={profile.loginStreak} />}
           </div>
-          {following !== null && (
-            <button
-              onClick={handleFollowToggle}
-              disabled={followLoading}
-              onMouseEnter={() => setHoveringFollow(true)}
-              onMouseLeave={() => setHoveringFollow(false)}
-              style={{
-                border: following
-                  ? hoveringFollow ? "1px solid #ffb3ad" : "1px solid #2e3447"
-                  : "1px solid #4edea3",
-                color: following
-                  ? hoveringFollow ? "#ffb3ad" : "#909097"
-                  : "#4edea3",
-                background: following
-                  ? hoveringFollow ? "rgba(255,179,173,0.08)" : "transparent"
-                  : "rgba(78,222,163,0.08)",
-                padding: "6px 16px",
-                fontSize: "11px",
-                fontWeight: 900,
-                letterSpacing: "0.1em",
-                cursor: followLoading ? "default" : "pointer",
-                borderRadius: "6px",
-                opacity: followLoading ? 0.6 : 1,
-                transition: "all 0.15s ease",
-                textTransform: "uppercase",
-              }}
-            >
-              {followLoading
-                ? "..."
-                : following
-                ? hoveringFollow ? "Unfollow" : "Following"
-                : "Follow"}
-            </button>
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+            {following !== null && (
+              <button
+                onClick={handleFollowToggle}
+                disabled={followLoading}
+                onMouseEnter={() => setHoveringFollow(true)}
+                onMouseLeave={() => setHoveringFollow(false)}
+                style={{
+                  border: following
+                    ? hoveringFollow ? "1px solid #ffb3ad" : "1px solid #2e3447"
+                    : "1px solid #4edea3",
+                  color: following
+                    ? hoveringFollow ? "#ffb3ad" : "#909097"
+                    : "#4edea3",
+                  background: following
+                    ? hoveringFollow ? "rgba(255,179,173,0.08)" : "transparent"
+                    : "rgba(78,222,163,0.08)",
+                  padding: "6px 16px",
+                  fontSize: "11px",
+                  fontWeight: 900,
+                  letterSpacing: "0.1em",
+                  cursor: followLoading ? "default" : "pointer",
+                  borderRadius: "6px",
+                  opacity: followLoading ? 0.6 : 1,
+                  transition: "all 0.15s ease",
+                  textTransform: "uppercase",
+                }}
+              >
+                {followLoading
+                  ? "..."
+                  : following
+                  ? hoveringFollow ? "Unfollow" : "Following"
+                  : "Follow"}
+              </button>
+            )}
+            <FriendButton username={username} />
+          </div>
         </div>
       </div>
 
