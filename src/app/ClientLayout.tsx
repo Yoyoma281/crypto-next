@@ -7,6 +7,7 @@ import TopBarStats from "./components/top-section";
 import TickerBar from "./components/TickerBar";
 import { I18nProvider } from "@/lib/i18n";
 import { FavoritesProvider } from "@/components/favorites-context";
+import { ArenaModeProvider } from "@/contexts/ArenaModeContext";
 import FloatingFavorites from "@/components/floating-favorites";
 import OnboardingModal from "@/components/onboarding-modal";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -64,6 +65,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
     <I18nProvider>
+      <ArenaModeProvider>
       <FavoritesProvider>
         <CommandPaletteProvider>
           <Suspense>
@@ -71,6 +73,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           </Suspense>
         </CommandPaletteProvider>
       </FavoritesProvider>
+      </ArenaModeProvider>
     </I18nProvider>
   );
 }

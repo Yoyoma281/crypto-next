@@ -16,6 +16,7 @@ import ThemeToggle from "@/components/theme-toggle";
 import LanguageSelector from "@/components/language-selector";
 import NotificationBell from "@/components/NotificationBell";
 import { useI18n } from "@/lib/i18n";
+import { useArenaMode } from "@/contexts/ArenaModeContext";
 
 const SpinModal = dynamic(() => import("@/components/SpinModal"), { ssr: false });
 
@@ -42,6 +43,8 @@ const MORE_NAV_KEYS = [
   { key: "learn" as const, href: "/learn/how-to-trade" },
 ];
 
+const ARENA_NAV = { label: "Arena", href: "/arena" };
+
 const FRIENDS_NAV = { label: "Friends", href: "/friends" };
 
 const SQUADS_NAV = { label: "Squads", href: "/squads" };
@@ -49,6 +52,7 @@ const SQUADS_NAV = { label: "Squads", href: "/squads" };
 export default function TopBarStats() {
   const pathname = usePathname();
   const { t } = useI18n();
+  const { activeMode, setActiveMode, weekInfo, countdown } = useArenaMode();
   const [moreOpen, setMoreOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
@@ -150,6 +154,34 @@ export default function TopBarStats() {
                 {FRIENDS_NAV.label}
               </Link>
 
+              {/* Arena mode toggle */}
+              <div className="hidden sm:flex items-center gap-0.5 ml-1 p-0.5 rounded-lg border border-border bg-muted/30">
+                <button
+                  onClick={() => setActiveMode('portfolio')}
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all whitespace-nowrap ${
+                    activeMode === 'portfolio'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Portfolio
+                </button>
+                <button
+                  onClick={() => setActiveMode('arena')}
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all whitespace-nowrap flex items-center gap-1 ${
+                    activeMode === 'arena'
+                      ? 'text-amber-400 shadow-sm'
+                      : 'text-muted-foreground hover:text-amber-400'
+                  }`}
+                  style={activeMode === 'arena' ? { background: 'rgba(245,200,66,0.1)' } : {}}
+                >
+                  <span>Arena</span>
+                  {weekInfo && countdown && (
+                    <span className="text-[8px] opacity-70">{countdown}</span>
+                  )}
+                </button>
+              </div>
+
               <div className="relative" ref={moreRef}>
                 <button
                   onClick={() => setMoreOpen((o) => !o)}
@@ -188,6 +220,17 @@ export default function TopBarStats() {
                         {t.nav[link.key]}
                       </Link>
                     ))}
+                    <Link
+                      href={ARENA_NAV.href}
+                      onClick={() => setMoreOpen(false)}
+                      className={`block px-3 py-2 text-xs font-medium transition-colors ${
+                        pathname === ARENA_NAV.href || pathname.startsWith(ARENA_NAV.href)
+                          ? 'text-amber-400 bg-muted'
+                          : 'text-amber-400/70 hover:text-amber-400 hover:bg-muted/60'
+                      }`}
+                    >
+                      {ARENA_NAV.label}
+                    </Link>
                   </div>
                 )}
               </div>

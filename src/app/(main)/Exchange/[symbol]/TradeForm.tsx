@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import ConfettiEffect from "@/components/ConfettiEffect";
 import { playSound } from "@/lib/sounds";
+import { useArenaMode } from "@/contexts/ArenaModeContext";
 
 interface Coin {
   symbol: string;
@@ -31,6 +32,7 @@ export default function TradeForm({
   forcedSide?: "BUY" | "SELL" | null;
 }) {
   const { t } = useI18n();
+  const { activeMode } = useArenaMode();
   const ticker = symbol.replace("USDT", "");
   const [side, setSide] = useState<"BUY" | "SELL">("BUY");
 
@@ -59,8 +61,16 @@ export default function TradeForm({
     return () => clearTimeout(id);
   }, [msg]);
 
+  useEffect(() => {
+    if (activeMode === 'arena' && orderMode === 'LIMIT') {
+      setOrderMode('MARKET');
+      setTriggerPrice('');
+    }
+  }, [activeMode, orderMode]);
+
   const refreshBalance = useCallback(() => {
-    fetch("/api/portfolio")
+    const endpoint = activeMode === 'arena' ? '/api/arena/portfolio' : '/api/portfolio';
+    fetch(endpoint, { credentials: 'include' })
       .then((r) => {
         if (r.status === 401 || r.status === 403) {
           setIsAuth(false);
@@ -71,15 +81,28 @@ export default function TradeForm({
       })
       .then((data) => {
         if (!data) return;
-        const coins: Coin[] = data?.portfolio?.Coins ?? [];
-        const usdt = coins.find((c) => c.symbol === "USD/USDT");
-        const coin = coins.find((c) => c.symbol === symbol) as (Coin & { avgBuyPrice?: number }) | undefined;
-        setUsdtBal(parseFloat(usdt?.amount ?? "0"));
-        setCoinBal(parseFloat(coin?.amount ?? "0"));
-        if (coin?.avgBuyPrice) avgBuyPriceRef.current = coin.avgBuyPrice;
+        if (activeMode === 'arena') {
+          const coins: Coin[] = data?.coins ?? [];
+          const usdt = coins.find((c) => c.symbol === 'USD/USDT');
+          const coin = coins.find((c) => c.symbol === symbol) as (Coin & { avgBuyPrice?: number }) | undefined;
+          setUsdtBal(parseFloat(usdt?.amount ?? '0'));
+          setCoinBal(parseFloat(coin?.amount ?? '0'));
+          if (coin?.avgBuyPrice) avgBuyPriceRef.current = coin.avgBuyPrice;
+        } else {
+          const coins: Coin[] = data?.portfolio?.Coins ?? [];
+          const usdt = coins.find((c) => c.symbol === 'USD/USDT');
+          const coin = coins.find((c) => c.symbol === symbol) as (Coin & { avgBuyPrice?: number }) | undefined;
+          setUsdtBal(parseFloat(usdt?.amount ?? '0'));
+          setCoinBal(parseFloat(coin?.amount ?? '0'));
+          if (coin?.avgBuyPrice) avgBuyPriceRef.current = coin.avgBuyPrice;
+        }
       })
-      .catch(() => setIsAuth(false));
-  }, [symbol]);
+      .catch(() => {
+        // Only hide the trade form on confirmed auth failures (401/403 above).
+        // Other errors (e.g. transient 500 on arena init) should not lock the UI.
+        if (activeMode !== 'arena') setIsAuth(false);
+      });
+  }, [symbol, activeMode]);
 
   useEffect(() => {
     refreshBalance();
@@ -112,9 +135,11 @@ export default function TradeForm({
 
     try {
       if (orderMode === "MARKET") {
-        const res = await fetch("/api/trades", {
+        const tradeEndpoint = activeMode === 'arena' ? '/api/arena/trades' : '/api/trades';
+        const res = await fetch(tradeEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
             targetSymbol: symbol,
             paymentSymbol: "USD/USDT",
@@ -265,7 +290,38 @@ export default function TradeForm({
         ))}
       </div>
 
-      {/* Market / Limit mode toggle */}
+      {/* Arena mode badge */}
+      {activeMode === 'arena' && (
+        <div
+          className="flex items-center justify-center gap-1.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest"
+          style={{ background: 'rgba(245,200,66,0.1)', border: '1px solid rgba(245,200,66,0.3)', color: '#f5c842' }}
+        >
+          Arena Mode · AUSDT Wallet
+        </div>
+      )}
+
+      {/* Market / Limit mode toggle — hidden in arena (limit orders not supported v1) */}
+      {activeMode === 'arena' ? (
+        <div
+          className="flex rounded-lg overflow-hidden relative"
+          style={{ background: '#0c1322', border: '1px solid rgba(62,72,80,0.4)' }}
+          title="Limit orders coming soon in Arena"
+        >
+          <div
+            className="flex-1 py-1 text-[9px] font-black uppercase tracking-widest text-center"
+            style={{ background: '#2e3545', color: '#dce2f7' }}
+          >
+            MARKET
+          </div>
+          <div
+            className="flex-1 py-1 text-[9px] font-black uppercase tracking-widest text-center opacity-30 cursor-not-allowed"
+            style={{ color: '#bec8d2' }}
+            title="Limit orders coming soon in Arena"
+          >
+            LIMIT
+          </div>
+        </div>
+      ) : (
       <div className="flex rounded-lg overflow-hidden" style={{ background: "#0c1322", border: "1px solid rgba(62,72,80,0.4)" }}>
         {(["MARKET", "LIMIT"] as const).map((mode) => (
           <button
@@ -287,6 +343,7 @@ export default function TradeForm({
           </button>
         ))}
       </div>
+      )}
 
       {/* Limit order type selector */}
       {orderMode === "LIMIT" && (

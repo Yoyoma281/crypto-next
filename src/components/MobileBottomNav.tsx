@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { TrendingUp, BarChart2, Briefcase, Users, Settings, Shield } from 'lucide-react';
+import { TrendingUp, BarChart2, Briefcase, Users, Settings, Swords } from 'lucide-react';
 
 const TABS = [
   { href: '/', label: 'Market', icon: TrendingUp, matchPrefix: false },
   { href: '/Exchange/BTC_USDT', label: 'Trade', icon: BarChart2, matchPrefix: true, prefixMatch: '/Exchange/' },
   { href: '/Portfolio', label: 'Portfolio', icon: Briefcase, matchPrefix: true },
-  { href: '/squads', label: 'Squads', icon: Shield, matchPrefix: true },
+  { href: '/arena', label: 'Arena', icon: Swords, matchPrefix: true, accentColor: '#f5c842' },
   { href: '/feed', label: 'Social', icon: Users, matchPrefix: true },
   { href: '/settings', label: 'Profile', icon: Settings, matchPrefix: true },
 ];
@@ -44,7 +44,7 @@ export default function MobileBottomNav() {
             key={tab.href}
             href={tab.href}
             className="flex flex-col items-center justify-center flex-1 gap-0.5 transition-colors"
-            style={{ color: active ? '#4edea3' : '#45464d' }}
+            style={{ color: active ? (tab.accentColor ?? '#4edea3') : '#45464d' }}
           >
             <Icon size={20} />
             <span style={{ fontSize: '10px', fontWeight: 600 }}>{tab.label}</span>

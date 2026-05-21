@@ -11,7 +11,7 @@ import { cookies } from "next/headers";
 const BACKEND = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
 
 export async function backendFetch(
-  method: "GET" | "POST" | "PUT" | "DELETE",
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   path: string,
   body?: unknown
 ): Promise<Response> {
