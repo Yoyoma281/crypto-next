@@ -1,8 +1,8 @@
 'use client';
 
 import { ColumnDef } from "@tanstack/react-table";
-import Image from "next/image";
 import { formatPrice } from "@/lib/utils";
+import CoinIcon from "@/components/CoinIcon";
 import { BinanceTrade } from "@/app/types/coin";
 
 
@@ -12,12 +12,7 @@ export const columns: ColumnDef<BinanceTrade>[] = [
         header: "Symbol",
         cell: (props) =>
             <div className="flex items-center gap-2">
-                <Image
-                    src={`../Coin-icons/${(props.getValue() as string).replace("USDT", "").toLowerCase()}.svg`}
-                    alt={props.getValue() as string}
-                    width={30}
-                    height={30}
-                />
+                <CoinIcon ticker={(props.getValue() as string).replace("USDT", "")} size={30} />
                 {props.getValue() as string}
             </div>
     },

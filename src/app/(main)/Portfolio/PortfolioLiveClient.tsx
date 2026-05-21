@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import Image from "next/image";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Swords } from "lucide-react";
+import CoinIcon from "@/components/CoinIcon";
 import { portfolioCoin } from "@/app/types/coin";
 import { CostBasisEntry } from "@/app/data/services";
 import { useI18n } from "@/lib/i18n";
@@ -13,6 +13,9 @@ import AnimatedNumber from "@/components/AnimatedNumber";
 import CurrencyToggle, { usePersistedCurrency } from "@/components/CurrencyToggle";
 import { useCurrencyRates, CurrencyKey } from "@/hooks/useCurrencyRates";
 import RebalanceSuggestions from "./RebalanceSuggestions";
+import { useArenaMode } from "@/contexts/ArenaModeContext";
+
+const ARENA_START_BALANCE = 10000;
 
 const RiskAnalyticsCard = dynamic(
   () => import("@/components/RiskAnalyticsCard"),
@@ -104,52 +107,6 @@ const DONUT_COLORS = [
   "#a855f7",
 ];
 
-/** Deterministic hue from a string for letter-avatar fallback */
-function hashColor(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 60%, 40%)`;
-}
-
-interface CoinIconProps {
-  ticker: string;
-  size?: number;
-}
-
-function CoinIcon({ ticker, size = 28 }: CoinIconProps) {
-  const [failed, setFailed] = useState(false);
-  const lower = ticker.toLowerCase();
-
-  if (failed) {
-    return (
-      <span
-        className="flex items-center justify-center rounded-full text-white font-bold text-xs flex-shrink-0"
-        style={{
-          width: size,
-          height: size,
-          background: hashColor(ticker),
-          fontSize: size * 0.4,
-        }}
-      >
-        {ticker.slice(0, 2).toUpperCase()}
-      </span>
-    );
-  }
-
-  return (
-    <Image
-      src={`/Coin-icons/${lower}.svg`}
-      alt={ticker}
-      width={size}
-      height={size}
-      className="rounded-full flex-shrink-0"
-      onError={() => setFailed(true)}
-    />
-  );
-}
 
 /** SVG donut chart using stroke-dasharray technique */
 interface DonutSlice {
@@ -227,9 +184,13 @@ export default function PortfolioLiveClient({
   costBasis,
 }: Props) {
   useI18n();
+  const { activeMode, weekInfo, countdown } = useArenaMode();
+  const isArena = activeMode === "arena";
   const [displayCurrency, setDisplayCurrency] = usePersistedCurrency();
   const rates = useCurrencyRates();
   const [coins, setCoins] = useState<portfolioCoin[]>(initialCoins);
+  const [arenaCoins, setArenaCoins] = useState<portfolioCoin[]>([]);
+  const [arenaLoading, setArenaLoading] = useState(false);
   const [streamStatus, setStreamStatus] = useState<
     "connecting" | "live" | "error"
   >("connecting");
@@ -243,8 +204,9 @@ export default function PortfolioLiveClient({
     totalWorth: number;
   } | null>(null);
 
-  // SSE stream for live portfolio updates
+  // SSE stream for live portfolio updates (portfolio mode only)
   useEffect(() => {
+    if (isArena) return;
     const es = new EventSource(
       `${process.env.NEXT_PUBLIC_BASE_URL}/portfolio/stream`,
       {
@@ -263,14 +225,47 @@ export default function PortfolioLiveClient({
     };
     es.onerror = () => setStreamStatus("error");
     return () => es.close();
-  }, []);
+  }, [isArena]);
 
-  // Fetch recent trade history
+  // Poll arena portfolio every 10s when in arena mode
+  useEffect(() => {
+    if (!isArena) return;
+    let cancelled = false;
+
+    const load = () => {
+      setArenaLoading(true);
+      fetch("/api/arena/portfolio", { credentials: "include" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (cancelled || !data) return;
+          // Map { symbol, amount, price, worth } → portfolioCoin shape
+          const mapped: portfolioCoin[] = (data.coins ?? []).map(
+            (c: { symbol: string; amount: string; worth: string }) => ({
+              symbol: c.symbol === "USD/USDT" ? "USD/USDT" : c.symbol,
+              amount: c.amount,
+              CurrentWorth: c.worth ?? "0",
+            }),
+          );
+          setArenaCoins(mapped);
+          setStreamStatus("live");
+        })
+        .catch(() => setStreamStatus("error"))
+        .finally(() => setArenaLoading(false));
+    };
+
+    load();
+    const id = setInterval(load, 10000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [isArena]);
+
+  // Fetch recent trade history — arena history when in arena mode, main history otherwise
   useEffect(() => {
     setTradesLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/trades`, {
-      credentials: "include",
-    })
+    const endpoint = isArena ? "/api/arena/history" : "/api/trades";
+    fetch(endpoint, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : { trades: [] }))
       .then((data) => {
         const list: TradeRecord[] = Array.isArray(data)
@@ -280,22 +275,24 @@ export default function PortfolioLiveClient({
         setTradesLoading(false);
       })
       .catch(() => { setTrades([]); setTradesLoading(false); });
-  }, []);
+  }, [isArena]);
 
-  // Fetch open copy positions
+  // Fetch open copy positions (portfolio mode only)
   const [copyPositions, setCopyPositions] = useState<Array<{
     _id: string; symbol: string; coinAmount: string; entryUsdAmount: string;
     currentWorth: string | null; pnl: string | null; leaderUsername: string; openedAt: string;
   }>>([]);
   useEffect(() => {
+    if (isArena) { setCopyPositions([]); return; }
     fetch("/api/copy-trading/positions")
       .then((r) => r.ok ? r.json() : { positions: [] })
       .then((d) => setCopyPositions(d.positions ?? []))
       .catch(() => {});
-  }, []);
+  }, [isArena]);
 
-  // Fetch allocation data for the chart
+  // Fetch allocation data for the chart (portfolio mode only — arena uses its own breakdown)
   useEffect(() => {
+    if (isArena) { setAllocationChartData(null); return; }
     fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/portfolio/allocation`, {
       credentials: "include",
     })
@@ -306,13 +303,15 @@ export default function PortfolioLiveClient({
         }
       })
       .catch(() => setAllocationChartData(null));
-  }, [coins]);
+  }, [coins, isArena]);
 
-  const holdings = coins.filter((c) => !c.symbol.includes("/"));
-  const cashCoin = coins.find((c) => c.symbol === "USD/USDT");
+  // In arena mode, swap the coin source to the arena wallet
+  const sourceCoins = isArena ? arenaCoins : coins;
+  const holdings = sourceCoins.filter((c) => !c.symbol.includes("/"));
+  const cashCoin = sourceCoins.find((c) => c.symbol === "USD/USDT");
   const cashBalance = cashCoin
     ? parseFloat(cashCoin.amount || "0")
-    : initialBalance;
+    : isArena ? 0 : initialBalance;
 
   const holdingsTotal = holdings.reduce(
     (sum, c) => sum + parseFloat(c.CurrentWorth || "0"),
@@ -323,9 +322,9 @@ export default function PortfolioLiveClient({
     (c) => parseFloat(c.amount || "0") > 0,
   ).length;
 
-  const STARTING_BALANCE = 1000;
+  const STARTING_BALANCE = isArena ? ARENA_START_BALANCE : 1000;
   const pnl = totalValue - STARTING_BALANCE;
-  const pnlPct = (pnl / STARTING_BALANCE) * 100;
+  const pnlPct = STARTING_BALANCE > 0 ? (pnl / STARTING_BALANCE) * 100 : 0;
   const pnlColor = pnl >= 0 ? "#4edea3" : "#ffb3ad";
 
   // Enrich each holding with its avg buy price and unrealized P&L
@@ -363,10 +362,29 @@ export default function PortfolioLiveClient({
       <div className="mb-12 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-8">
         <div className="space-y-3">
           <div className="flex items-center gap-4 flex-wrap">
-            <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
-              Total Portfolio Value
-            </p>
+            {isArena ? (
+              <span
+                className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-extrabold px-2.5 py-1 rounded-md"
+                style={{
+                  color: "#f5c842",
+                  background: "rgba(245,200,66,0.1)",
+                  border: "1px solid rgba(245,200,66,0.35)",
+                }}
+              >
+                <Swords className="h-3 w-3" />
+                Arena Wallet
+                {weekInfo && <span className="opacity-70 font-mono">· W#{weekInfo.weekNumber}</span>}
+                {countdown && <span className="opacity-70 font-mono">· {countdown}</span>}
+              </span>
+            ) : (
+              <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+                Total Portfolio Value
+              </p>
+            )}
             <CurrencyToggle value={displayCurrency} onChange={setDisplayCurrency} />
+            {isArena && arenaLoading && arenaCoins.length === 0 && (
+              <span className="text-[10px] text-muted-foreground">Loading arena wallet…</span>
+            )}
           </div>
           <div className="flex items-end gap-1 leading-none">
             {displayCurrency === "USDT" ? (
@@ -395,7 +413,9 @@ export default function PortfolioLiveClient({
               </span>
             </span>
             <span className="text-[10px] text-muted-foreground">
-              since starting balance
+              {isArena
+                ? `vs. ${ARENA_START_BALANCE.toLocaleString()} AUSDT start`
+                : "since starting balance"}
             </span>
           </div>
         </div>
@@ -416,14 +436,14 @@ export default function PortfolioLiveClient({
         </div>
       </div>
 
-      {/* ── REBALANCE SUGGESTIONS ────────────────────────────────── */}
-      <RebalanceSuggestions />
-
-      {/* ── EQUITY CURVE ────────────────────────────────────────── */}
-      <EquityCurve />
-
-      {/* ── RISK ANALYTICS ───────────────────────────────────────── */}
-      <RiskAnalyticsCard />
+      {/* Rebalance, equity curve, risk analytics — portfolio mode only */}
+      {!isArena && (
+        <>
+          <RebalanceSuggestions />
+          <EquityCurve />
+          <RiskAnalyticsCard />
+        </>
+      )}
 
       {/* ── 12-COL GRID ──────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10">

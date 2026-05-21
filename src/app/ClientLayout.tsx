@@ -8,10 +8,12 @@ import TickerBar from "./components/TickerBar";
 import { I18nProvider } from "@/lib/i18n";
 import { FavoritesProvider } from "@/components/favorites-context";
 import { ArenaModeProvider } from "@/contexts/ArenaModeContext";
+import ArenaModeBanner from "@/components/ArenaModeBanner";
 import FloatingFavorites from "@/components/floating-favorites";
 import OnboardingModal from "@/components/onboarding-modal";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import CommandPalette, { CommandPaletteProvider, useCommandPaletteContext } from "@/components/CommandPalette";
+import ArenaSettlementModal from "@/components/ArenaSettlementModal";
 import { useEffect } from "react";
 
 function LayoutInner({ children }: { children: React.ReactNode }) {
@@ -35,6 +37,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
       {!hideChrome && (
         <>
           <TopBarStats />
+          <ArenaModeBanner />
           <TickerBar />
         </>
       )}
@@ -58,6 +61,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
       )}
       {/* Command palette renders outside hideChrome so it works on all pages */}
       <CommandPalette />
+      <ArenaSettlementModal />
     </>
   );
 }

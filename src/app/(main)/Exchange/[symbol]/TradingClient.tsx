@@ -5,42 +5,9 @@ import dynamic from "next/dynamic";
 import OrderBook from "./OrderBook";
 import RecentTrades from "./RecentTrades";
 import TradeForm from "./TradeForm";
-import Image from "next/image";
+import CoinIcon from "@/components/CoinIcon";
 
 const AiAssistantPanel = dynamic(() => import("./AiAssistantPanel"), { ssr: false });
-
-const ICON_SRCS = (ticker: string) => [
-  `/Coin-icons/${ticker.toLowerCase()}.svg`,
-  `https://assets.coincap.io/assets/icons/${ticker.toLowerCase()}@2x.png`,
-  `https://raw.githubusercontent.com/ErikThiart/cryptocurrency-icons/master/32/${ticker.toLowerCase()}.png`,
-];
-
-function CoinIcon({ ticker }: { ticker: string }) {
-  const [stage, setStage] = useState(0);
-  const srcs = ICON_SRCS(ticker);
-  if (stage >= srcs.length) {
-    return (
-      <div
-        className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-black shrink-0"
-        style={{ background: `hsl(${(ticker.charCodeAt(0) * 47) % 360}, 55%, 45%)` }}
-      >
-        {ticker[0]}
-      </div>
-    );
-  }
-  return (
-    <Image
-      key={srcs[stage]}
-      src={srcs[stage]}
-      alt={ticker}
-      width={28}
-      height={28}
-      className="rounded-full shrink-0"
-      onError={() => setStage((s) => s + 1)}
-      unoptimized
-    />
-  );
-}
 
 const PriceChart = dynamic(() => import("./PriceChart"), { ssr: false });
 
@@ -174,7 +141,7 @@ export default function TradingClient({
       <header className="h-12 bg-[#0b1222] border-b border-[#2e3447] flex items-center px-4 shrink-0 z-10">
         {/* Icon + pair name */}
         <div className="flex items-center gap-2 shrink-0">
-          <CoinIcon ticker={ticker} />
+          <CoinIcon ticker={ticker} size={28} />
           <div className="flex flex-col leading-none">
             <span className="text-[#dce1fb] font-black text-sm font-[family-name:var(--font-manrope)] tracking-tight">
               {ticker}<span className="text-[#909097] font-medium">/USDT</span>

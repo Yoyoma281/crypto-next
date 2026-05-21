@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import CoinIcon from "@/components/CoinIcon";
 import Sparkline from "@/app/components/sparkline";
 import { formatPrice, fmtCoinPrice } from "@/lib/utils";
 import { CoinTableRow } from "@/app/types/coin";
@@ -37,49 +37,6 @@ type SortDir = "asc" | "desc";
 const LIMIT = 50;
 const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
 
-// ─── Coin icon with 3-stage fallback ─────────────────────────────────────────
-
-function tickerColor(ticker: string) {
-  let hash = 0;
-  for (let i = 0; i < ticker.length; i++)
-    hash = ticker.charCodeAt(i) + ((hash << 5) - hash);
-  return `hsl(${Math.abs(hash) % 360}, 55%, 45%)`;
-}
-
-const ICON_SRCS = (ticker: string) => [
-  `/Coin-icons/${ticker.toLowerCase()}.svg`,
-  `https://assets.coincap.io/assets/icons/${ticker.toLowerCase()}@2x.png`,
-  `https://raw.githubusercontent.com/ErikThiart/cryptocurrency-icons/master/32/${ticker.toLowerCase()}.png`,
-];
-
-function CoinIcon({ ticker, size = 32 }: { ticker: string; size?: number }) {
-  const [stage, setStage] = useState(0);
-  const srcs = ICON_SRCS(ticker);
-
-  if (stage >= srcs.length) {
-    return (
-      <div
-        className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
-        style={{ width: size, height: size, fontSize: size * 0.38, background: tickerColor(ticker) }}
-      >
-        {ticker[0]}
-      </div>
-    );
-  }
-
-  return (
-    <Image
-      key={srcs[stage]}
-      src={srcs[stage]}
-      alt={ticker}
-      width={size}
-      height={size}
-      className="rounded-full flex-shrink-0"
-      onError={() => setStage((s) => s + 1)}
-      unoptimized
-    />
-  );
-}
 
 // ─── Pct badge ────────────────────────────────────────────────────────────────
 

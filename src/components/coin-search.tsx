@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Search, X } from "lucide-react";
+import CoinIcon from "@/components/CoinIcon";
 
 interface CoinEntry {
   symbol: string;
@@ -20,37 +20,6 @@ function loadCoins(): Promise<CoinEntry[]> {
     .then((r) => r.json())
     .then((data: CoinEntry[]) => { _cache = data; return data; });
   return _promise;
-}
-
-function CoinIcon({ ticker }: { ticker: string }) {
-  const [stage, setStage] = useState(0);
-  const srcs = [
-    `/Coin-icons/${ticker.toLowerCase()}.svg`,
-    `https://assets.coincap.io/assets/icons/${ticker.toLowerCase()}@2x.png`,
-    `https://raw.githubusercontent.com/ErikThiart/cryptocurrency-icons/master/32/${ticker.toLowerCase()}.png`,
-  ];
-  if (stage >= srcs.length) {
-    return (
-      <div
-        className="h-6 w-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
-        style={{ background: `hsl(${(ticker.charCodeAt(0) * 47) % 360}, 55%, 45%)` }}
-      >
-        {ticker[0]}
-      </div>
-    );
-  }
-  return (
-    <Image
-      key={srcs[stage]}
-      src={srcs[stage]}
-      alt={ticker}
-      width={24}
-      height={24}
-      className="rounded-full shrink-0"
-      onError={() => setStage((s) => s + 1)}
-      unoptimized
-    />
-  );
 }
 
 export default function CoinSearch() {
@@ -177,7 +146,7 @@ export default function CoinSearch() {
               className="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors"
               style={{ background: i === active ? "hsl(var(--muted))" : "transparent" }}
             >
-              <CoinIcon ticker={coin.base} />
+              <CoinIcon ticker={coin.base} size={24} />
               <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-xs font-semibold text-foreground leading-tight">{coin.base}</span>
                 <span className="text-[10px] text-muted-foreground leading-tight">{coin.symbol}</span>

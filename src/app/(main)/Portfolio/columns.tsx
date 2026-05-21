@@ -2,8 +2,8 @@
 
 import { portfolioCoin } from "@/app/types/coin";
 import { ColumnDef } from "@tanstack/react-table";
-import Image from "next/image";
 import { T } from "@/lib/i18n/translations";
+import CoinIcon from "@/components/CoinIcon";
 
 type EnrichedCoin = portfolioCoin & {
   avgBuyPrice?: number;
@@ -52,14 +52,7 @@ export function makeColumns(t: T): ColumnDef<EnrichedCoin>[] {
         const ticker = sym.replace(/USDT$/i, "").replace("/", "");
         return (
           <div className="flex items-center gap-3">
-            <Image
-              src={`../Coin-icons/${ticker.toLowerCase()}.svg`}
-              alt={ticker}
-              width={32}
-              height={32}
-              className="rounded-full"
-              onError={() => {}}
-            />
+            <CoinIcon ticker={ticker} size={32} />
             <div className="flex flex-col leading-tight">
               <span className="font-semibold text-[14px]">{ticker || sym}</span>
               <span className="text-muted-foreground text-[12px]">{sym}</span>

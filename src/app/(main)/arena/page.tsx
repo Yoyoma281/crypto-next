@@ -16,6 +16,7 @@ interface LeaderboardEntry {
   rankDelta?: number;
   isCurrentUser?: boolean;
   qualified?: boolean;
+  badges: string[];
 }
 
 interface MyStats {
@@ -73,9 +74,17 @@ function RankDelta({ delta }: { delta?: number }) {
 export default function ArenaPage() {
   const { weekInfo, countdown, activeMode, setActiveMode } = useArenaMode();
 
+  interface Snapshot {
+    equityUsdt: string;
+    pnlPct: string;
+    snapshotAt: string;
+    rank?: number;
+  }
+
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [myStats, setMyStats] = useState<MyStats | null>(null);
   const [pastWeeks, setPastWeeks] = useState<PastWeek[]>([]);
+  const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loadingLb, setLoadingLb] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingPast, setLoadingPast] = useState(true);
@@ -97,6 +106,7 @@ export default function ArenaPage() {
           rankDelta: undefined,
           isCurrentUser: currentUserId ? String(e.userId) === currentUserId : false,
           qualified: (e.trades as number) >= 10 && (e.symbols as number) >= 3 && !(e.disqualified as boolean),
+          badges: (e.badges as string[]) ?? [],
         }));
         setLeaderboard(entries);
       })
@@ -265,12 +275,31 @@ export default function ArenaPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
+                            {entry.avatar ? (
+                              <img
+                                src={entry.avatar}
+                                alt={entry.username}
+                                className="h-6 w-6 rounded-full shrink-0 object-cover"
+                                style={
+                                  entry.badges.includes('weekly_champion')
+                                    ? { border: '2px solid #f5c842', boxShadow: '0 0 8px rgba(245,200,66,0.5)' }
+                                    : undefined
+                                }
+                              />
+                            ) : (
                             <div
                               className="h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0"
-                              style={{ background: entry.isCurrentUser ? 'rgba(245,200,66,0.2)' : 'hsl(var(--muted))', color: entry.isCurrentUser ? '#f5c842' : 'hsl(var(--foreground))' }}
+                              style={{
+                                background: entry.isCurrentUser ? 'rgba(245,200,66,0.2)' : 'hsl(var(--muted))',
+                                color: entry.isCurrentUser ? '#f5c842' : 'hsl(var(--foreground))',
+                                ...(entry.badges.includes('weekly_champion')
+                                  ? { border: '2px solid #f5c842', boxShadow: '0 0 8px rgba(245,200,66,0.5)' }
+                                  : {}),
+                              }}
                             >
                               {entry.username.slice(0, 2).toUpperCase()}
                             </div>
+                            )}
                             <span className="font-semibold text-xs truncate max-w-[100px]" style={{ color: entry.isCurrentUser ? '#f5c842' : undefined }}>
                               {entry.username}
                               {entry.isCurrentUser && <span className="ml-1 text-[9px] opacity-70">(you)</span>}

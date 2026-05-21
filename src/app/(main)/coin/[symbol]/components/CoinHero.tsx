@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import CoinIcon from "@/components/CoinIcon";
 
 interface CoinHeroProps {
   coinTicker: string;
@@ -25,14 +25,7 @@ export default function CoinHero({
   return (
     <div className="flex flex-wrap items-start gap-4 mb-8">
       {/* Coin icon */}
-      <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 mt-1">
-        <Image
-          src={`/Coin-icons/${coinTicker.toLowerCase()}.svg`}
-          alt={coinTicker}
-          width={48}
-          height={48}
-        />
-      </div>
+      <CoinIcon ticker={coinTicker} size={48} className="mt-1" />
 
       {/* Name + price block */}
       <div className="flex flex-col gap-1">

@@ -155,10 +155,21 @@ export default function TopBarStats() {
               </Link>
 
               {/* Arena mode toggle */}
-              <div className="hidden sm:flex items-center gap-0.5 ml-1 p-0.5 rounded-lg border border-border bg-muted/30">
+              <div
+                className="hidden sm:flex items-center gap-0.5 ml-1 p-0.5 rounded-lg border transition-all"
+                style={
+                  activeMode === 'arena'
+                    ? {
+                        borderColor: 'rgba(245,200,66,0.55)',
+                        background: 'rgba(245,200,66,0.08)',
+                        boxShadow: '0 0 0 1px rgba(245,200,66,0.2), 0 0 12px rgba(245,200,66,0.18)',
+                      }
+                    : { borderColor: 'hsl(var(--border))', background: 'hsl(var(--muted) / 0.3)' }
+                }
+              >
                 <button
                   onClick={() => setActiveMode('portfolio')}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all whitespace-nowrap ${
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
                     activeMode === 'portfolio'
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -168,16 +179,24 @@ export default function TopBarStats() {
                 </button>
                 <button
                   onClick={() => setActiveMode('arena')}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all whitespace-nowrap flex items-center gap-1 ${
-                    activeMode === 'arena'
-                      ? 'text-amber-400 shadow-sm'
-                      : 'text-muted-foreground hover:text-amber-400'
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                    activeMode === 'arena' ? '' : 'text-muted-foreground hover:text-amber-400'
                   }`}
-                  style={activeMode === 'arena' ? { background: 'rgba(245,200,66,0.1)' } : {}}
+                  style={
+                    activeMode === 'arena'
+                      ? { background: '#f5c842', color: '#1a1408', boxShadow: '0 0 12px rgba(245,200,66,0.55)' }
+                      : {}
+                  }
                 >
+                  {activeMode === 'arena' && (
+                    <span
+                      className="inline-block h-1.5 w-1.5 rounded-full"
+                      style={{ background: '#1a1408', animation: 'arenaTogglePulse 1.8s ease-in-out infinite' }}
+                    />
+                  )}
                   <span>Arena</span>
                   {weekInfo && countdown && (
-                    <span className="text-[8px] opacity-70">{countdown}</span>
+                    <span className="text-[8px] opacity-80 font-mono">{countdown}</span>
                   )}
                 </button>
               </div>
@@ -352,6 +371,10 @@ export default function TopBarStats() {
         @keyframes spinPulse {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.5; transform: scale(1.3); }
+        }
+        @keyframes arenaTogglePulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%      { opacity: 0.4; transform: scale(1.4); }
         }
       `}</style>
     </>

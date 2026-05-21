@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
 interface WeekInfo {
+  _id: string;
   weekNumber: number;
   startAt: string;
   endAt: string;

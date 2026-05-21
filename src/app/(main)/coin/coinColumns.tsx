@@ -10,53 +10,7 @@ import { CoinTableRow } from "@/app/types/coin";
 import type { T } from "@/lib/i18n";
 import Sparkline from "@/app/components/sparkline";
 import { Star, Bell, BellRing } from "lucide-react";
-
-// Deterministic color from ticker name
-function tickerColor(ticker: string) {
-  let hash = 0;
-  for (let i = 0; i < ticker.length; i++)
-    hash = ticker.charCodeAt(i) + ((hash << 5) - hash);
-  const h = Math.abs(hash) % 360;
-  return `hsl(${h}, 55%, 45%)`;
-}
-
-// Fallback chain: local SVG → GitHub PNG → letter avatar
-const GITHUB_ICON = (t: string) =>
-  `https://raw.githubusercontent.com/ErikThiart/cryptocurrency-icons/master/32/${t.toLowerCase()}.png`;
-
-function CoinIcon({ ticker }: { ticker: string }) {
-  // 0 = local SVG, 1 = GitHub PNG, 2 = letter avatar
-  const [stage, setStage] = useState(0);
-
-  if (stage === 2) {
-    return (
-      <div
-        className="h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-        style={{ background: tickerColor(ticker) }}
-      >
-        {ticker[0]}
-      </div>
-    );
-  }
-
-  const src =
-    stage === 0
-      ? `/Coin-icons/${ticker.toLowerCase()}.svg`
-      : GITHUB_ICON(ticker);
-
-  return (
-    <Image
-      key={src}
-      src={src}
-      alt={ticker}
-      width={32}
-      height={32}
-      className="rounded-full flex-shrink-0"
-      onError={() => setStage((s) => s + 1)}
-      unoptimized
-    />
-  );
-}
+import CoinIcon from "@/components/CoinIcon";
 
 function PctBadge({ value }: { value: string }) {
   const num = parseFloat(value);

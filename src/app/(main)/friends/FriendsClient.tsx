@@ -623,7 +623,7 @@ export default function FriendsClient() {
                         <LevelChip level={user.level} />
                       </div>
                       <div style={{ fontSize: "11px", color: "#909097", fontFamily: "monospace" }}>
-                        {user.xp.toLocaleString()} XP
+                        {(user.xp ?? 0).toLocaleString()} XP
                       </div>
                     </div>
                     {isFriend ? (
