@@ -18,17 +18,18 @@ interface Options {
 }
 
 interface PullToRefreshResult<T extends HTMLElement> {
-  containerRef: React.RefObject<T>;
+  containerRef: React.RefObject<T | null>;
   /** How far (0–threshold) the user has currently pulled, for showing a spinner */
   pullDistance: number;
   /** True while the user is actively pulling past the threshold */
   isPulling: boolean;
 }
 
-export function usePullToRefresh<T extends HTMLElement = HTMLDivElement>(
-  { threshold = 70, onRefresh }: Options,
-): PullToRefreshResult<T> {
-  const containerRef = useRef<T>(null);
+export function usePullToRefresh<T extends HTMLElement = HTMLDivElement>({
+  threshold = 70,
+  onRefresh,
+}: Options): PullToRefreshResult<T> {
+  const containerRef = useRef<T | null>(null);
   const [pullDistance, setPullDistance] = useState(0);
   const [isPulling, setIsPulling] = useState(false);
 
@@ -43,8 +44,9 @@ export function usePullToRefresh<T extends HTMLElement = HTMLDivElement>(
     if (typeof window === "undefined" || !("ontouchstart" in window)) return;
 
     // Respect prefers-reduced-motion — skip the visual pull indicator
-    const prefersReduced =
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const prefersReduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
     let startY = 0;
     let currentY = 0;
@@ -95,8 +97,12 @@ export function usePullToRefresh<T extends HTMLElement = HTMLDivElement>(
     }
 
     const el = containerRef.current ?? document;
-    el.addEventListener("touchstart", handleTouchStart as EventListener, { passive: true });
-    el.addEventListener("touchmove", handleTouchMove as EventListener, { passive: true });
+    el.addEventListener("touchstart", handleTouchStart as EventListener, {
+      passive: true,
+    });
+    el.addEventListener("touchmove", handleTouchMove as EventListener, {
+      passive: true,
+    });
     el.addEventListener("touchend", handleTouchEnd as EventListener);
     el.addEventListener("touchcancel", handleTouchEnd as EventListener);
 
